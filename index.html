@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway&family=Roboto&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.1"></script>
+
+    <title>Guess the Country</title>
+
+</head>
+
+<body>
+
+    <div id="game-container">
+        <h1 id="heading">Guess the Country</h1>
+        <p id="subHeading">Can you identify which country's flag this is?</p>
+        <img id="flag" src="" alt="Country Flag">
+        <div id="options">
+            <button class="option" disabled>Option 1</button>
+            <button class="option" disabled>Option 2</button>
+            <button class="option" disabled>Option 3</button>
+            <button class="option" disabled>Option 4</button>
+        </div>
+        <p id="message"></p>
+        <div id="facts" hidden>
+            <!-- Country facts will be displayed here -->
+        </div>
+        <button id="next" hidden>Next country</button>
+    </div>
+    <p id="score">Score: 0/0</p>
+    <script src="script.js"></script>
+</body>
+
+</html>

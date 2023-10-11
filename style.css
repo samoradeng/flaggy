@@ -1,0 +1,120 @@
+/* style.css */
+
+#heading{
+    font-size: 32px;
+    margin-bottom: 0px;
+    font-weight: 700;
+}
+
+#subHeading{
+    font-size: 16px;
+    margin-top: 8px;
+    margin-bottom: 20px;
+    font-weight: 300;
+    color: #3c4043;
+}
+
+
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Roboto',arial, sans-serif;
+    background-color: white;
+}
+
+#game-container {
+    text-align: center;
+}
+
+#flag {
+    width: 300px;
+    height: 200px;
+    margin-top: 48px;
+    margin-bottom: 48px;
+}
+
+.option {
+    margin: 4px;
+    padding: 8px 16px;
+    color: #3c4043;
+    background-color: #f8f9fa;
+    font-family: 'Roboto',arial, sans-serif;
+    font-size: 16px;
+    border-radius: 4px;
+    border: 1px solid #f8f9fa;
+    cursor: pointer;
+}
+
+.option:not(.disabled):hover {
+    box-shadow: 0 1px 1px rgba(0,0,0,.1);
+    border: 1px solid #dadce0;
+    color: #202124;
+}
+
+#message {
+    font-size: 16px;
+    margin-top: 16px;
+    margin-bottom: 32px;
+}
+
+#facts {
+    margin-top: 20px;
+}
+
+#score {
+    position: absolute;
+    top: 4px;
+    right: 24px;
+}
+
+.correct-answer {
+    background-color: green;
+    color: white;
+}
+
+.wrong-answer {
+    border-color: red;
+    color: #3c4043;
+}
+
+#next {
+    margin-top: 16px;
+    padding: 8px 16px;
+    height: 48px;
+    color: #3c4043;
+    background-color: #f8f9fa;
+    font-family: 'Roboto',arial, sans-serif;
+    font-size: 16px;
+    border-radius: 8px;
+    border: .5px solid black;
+    cursor: pointer;
+    width: 100%;
+}
+
+#next:hover {
+    background-color: #333333;
+    color: white;
+}
+
+#facts {
+    text-align: left;
+    margin-left: 8px;
+}
+
+.disabled {
+    cursor: default;
+    
+}
+
+
+
+
+.fact-text strong {
+    color: #757575;
+    
+}
