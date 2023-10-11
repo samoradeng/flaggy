@@ -84,6 +84,8 @@ body {
 
 #next {
     margin-top: 16px;
+    margin-left: 8px;
+    margin-right: 8px;
     padding: 8px 16px;
     height: 48px;
     color: #3c4043;
