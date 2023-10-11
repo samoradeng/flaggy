@@ -34,8 +34,8 @@ body {
 #flag {
     width: 300px;
     height: 200px;
-    margin-top: 48px;
-    margin-bottom: 48px;
+    margin-top: 7%;
+    margin-bottom: 7%;
 }
 
 .option {
@@ -64,6 +64,7 @@ body {
 
 #facts {
     margin-top: 20px;
+    width: 80%;
 }
 
 #score {
@@ -84,8 +85,7 @@ body {
 
 #next {
     margin-top: 16px;
-    margin-left: 8px;
-    margin-right: 8px;
+    
     padding: 8px 16px;
     height: 48px;
     color: #3c4043;
@@ -95,7 +95,7 @@ body {
     border-radius: 8px;
     border: .5px solid black;
     cursor: pointer;
-    width: 100%;
+    width: 90%;
 }
 
 #next:hover {
@@ -105,7 +105,7 @@ body {
 
 #facts {
     text-align: left;
-    margin-left: 8px;
+    margin-left: 5%;
 }
 
 .disabled {
