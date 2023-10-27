@@ -18,6 +18,22 @@
 
 <body>
 
+    <div id="game-over-screen" style="display: none;">
+        <p class="center-text-title">Hi Flaggy</p>
+        <p class="center-text-paragraph">Tomorrow’s a new day, with more flags. See you then.</p>
+        <button id="see-stats-from-gameover">See Stats</button>
+    </div>
+
+    <div id="game-over-overlay" style="display: none;">
+        <div class="game-over-content">
+            <h2 id="game-over-heading">Game Over</h2>
+            <p id="game-over-score">Your score: <span id="final-score-display"></span></p>
+            <button id="close-overlay-btn">Close</button>
+        </div>
+    </div>
+
+
+
     <div id="game-container">
         <h1 id="heading">Guess the Country</h1>
         <p id="subHeading">Can you identify which country's flag this is?</p>
@@ -34,7 +50,38 @@
         </div>
         <button id="next" hidden>Next country</button>
     </div>
-    <p id="score">Score: 0/0</p>
+    <div id="top-right-game-stats">
+        <div id="lives">
+            <img src="/images/heart.svg" class="heart-icon" alt="Life">
+            <img src="/images/heart.svg" class="heart-icon" alt="Life">
+            <img src="/images/heart.svg" class="heart-icon" alt="Life">
+        </div>
+        <button id="stats-btn">
+            <img src="/images/chart-bar.svg">
+        </button>
+        <p id="score">Score: 0/0</p>
+
+
+    </div>
+
+    <div id="stats-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">
+                <img src="/images/x-mark.svg">
+            </span>
+            <h2>Statistics</h2>
+            <p id="stats">Number of Days Played: <span id="times-played">0</span></p>
+            <p id="stats">Day Streak: <span id="current-streak">0</span></p>
+            <p id="stats">Max Day Streak: <span id="max-streak">0</span></p>
+            <p id="stats">Day Win Percentage: <span id="percentage-daily"></span> </p>
+            <!--<p>Score % <span id="percentage-overall"></span> </p>-->
+            <button id="share-button">share</button>
+        </div>
+    </div>
+
+
+
+
     <script src="script.js"></script>
 </body>
 
