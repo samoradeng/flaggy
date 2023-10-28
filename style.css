@@ -181,7 +181,8 @@ body {
     margin-left: 24px;
     justify-content: space-between;
     background-color: white;
-    margin-top: 16px;
+    margin-top: 0px;
+    padding-top: 16px;
 }
 #stats-btn {
     position: relative;
