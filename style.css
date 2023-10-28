@@ -312,6 +312,7 @@ body {
     text-align: center;
     font-family: 'Roboto',arial, sans-serif;
     bottom: 0;
+    position: fixed;
 }
 
 #game-over-heading {
