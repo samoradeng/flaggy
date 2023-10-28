@@ -311,7 +311,7 @@ body {
     max-width: 400px;
     text-align: center;
     font-family: 'Roboto',arial, sans-serif;
-    
+    bottom: 0;
 }
 
 #game-over-heading {
