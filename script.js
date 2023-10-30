@@ -236,7 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (countries.length === 0) {
             document.getElementById('final-score-display').textContent = score + "/" + total;
-            document.getElementById('game-over-overlay').style.display = 'flex';
+           // document.getElementById('game-over-overlay').style.display = 'flex';
             return;
         }
 
