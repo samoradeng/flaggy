@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const API_KEY = "2IHGXCzu9puDze3UsqBO9b3pDfGstYnRIruqtBKh";
+    const API_KEY = "lGBbDFd82zkgNzrKEY3KYCDGI4AEdNST01U6Q57I";
     let countries = [];
     let currentCountry = null;
     let usedCountries = [];
@@ -195,6 +195,9 @@ document.addEventListener("DOMContentLoaded", function () {
         nextCountry();
     }
 
+    function storeCurrentFlag(country) {
+        localStorage.setItem('currentFlag', JSON.stringify(country));
+    }
 
 
     function showStatsModal() {
@@ -231,13 +234,24 @@ document.addEventListener("DOMContentLoaded", function () {
     function nextCountry() {
         nextBtn.disabled = false;
         saveGameState();
+        const storedFlag = localStorage.getItem('currentFlag');
+
         if (gameState === "over") return;
         timesPlayed++;
 
-        if (countries.length === 0) {
-            document.getElementById('final-score-display').textContent = score + "/" + total;
-           // document.getElementById('game-over-overlay').style.display = 'flex';
-            return;
+        if (storedFlag) {
+            currentCountry = JSON.parse(storedFlag);
+        } else {
+
+
+
+
+
+            if (countries.length === 0) {
+                document.getElementById('final-score-display').textContent = score + "/" + total;
+                //document.getElementById('game-over-overlay').style.display = 'flex';
+                return;
+            }
         }
 
         document.getElementById('close-overlay-btn').addEventListener('click', function () {
@@ -249,6 +263,9 @@ document.addEventListener("DOMContentLoaded", function () {
         currentCountry = countries[randomIndex];
         countries.splice(randomIndex, 1);
         usedCountries.push(currentCountry);
+        storeCurrentFlag(currentCountry);  // Store the flag in localStorage
+
+
 
         flagImg.src = currentCountry.flag.large;
         updateOptions();
@@ -347,6 +364,9 @@ document.addEventListener("DOMContentLoaded", function () {
             button.classList.add('disabled'); // Add disabled class
         });
 
+        localStorage.removeItem('currentFlag'); // Remove the stored flag after user makes a choice
+
+
         if (selectedCountryName === currentCountry.name) {
             message.textContent = "🎉 Correct! Well done!";
             score++;
@@ -404,6 +424,3 @@ document.addEventListener("DOMContentLoaded", function () {
     //console.log("Percentage:", overallPercentageRight);
 
 });
-
-
-
