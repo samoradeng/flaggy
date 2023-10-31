@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const API_KEY = "lGBbDFd82zkgNzrKEY3KYCDGI4AEdNST01U6Q57I";
+    const API_KEY = "HPqAlkGr4fdyszxEYmvlMUBokVbbNoh2fymVwzms";
     let countries = [];
     let currentCountry = null;
     let usedCountries = [];
