@@ -353,20 +353,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 //document.getElementById('game-over-overlay').style.display = 'flex';
                 showStatsModal();
 
-                message.hidden = true;
-                facts.hidden = true;
-                nextBtn.hidden = true;
-                headingText.hidden = false;
-                subHeadingText.hidden = false;
+                //message.hidden = true;
+                //facts.hidden = true;
+                //nextBtn.hidden = true;
+                //headingText.hidden = false;
+                //subHeadingText.hidden = false;
 
 
 
 
                 headingText.style.display = 'none';
                 subHeadingText.style.display = 'none';
-                flagImg.style.display = 'none';
-                document.getElementById('options').style.display = 'none';
-                document.getElementById('game-over-screen').style.display = 'block';
+                //flagImg.style.display = 'none';
+                //document.getElementById('options').style.display = 'none';
+                //document.getElementById('game-over-screen').style.display = 'block';
 
             }, 1000);
         }
@@ -483,9 +483,8 @@ document.addEventListener("DOMContentLoaded", function () {
         facts.innerHTML = `
             <h2>${country.name}</h2>
             <p class="fact-text"><strong>Capital:</strong> ${country.capital}</p>
-            <p class="fact-text"><strong>Region:</strong> ${country.region}</p>
-            <p class="fact-text"><strong>Sub Region:</strong> ${country.subregion}</p>
-            <p class="fact-text"><strong>Population:</strong> ${country.population.toLocaleString('en-US')}</p>
+            <p class="fact-text"><strong>Location:</strong> ${country.subregion}</p>
+            <p class="fact-text"><strong>Language(s):</strong> ${Object.values(country.languages).join(', ')}</p>
             
         `;
         facts.hidden = false;
