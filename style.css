@@ -29,6 +29,7 @@ body {
 }
 
 #game-container {
+    margin-top: 72px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -41,6 +42,7 @@ body {
     height: 200px;
     margin-top: 7%;
     margin-bottom: 7%;
+    
 }
 
 .option {
@@ -64,13 +66,14 @@ body {
 #message {
     font-size: 16px;
     margin-top: 16px;
-    margin-bottom: 32px;
+    margin-bottom: 16px;
 }
 
 #facts {
-    margin-top: 20px;
+    margin-top: 0px;
     width: 80%;
-   
+    
+    text-align:left;
 }
 
 
@@ -97,7 +100,8 @@ body {
     border-radius: 8px;
     border: .5px solid black;
     cursor: pointer;
-    width: 90%;
+    width: 80%;
+    margin-bottom: 32px;
 }
 
 #next:hover {
@@ -105,10 +109,6 @@ body {
     color: white;
 }
 
-#facts {
-    text-align: left;
-    margin-left: 5%;
-}
 
 .disabled {
     cursor: default;
@@ -171,7 +171,7 @@ body {
     padding-left: 32px;
     padding-right: 32px;
     padding-top: 40px;
-    padding-bottom: 72px;
+    padding-bottom: 80px;
     width: 80%;
     max-width: 520px;
     border-radius: 16px;
