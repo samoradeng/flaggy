@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", function () {
     const API_KEY = "HPqAlkGr4fdyszxEYmvlMUBokVbbNoh2fymVwzms";
     let countries = [];
@@ -95,6 +96,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+
+
     // Event Listeners
     options.forEach(button => button.addEventListener('click', checkAnswer));
     nextBtn.addEventListener('click', nextCountry);
@@ -153,6 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 hearts[i].classList.add('heart-lost');
 
                 if (lives === 0) {
+
                     document.getElementById('game-over-screen').style.display = 'block';
                     // Hide other game elements as appropriate...
                     headingText.style.display = 'none';
@@ -296,12 +300,31 @@ document.addEventListener("DOMContentLoaded", function () {
             setTimeout(() => {
                 //alert('Thanks for playing!');
                 document.getElementById('final-score-display').textContent = score + "/" + total;
-                document.getElementById('game-over-overlay').style.display = 'flex';
+                //document.getElementById('game-over-overlay').style.display = 'flex';
                 showStatsModal();
+
+                message.hidden = true;
+                facts.hidden = true;
+                nextBtn.hidden = true;
+                headingText.hidden = false;
+                subHeadingText.hidden = false;
+
+
+
+
+                headingText.style.display = 'none';
+                subHeadingText.style.display = 'none';
+                flagImg.style.display = 'none';
+                document.getElementById('options').style.display = 'none';
+                document.getElementById('game-over-screen').style.display = 'block';
+
             }, 1000);
         }
         saveGameState();
     }
+
+
+
 
 
     function saveGameState() {
@@ -424,3 +447,6 @@ document.addEventListener("DOMContentLoaded", function () {
     //console.log("Percentage:", overallPercentageRight);
 
 });
+
+
+
