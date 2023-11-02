@@ -71,7 +71,7 @@ body {
 
 #facts {
     margin-top: 0px;
-    width: 80%;
+    width: 90%;
     
     text-align:left;
 }
@@ -100,8 +100,8 @@ body {
     border-radius: 8px;
     border: .5px solid black;
     cursor: pointer;
-    width: 80%;
-    margin-bottom: 32px;
+    width: 90%;
+    margin-bottom: 24px;
 }
 
 #next:hover {
