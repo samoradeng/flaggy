@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", function () {
     const API_KEY = "HPqAlkGr4fdyszxEYmvlMUBokVbbNoh2fymVwzms";
     let countries = [];
@@ -227,13 +226,64 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Function to share score on Twitter
-    function shareOnTwitter() {
-        const text = `I scored ${score} on the flaggy game! Try it out now!`;
-        const url = 'https://yourquizapp.com'; // Replace with your app's URL
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+    // function shareOnTwitter() {
+    //     const text = `I scored ${score} on the flaggy game! Try it out now!`;
+    //     const url = 'https://yourquizapp.com'; // Replace with your app's URL
+    //     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+    // }
+    //document.getElementById('share-button').addEventListener('click', shareOnTwitter);
+
+
+    function copiedResultsToast() {
+        // Get the snackbar DIV
+        var resultsToast = document.getElementById("resultsToast");
+
+        // Add the "show" class to DIV
+        resultsToast.className = "show";
+
+        // After 3 seconds, remove the show class from DIV
+        setTimeout(function () { resultsToast.className = resultsToast.className.replace("show", ""); }, 3000);
     }
 
-    document.getElementById('share-button').addEventListener('click', shareOnTwitter);
+    // Function to share score
+    function shareScore() {
+        const scoreText = `flaggy ${score}/${total}`; // Modify this text as needed
+
+        // Check if the Web Share API is supported
+        if (navigator.share) {
+            // Use the Web Share API
+            navigator.share({
+                title: 'Check out my score!',
+                text: scoreText,
+                url: document.URL // You can also share a URL if needed
+            }).then(() => {
+                console.log('Thanks for sharing!');
+            }).catch(console.error);
+        } else {
+            // Fallback for desktop browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = scoreText;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                const msg = successful ? 'successful' : 'unsuccessful';
+                console.log('Fallback: Copying text command was ' + msg);
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            document.body.removeChild(textArea);
+            //alert('Score copied to clipboard: ' + scoreText); // Inform the user
+            copiedResultsToast()
+        }
+    }
+
+    // Update the event listener for your share button
+    document.getElementById('share-button').addEventListener('click', shareScore);
+
+
+
 
     function nextCountry() {
         nextBtn.disabled = false;
@@ -447,6 +497,3 @@ document.addEventListener("DOMContentLoaded", function () {
     //console.log("Percentage:", overallPercentageRight);
 
 });
-
-
-
