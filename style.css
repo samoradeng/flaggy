@@ -4,14 +4,14 @@
 #heading{
     font-size: 32px;
     margin-bottom: 0px;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 #subHeading{
     font-size: 16px;
     margin-top: 8px;
     margin-bottom: 20px;
-    font-weight: 300;
+    font-weight:normal;
     color: #3c4043;
 }
 
@@ -48,13 +48,16 @@ body {
 .option {
     margin: 4px;
     padding: 8px 16px;
-    color: #3c4043;
     background-color: #f8f9fa;
     font-family: 'Roboto',arial, sans-serif;
     font-size: 16px;
     border-radius: 4px;
-    border: 1px solid #f8f9fa;
+    border-top: 1px solid #f8f9fa;
+    border-left: 1px solid #f8f9fa;
+    border-right: 1px solid #f8f9fa;
+    border-bottom:1px solid #dadce0;
     cursor: pointer;
+    box-shadow: 0 1px 1px rgba(0,0,0,.1);
 }
 
 .option:not(.disabled):hover {
@@ -118,14 +121,19 @@ body {
 
 
 
-.fact-text strong {
-    color: #757575;
-    
+.fact-text strong{
+    color: #1d1d1d;
+    font-weight:500;
+}
+
+.fact-text {
+    font-weight: 300;
+    color: #1d1d1d;
 }
 
 #stats {
-    color: #757575;
-    font-weight: bold;
+    color: #1d1d1d;
+    font-weight: 300;
     font-family: 'Roboto',arial, sans-serif;;
     
 }
