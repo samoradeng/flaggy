@@ -473,7 +473,7 @@ document.addEventListener("DOMContentLoaded", function () {
         total++;
         overallTotal++;
         scoreDisplay.textContent = "Score: " + score + "/" + total;
-        //showFacts(currentCountry);
+        showFacts(currentCountry);
         nextBtn.hidden = false;
         headingText.hidden = true;
         subHeadingText.hidden = true;
