@@ -94,7 +94,6 @@ body {
 
 #next {
     margin-top: 16px;
-    
     padding: 8px 16px;
     height: 48px;
     color: #3c4043;
@@ -102,10 +101,14 @@ body {
     font-family: 'Roboto',arial, sans-serif;
     font-size: 16px;
     border-radius: 8px;
-    border: .5px solid black;
+    border-top: 1px solid #f8f9fa;
+    border-left: 1px solid #f8f9fa;
+    border-right: 1px solid #f8f9fa;
+    border-bottom:1px solid #dadce0;
+    box-shadow: 0 1px 1px rgba(0,0,0,.1);
     cursor: pointer;
     width: 90%;
-    margin-bottom: 24px;
+    margin-bottom:24px;
 }
 
 #next:hover {
