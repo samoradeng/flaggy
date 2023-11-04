@@ -47,6 +47,8 @@ document.addEventListener("DOMContentLoaded", function () {
         maxStreak = streaks.maxStreak;
     }
 
+    document.addEventListener("DOMContentLoaded", loadGameState);
+
     function calculateStreaks(dates) {
         const oneDay = 24 * 60 * 60 * 1000;  // milliseconds in a day
 
@@ -119,6 +121,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     function loadGameState() {
+        const gameStateData = JSON.parse(localStorage.getItem('countryGame')) || {};
+
         if (localStorage.getItem('gameEndDate') && isNewDay(localStorage.getItem('gameEndDate'))) {
             // ... reset the game and remove the gameEndDate from local storage...
             localStorage.removeItem('gameEndDate');
@@ -137,38 +141,42 @@ document.addEventListener("DOMContentLoaded", function () {
         if (savedData) {
             const gameStateData = JSON.parse(savedData);
 
-            gameState = gameStateData.gameState;
-            score = gameStateData.score;
-            total = gameStateData.total;
-            lives = gameStateData.lives;
-            timesPlayed = gameStateData.timesPlayed;
+            gameState = gameStateData.gameState || "playing";
+            score = gameStateData.score || 0;
+            total = gameStateData.total || 0;
+            lives = gameStateData.lives || 3;
+            timesPlayed = gameStateData.timesPlayed || 0;
             currentStreak = gameStateData.currentStreak || 0;
             maxStreak = gameStateData.maxStreak || 0;
-            usedCountries = gameStateData.usedCountries;
+            usedCountries = gameStateData.usedCountries || [];
+            currentCountry = gameStateData.currentCountry || null;
 
             overallScore = gameStateData.overallScore;
             overallTotal = gameStateData.overallTotal;
 
-            // Update the UI with the loaded data
-            scoreDisplay.textContent = "Score: " + score + "/" + total;
-            for (let i = 0; i < 3 - lives; i++) {
-                hearts[i].classList.add('heart-lost');
+            updateUI();
 
-                if (lives === 0) {
-
-                    document.getElementById('game-over-screen').style.display = 'block';
-                    // Hide other game elements as appropriate...
-                    headingText.style.display = 'none';
-                    subHeadingText.style.display = 'none';
-                    flagImg.style.display = 'none';
-                    document.getElementById('options').style.display = 'none';
-                }
-
-
+            if (currentCountry && gameState !== "over") {
+                flagImg.src = currentCountry.flag.large;
+                updateOptions(currentCountry); // Update options with the current country to prevent cheating
+            } else if (gameState === "over") {
+                showGameOver();
             }
+
+
 
         }
 
+    }
+
+    function showGameOver() {
+        // Show the game over screen and hide the other elements
+        document.getElementById('game-over-screen').style.display = 'block';
+        // Hide other game elements
+        headingText.style.display = 'none';
+        subHeadingText.style.display = 'none';
+        flagImg.style.display = 'none';
+        document.getElementById('options').style.display = 'none';
     }
     loadGameState();
 
@@ -200,6 +208,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function storeCurrentFlag(country) {
         localStorage.setItem('currentFlag', JSON.stringify(country));
+    }
+
+    function updateUI() {
+        // Update the UI with the loaded data
+        scoreDisplay.textContent = "Score: " + score + "/" + total;
+        hearts.forEach((heart, index) => {
+            if (index < lives) {
+                heart.classList.remove('heart-lost');
+            } else {
+                heart.classList.add('heart-lost');
+            }
+        });
+
+        // If the game is over, show the game over screen
+        if (lives === 0) {
+            showGameOver();
+        }
     }
 
 
@@ -397,6 +422,7 @@ document.addEventListener("DOMContentLoaded", function () {
             currentStreak: currentStreak,
             maxStreak: maxStreak,
             usedCountries: usedCountries,
+            currentCountry: currentCountry,
             playedDates: playedDates,
 
             overallScore: overallScore,
@@ -477,6 +503,8 @@ document.addEventListener("DOMContentLoaded", function () {
         nextBtn.hidden = false;
         headingText.hidden = true;
         subHeadingText.hidden = true;
+
+        saveGameState();
     }
 
     function showFacts(country) {
