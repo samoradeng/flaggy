@@ -47,7 +47,7 @@ body {
 
 .option {
     margin: 4px;
-    
+    color: black;
     padding: 8px 16px;
     background-color: #f8f9fa;
     font-family: 'Roboto',arial, sans-serif;
@@ -61,8 +61,18 @@ body {
     box-shadow: 0 1px 1px rgba(0,0,0,.1);
 }
 
-.option :active {
-    color: #1d1d1d;
+.option.disabled {
+    color: #B2B3B4;
+}
+
+.option.disabled.correct-answer {
+    background-color: green;
+    color: white;
+}
+
+.option.disabled.wrong-answer {
+    border-color: red;
+    color: #3c4043;
 }
 
 .option:not(.disabled):hover {
@@ -70,6 +80,8 @@ body {
     border: 1px solid #dadce0;
     
 }
+
+
 
 #message {
     font-size: 16px;
@@ -141,7 +153,7 @@ body {
 
 #stats {
     color: #1d1d1d;
-    font-weight: 300;
+    font-weight: 100;
     font-family: 'Roboto',arial, sans-serif;;
     
 }
@@ -161,7 +173,7 @@ body {
 {
     color: black;
     font-family: 'Roboto',arial, sans-serif;
-    font-weight:normal;
+    font-weight:900;
 }
 
 
