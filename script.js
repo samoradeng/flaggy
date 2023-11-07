@@ -170,6 +170,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function showGameOver() {
+        lives = 0;
+        console.log(lives)
+
+        hearts.forEach(heart => {
+            heart.classList.add('heart-lost');
+        });
+
+
         // Show the game over screen and hide the other elements
         document.getElementById('game-over-screen').style.display = 'block';
         // Hide other game elements
@@ -177,6 +185,8 @@ document.addEventListener("DOMContentLoaded", function () {
         subHeadingText.style.display = 'none';
         flagImg.style.display = 'none';
         document.getElementById('options').style.display = 'none';
+
+
     }
     loadGameState();
 
@@ -223,7 +233,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // If the game is over, show the game over screen
         if (lives === 0) {
+            gameState = "over";
+            nextBtn.disabled = true;
+            setTimeout(() => {
+                //alert('Thanks for playing!');
+                document.getElementById('final-score-display').textContent = score + "/" + total;
+                //document.getElementById('game-over-overlay').style.display = 'flex';
+                showStatsModal();
+
+                //message.hidden = true;
+                //facts.hidden = true;
+                //nextBtn.hidden = true;
+                //headingText.hidden = false;
+                //subHeadingText.hidden = false;
+
+
+
+
+                headingText.style.display = 'none';
+                subHeadingText.style.display = 'none';
+                //flagImg.style.display = 'none';
+                //document.getElementById('options').style.display = 'none';
+                //document.getElementById('game-over-screen').style.display = 'block';
+
+            }, 1000);
+
             showGameOver();
+
+
         }
     }
 
@@ -371,6 +408,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (lives === 0) {
             gameState = "over";
+            //updateUI(); // Add this call to ensure UI is updated when the game is over
             nextBtn.disabled = true;
             setTimeout(() => {
                 //alert('Thanks for playing!');
