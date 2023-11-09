@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const API_KEY = "HPqAlkGr4fdyszxEYmvlMUBokVbbNoh2fymVwzms";
+    const API_KEY = "zl2lkL1rpY7gOv6uCtIYM4BKWAp81eHOnIQT7Lbc";
     let countries = [];
     let currentCountry = null;
     let usedCountries = [];
@@ -165,9 +165,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+        } else {
+            // If there's no saved game state, start a new game
+            fetchCountriesAndStartNewGame();
         }
 
     }
+
+    function fetchCountriesAndStartNewGame() {
+        fetch(`https://countryapi.io/api/all?apikey=${API_KEY}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                countries = Object.values(data);
+                fetchNewCountry();
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                // Handle the error, such as retrying the fetch or informing the user
+            });
+    }
+
 
     function showGameOver() {
         lives = 0;
@@ -181,6 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Show the game over screen and hide the other elements
         document.getElementById('game-over-screen').style.display = 'block';
         // Hide other game elements
+        document.getElementById('top-right-game-stats').style.display = 'none';
         headingText.style.display = 'none';
         subHeadingText.style.display = 'none';
         flagImg.style.display = 'none';
@@ -350,52 +373,51 @@ document.addEventListener("DOMContentLoaded", function () {
     function nextCountry() {
         nextBtn.disabled = false;
         saveGameState();
-        const storedFlag = localStorage.getItem('currentFlag');
+        // Check if there's a stored flag in localStorage and parse it if present
+        const storedFlagJSON = localStorage.getItem('currentFlag');
 
-        if (gameState === "over") return;
-        timesPlayed++;
-
-        if (storedFlag) {
-            currentCountry = JSON.parse(storedFlag);
-        } else {
-
-
-
-
-
-            if (countries.length === 0) {
-                document.getElementById('final-score-display').textContent = score + "/" + total;
-                //document.getElementById('game-over-overlay').style.display = 'flex';
-                return;
+        if (storedFlagJSON) {
+            try {
+                currentCountry = JSON.parse(storedFlagJSON);
+                flagImg.src = currentCountry.flag.large;
+                updateOptions(currentCountry);
+            } catch (e) {
+                console.error('Error parsing stored flag:', e);
+                // Handle the error, for example, by fetching a new country
+                fetchNewCountry();
             }
+        } else {
+            // If there's no current country stored, fetch a new one
+            fetchNewCountry();
         }
 
-        document.getElementById('close-overlay-btn').addEventListener('click', function () {
-            document.getElementById('game-over-overlay').style.display = 'none';
+        // Enable option buttons
+        options.forEach(button => {
+            button.disabled = false;
+            button.classList.remove('disabled', 'correct-answer', 'wrong-answer');
         });
 
+        timesPlayed++;
 
-        const randomIndex = Math.floor(Math.random() * countries.length);
-        currentCountry = countries[randomIndex];
-        countries.splice(randomIndex, 1);
-        usedCountries.push(currentCountry);
-        storeCurrentFlag(currentCountry);  // Store the flag in localStorage
-
-
-
-        flagImg.src = currentCountry.flag.large;
-        updateOptions();
-
+        // Update UI to reflect the new state
         message.textContent = "";
         facts.hidden = true;
         nextBtn.hidden = true;
         headingText.hidden = false;
         subHeadingText.hidden = false;
+    }
 
-        options.forEach(button => {
-            button.disabled = false;
-            button.classList.remove('disabled', 'correct-answer', 'wrong-answer'); // Remove disabled and styling classes
-        });
+
+    function fetchNewCountry() {
+        const randomIndex = Math.floor(Math.random() * countries.length);
+        currentCountry = countries[randomIndex];
+        countries.splice(randomIndex, 1);
+        usedCountries.push(currentCountry);
+
+        // Assuming `currentCountry` has a `flag` property that contains the flag image URL
+        flagImg.src = currentCountry.flag.large;
+        updateOptions();
+        localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
     }
 
 
