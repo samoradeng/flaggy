@@ -296,6 +296,29 @@ body {
     /* This assumes it should take up the full viewport height. */
 }
 
+
+#logo-and-text{
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    top: 48px;
+    margin-bottom: 80px;
+}
+
+
+#flagem-logo{
+    display: relative;
+    width: 56px;
+    height: 56px;
+}
+
+#flagem-logo-text{
+    margin-top: 8px;
+    font-size: 18px;
+    font-weight: 500;
+}
+
 .center-text-title {
     
     font-size: 36px;
