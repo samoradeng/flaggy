@@ -29,6 +29,7 @@ body {
 }
 
 #game-container {
+    position:fixed;
     margin-top: 40px;
     text-align: center;
     display: flex;
