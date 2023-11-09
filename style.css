@@ -502,3 +502,58 @@ body {
     from {bottom: 30px; opacity: 1;}
     to {bottom: 0; opacity: 0;}
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  /* Animations for feedback */
+@keyframes shake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-10px); }
+    80% { transform: translateX(10px); }
+    100% { transform: translateX(0); }
+}
+
+.option.wrong-answer {
+    animation: shake 0.5s;
+}
+
+
+
+
+@keyframes correctPulse {
+    0% {
+        transform: scale(1);
+        
+        box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7);
+    }
+    50% {
+        transform: scale(1.1);
+        
+        box-shadow: 0 0 10px 10px rgba(0, 255, 0, 0);
+    }
+    100% {
+        transform: scale(1);
+        
+        box-shadow: 0 0 0 0 rgba(0, 255, 0, 0);
+    }
+}
+
+.option.correct-answer {
+    animation: correctPulse 1s;
+    color: black;
+}
