@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const API_KEY = "y8USVsSDNum5ykndOobaO8sBRU5lhS1EjtpmqPIL";
     let countries = [];
     let currentCountry = null;
     let usedCountries = [];
@@ -110,14 +109,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Fetch countries data
-    fetch(`https://countryapi.io/api/all?apikey=${API_KEY}`)
+    // Assuming you've placed the JSON file in the same directory
+    fetch('countries.json')
         .then(response => response.json())
         .then(data => {
-            countries = Object.values(data);
-            nextCountry();
+            countries = data; // or however you need to process it
+            nextCountry();// Your code to initialize the game with this data
         })
-        .catch(error => console.error('Error fetching data:', error));
+        .catch(error => console.error('Error loading local data:', error));
+
 
 
     function loadGameState() {
@@ -409,13 +409,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     function fetchNewCountry() {
-        const randomIndex = Math.floor(Math.random() * countries.length);
-        currentCountry = countries[randomIndex];
-        countries.splice(randomIndex, 1);
-        usedCountries.push(currentCountry);
+        const countryCodes = Object.keys(countries); // Get an array of country codes
+        const randomIndex = Math.floor(Math.random() * countryCodes.length);
+        const countryCode = countryCodes[randomIndex];
+        currentCountry = countries[countryCode];
 
-        // Assuming `currentCountry` has a `flag` property that contains the flag image URL
-        flagImg.src = currentCountry.flag.large;
+        flagImg.src = currentCountry.flag.large; // Adjust according to your JSON structure
         updateOptions();
         localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
     }
@@ -500,12 +499,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     function updateOptions() {
-        const allOtherCountries = [...countries, ...usedCountries].filter(country => country.name !== currentCountry.name);
+        const allOtherCountryCodes = Object.keys(countries).filter(code => code !== currentCountry.alpha2Code);
         const incorrectAnswers = [];
-        while (incorrectAnswers.length < 3 && allOtherCountries.length > 0) {
-            const randomIndex = Math.floor(Math.random() * allOtherCountries.length);
-            incorrectAnswers.push(allOtherCountries[randomIndex].name);
-            allOtherCountries.splice(randomIndex, 1);
+        while (incorrectAnswers.length < 3 && allOtherCountryCodes.length > 0) {
+            const randomIndex = Math.floor(Math.random() * allOtherCountryCodes.length);
+            const countryCode = allOtherCountryCodes[randomIndex];
+            incorrectAnswers.push(countries[countryCode].name);
+            allOtherCountryCodes.splice(randomIndex, 1);
         }
 
         const allAnswers = [...incorrectAnswers, currentCountry.name];
