@@ -560,6 +560,8 @@ document.addEventListener("DOMContentLoaded", function () {
         overallTotal++;
         scoreDisplay.textContent = "Score: " + score + "/" + total;
         showFacts(currentCountry);
+        headingText.style.display = 'none';
+        subHeadingText.style.display = 'none';
         nextBtn.hidden = false;
         headingText.hidden = true;
         subHeadingText.hidden = true;
