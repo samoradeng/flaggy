@@ -22,7 +22,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+   /* min-height: 100vh;*/
     margin: 0;
     font-family: 'Roboto',arial, sans-serif;
     background-color: white;
@@ -30,21 +30,29 @@ body {
 
 #game-container {
     
-    margin-top: 40px;
+    margin-top: 120px;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    
 }
 
 #flag {
-    width: 300px;
-    height: 200px;
+    width: 378px; /* Fixed width */
+    height: 283px; /* Fixed height */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    border-radius: 8px;
     margin-top: 7%;
     margin-bottom: 7%;
-    
+    box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.15);
 }
+
+
+
+
 
 .option {
     margin: 4px;
@@ -199,7 +207,7 @@ body {
     background-color: white;
     padding-left: 32px;
     padding-right: 32px;
-    padding-top: 40px;
+    padding-top: 32px;
     padding-bottom: 80px;
     width: 80%;
     max-width: 520px;
@@ -291,6 +299,10 @@ body {
 #game-over-screen {
     position: absolute;
     display: flex;
+    width: 90%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     flex-direction: column;
     text-align: center;
     
