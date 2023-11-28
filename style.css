@@ -39,8 +39,8 @@ body {
 }
 
 #flag {
-    width: 378px; /* Fixed width */
-    height: 283px; /* Fixed height */
+    width: 360px; /* Fixed width */
+    height: 270px; /* Fixed height */
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -246,7 +246,7 @@ body {
     justify-content: space-between;
     background-color: white;
     margin-top: 0px;
-    padding-top: 16px;
+    padding-top: 8px;
 }
 #stats-btn {
     position: relative;
