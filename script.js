@@ -157,7 +157,9 @@ document.addEventListener("DOMContentLoaded", function () {
             updateUI();
 
             if (currentCountry && gameState !== "over") {
-                flagImg.src = currentCountry.flag.large;
+                flagDiv.style.backgroundImage = `url(${currentCountry.flag.large})`;
+
+                
                 updateOptions(currentCountry); // Update options with the current country to prevent cheating
             } else if (gameState === "over") {
                 showGameOver();
@@ -379,7 +381,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (storedFlagJSON) {
             try {
                 currentCountry = JSON.parse(storedFlagJSON);
-                flagImg.src = currentCountry.flag.large;
+                flagDiv.src = currentCountry.flag.large;
                 updateOptions(currentCountry);
             } catch (e) {
                 console.error('Error parsing stored flag:', e);
@@ -414,7 +416,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const countryCode = countryCodes[randomIndex];
         currentCountry = countries[countryCode];
 
-        flagImg.src = currentCountry.flag.large; // Adjust according to your JSON structure
+        flagDiv.src = currentCountry.flag.large; // Adjust according to your JSON structure
         updateOptions();
         localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
     }
@@ -570,8 +572,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function showFacts(country) {
-        facts.innerHTML = `
-            <h2>${country.name}</h2>
+        facts.innerHTML = `options
             <p class="fact-text"><strong>Capital:</strong> ${country.capital}</p>
             <p class="fact-text"><strong>Location:</strong> ${country.subregion}</p>
             <p class="fact-text"><strong>Language(s):</strong> ${Object.values(country.languages).join(', ')}</p>
