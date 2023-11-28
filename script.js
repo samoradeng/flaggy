@@ -1,3 +1,5 @@
+//test 
+
 document.addEventListener("DOMContentLoaded", function () {
     let countries = [];
     let currentCountry = null;
