@@ -242,12 +242,13 @@ body {
     left: 16px;
     gap: 16px;
     align-items: center;
-    margin-right: 24px;
-    margin-left: 24px;
+    margin-right: 8px;
+    margin-left: 8px;
     justify-content: space-between;
     background-color: white;
     margin-top: 0px;
     padding-top: 0px;
+    
 }
 #stats-btn {
     position: relative;
