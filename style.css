@@ -30,7 +30,7 @@ body {
 
 #game-container {
     position:relative;
-    top: 72px;
+    top: 64px;
     text-align: center;
     display: flex;
     flex-direction: column;
