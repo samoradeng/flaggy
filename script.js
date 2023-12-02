@@ -575,7 +575,7 @@ document.addEventListener("DOMContentLoaded", function () {
         facts.innerHTML = `
             <p class="fact-text"><strong>Capital:</strong> ${country.capital}</p>
             <p class="fact-text"><strong>Location:</strong> ${country.subregion}</p>
-            <p class="fact-text"><strong>Language(s):</strong> ${Object.values(country.languages).join(', ')}</p>
+           
             
         `;
         facts.hidden = false;
