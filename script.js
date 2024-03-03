@@ -334,7 +334,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Function to share score
     function shareScore() {
-        const scoreText = `flaggy ${score}/${total}`; // Modify this text as needed
+        const scoreText = `flagtriv ${score}/${total}`; // Modify this text as needed
 
         // Check if the Web Share API is supported
         if (navigator.share) {
