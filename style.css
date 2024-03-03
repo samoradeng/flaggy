@@ -358,7 +358,7 @@ body {
     
     padding: 16px 24px;
     color: white;
-    background-color: #0052FF;
+    background-color: black;
     font-family: 'Roboto',arial, sans-serif;
     font-size: 16px;
     border-radius: 40px;
@@ -368,7 +368,7 @@ body {
 }
 
 #see-stats-from-gameover:hover {
-    background-color: #0052E1;
+    background-color: #333333;
 }
 
 
