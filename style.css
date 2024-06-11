@@ -351,6 +351,8 @@ body {
     font-weight: 900;
     margin-bottom: 16px;
     text-align: center;
+
+    
 }
 
 .center-text-paragraph {
@@ -379,19 +381,22 @@ body {
 #see-stats-from-gameover{
     position: relative;
     padding: 16px 24px;
-    background-color: #333333;
+    background-color: white;
     font-weight: 400;
-    color: rgb(255, 255, 255) ;
+    color:#1d1d1d;
     border-radius: 100px;
     font-family: 'Roboto', arial, sans-serif;
     font-size: 16px;
     border-radius: 40px;
-    border: 1px solid #f8f9fa;
     cursor: pointer;
+    margin-top: 8px;
+    border-radius: 100px;
+    border-color: #333333;
 }
 #see-stats-from-gameover:hover{
-    background-color: #1d1d1d;
-    color: white;
+    color:#333;
+    background-color: #efefef;
+    border-color: #333333;
 }
 #main-menu{
 position: relative;
