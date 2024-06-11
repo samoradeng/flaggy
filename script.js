@@ -1,29 +1,35 @@
-//test 
-
 document.addEventListener("DOMContentLoaded", function () {
     let countries = [];
     let currentCountry = null;
     let usedCountries = [];
     let score = 0;
     let total = 0;
-    let gameState = "playing"; // possible values: "playing", "over"
-    let playedDates = []; // Added this for unique days tracking
+    let gameState = "playing";
+    let playedDates = [];
 
     if (localStorage.getItem('playedDates')) {
         playedDates = JSON.parse(localStorage.getItem('playedDates'));
     }
 
-    let overallScore = 0; // Introduce this variable
-    let overallTotal = 0; // Introduce this variable
+    let dailyStats = {
+        timesPlayed: 0,
+        currentStreak: 0,
+        maxStreak: 0,
+        overallScore: 0,
+        overallTotal: 0
+    };
 
+    let endlessStats = {
+        timesPlayed: 0,
+        highestScore: 0,
+        totalScore: 0
+    };
 
-    // User statistics
-    let timesPlayed = 0;
-    let currentStreak = 0;
-    let maxStreak = 0;
     let lives = 3;
     const hearts = document.querySelectorAll('.heart-icon');
-
+    let isEndlessMode = false;
+    let hasPlayedDaily = false;
+    const today = (new Date()).toDateString();
 
     // DOM Elements
     const flagImg = document.getElementById('flag');
@@ -37,27 +43,35 @@ document.addEventListener("DOMContentLoaded", function () {
     const statsBtn = document.getElementById('stats-btn');
     const statsModal = document.getElementById('stats-modal');
     const closeBtn = document.querySelector('.close-btn');
+    const dailyChallengeBtn = document.getElementById('daily-challenge-btn');
+    const endlessModeBtn = document.getElementById('endless-mode-btn');
+    const modeSelection = document.getElementById('mode-selection');
+    const gameContainer = document.getElementById('game-container');
+    const gameOverScreen = document.getElementById('game-over-screen');
+    const endlessGameOverScreen = document.getElementById('endless-game-over-screen');
+    const playEndlessFromGameOver = document.getElementById('play-endless-from-gameover');
+    const tryAgainBtn = document.getElementById('try-again');
+    const mainMenuBtn = document.getElementById('main-menu');
+    const dailyStatsTab = document.getElementById('daily-stats-tab');
+    const endlessStatsTab = document.getElementById('endless-stats-tab');
 
-    // Check if today's date is already in playedDates
-    const today = (new Date()).toDateString();
-    if (!playedDates.includes(today)) {
-        playedDates.push(today);
-        // Also, we'll update streaks here:
-        const streaks = calculateStreaks(playedDates);
-        currentStreak = streaks.currentStreak;
-        maxStreak = streaks.maxStreak;
+    if (localStorage.getItem('highestScore')) {
+        endlessStats.highestScore = parseInt(localStorage.getItem('highestScore'));
     }
 
-    document.addEventListener("DOMContentLoaded", loadGameState);
+    if (localStorage.getItem('dailyChallengePlayed') === today) {
+        hasPlayedDaily = true;
+        endlessModeBtn.disabled = false;
+        dailyChallengeBtn.disabled = true; // Disable the daily challenge button if played today
+    }
 
     function calculateStreaks(dates) {
-        const oneDay = 24 * 60 * 60 * 1000;  // milliseconds in a day
-
-        let currentStreak = 1;  // We start at 1 because the streak includes today.
+        const oneDay = 24 * 60 * 60 * 1000;
+        let currentStreak = 1;
         let maxStreak = 0;
-        let streak = 1;  // The streak for the loop also starts at 1 for the same reason.
+        let streak = 1;
 
-        dates.sort((a, b) => new Date(a) - new Date(b)); // Sort the dates in ascending order
+        dates.sort((a, b) => new Date(a) - new Date(b));
 
         for (let i = 1; i < dates.length; i++) {
             const prevDate = new Date(dates[i - 1]);
@@ -66,11 +80,10 @@ document.addEventListener("DOMContentLoaded", function () {
             if ((currentDate - prevDate) === oneDay) {
                 currentStreak++;
             } else {
-                maxStreak = Math.max(maxStreak, currentStreak); // Update maxStreak if currentStreak was greater.
+                maxStreak = Math.max(maxStreak, currentStreak);
                 currentStreak = 1;
             }
 
-            // Set the time of both dates to midnight for accurate comparison
             prevDate.setHours(0, 0, 0, 0);
             currentDate.setHours(0, 0, 0, 0);
 
@@ -91,51 +104,52 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        // After loop ends, it's possible that the longest streak is the current one.
         maxStreak = Math.max(maxStreak, currentStreak);
         return { currentStreak, maxStreak };
     }
-
-
-
-
 
     // Event Listeners
     options.forEach(button => button.addEventListener('click', checkAnswer));
     nextBtn.addEventListener('click', nextCountry);
     statsBtn.addEventListener('click', showStatsModal);
     closeBtn.addEventListener('click', closeStatsModal);
+    dailyChallengeBtn.addEventListener('click', startDailyChallenge);
+    endlessModeBtn.addEventListener('click', startEndlessMode);
+    endlessModeBtn.addEventListener('mouseover', showEndlessModeInfo);
+    playEndlessFromGameOver.addEventListener('click', startEndlessMode);
+    tryAgainBtn.addEventListener('click', restartEndlessMode);
+    mainMenuBtn.addEventListener('click', backToMainMenu);
+    dailyStatsTab.addEventListener('click', showDailyStats);
+    endlessStatsTab.addEventListener('click', showEndlessStats);
+
     window.addEventListener('click', function (event) {
         if (event.target === statsModal) {
             statsModal.style.display = 'none';
         }
     });
 
-    // Assuming you've placed the JSON file in the same directory
     fetch('countries.json')
         .then(response => response.json())
         .then(data => {
-            countries = data; // or however you need to process it
-            nextCountry();// Your code to initialize the game with this data
+            countries = data;
+            loadGameState(); // Load game state after fetching the countries
         })
         .catch(error => console.error('Error loading local data:', error));
-
-
 
     function loadGameState() {
         const gameStateData = JSON.parse(localStorage.getItem('countryGame')) || {};
 
         if (localStorage.getItem('gameEndDate') && isNewDay(localStorage.getItem('gameEndDate'))) {
-            // ... reset the game and remove the gameEndDate from local storage...
             localStorage.removeItem('gameEndDate');
-            restartGame(); // This function should reset everything for a new game
+            restartGame();
 
-            overallScore = gameStateData.overallScore || 0;
-            overallTotal = gameStateData.overallTotal || 0;
-            return;  // No need to load the saved data if we are starting fresh
+            dailyStats.overallScore = gameStateData.dailyStats?.overallScore || 0;
+            dailyStats.overallTotal = gameStateData.dailyStats?.overallTotal || 0;
+            endlessStats.totalScore = gameStateData.endlessStats?.totalScore || 0;
+            endlessStats.timesPlayed = gameStateData.endlessStats?.timesPlayed || 0;
+            endlessStats.highestScore = gameStateData.endlessStats?.highestScore || 0;
 
-
-
+            return;
         }
 
         const savedData = localStorage.getItem('countryGame');
@@ -147,31 +161,40 @@ document.addEventListener("DOMContentLoaded", function () {
             score = gameStateData.score || 0;
             total = gameStateData.total || 0;
             lives = gameStateData.lives || 3;
-            timesPlayed = gameStateData.timesPlayed || 0;
-            currentStreak = gameStateData.currentStreak || 0;
-            maxStreak = gameStateData.maxStreak || 0;
             usedCountries = gameStateData.usedCountries || [];
             currentCountry = gameStateData.currentCountry || null;
+            isEndlessMode = gameStateData.isEndlessMode || false;
+            hasPlayedDaily = gameStateData.hasPlayedDaily || false;
 
-            overallScore = gameStateData.overallScore;
-            overallTotal = gameStateData.overallTotal;
+            dailyStats = gameStateData.dailyStats || dailyStats;
+            endlessStats = gameStateData.endlessStats || endlessStats;
 
             updateUI();
+            nextCountry();
 
             if (currentCountry && gameState !== "over") {
                 flagImg.src = currentCountry.flag.large;
-                updateOptions(currentCountry); // Update options with the current country to prevent cheating
+                updateOptions(currentCountry);
             } else if (gameState === "over") {
-                showGameOver();
+                if (isEndlessMode) {
+                    showEndlessGameOver();
+                } else {
+                    showGameOver();
+                }
             }
 
-
-
+            if (isEndlessMode || hasPlayedDaily) {
+                modeSelection.style.display = 'none';
+                gameContainer.style.display = 'flex';
+            }
         } else {
-            // If there's no saved game state, start a new game
             fetchCountriesAndStartNewGame();
         }
 
+        if (hasPlayedDaily) {
+            endlessModeBtn.disabled = false;
+            dailyChallengeBtn.disabled = true; // Disable the daily challenge button if played today
+        }
     }
 
     function fetchCountriesAndStartNewGame() {
@@ -188,35 +211,57 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
-                // Handle the error, such as retrying the fetch or informing the user
             });
     }
 
-
     function showGameOver() {
         lives = 0;
-        console.log(lives)
 
         hearts.forEach(heart => {
             heart.classList.add('heart-lost');
         });
 
+        if (score > endlessStats.highestScore) {
+            endlessStats.highestScore = score;
+            localStorage.setItem('highestScore', endlessStats.highestScore);
+        }
 
-        // Show the game over screen and hide the other elements
-        document.getElementById('game-over-screen').style.display = 'block';
-        // Hide other game elements
+        gameOverScreen.style.display = 'block';
+        gameContainer.style.display = 'none';
         document.getElementById('top-right-game-stats').style.display = 'none';
         headingText.style.display = 'none';
         subHeadingText.style.display = 'none';
         flagImg.style.display = 'none';
         document.getElementById('options').style.display = 'none';
+        document.getElementById('highest-score-display').textContent = "Highest Score: " + endlessStats.highestScore;
 
-
+        dailyChallengeBtn.disabled = true; // Disable the daily challenge button if the game is over
     }
-    loadGameState();
 
     document.getElementById('see-stats-from-gameover').addEventListener('click', showStatsModal);
+    
+    function showEndlessGameOver() {
+        lives = 0;
 
+        hearts.forEach(heart => {
+            heart.classList.add('heart-lost');
+        });
+
+        if (score > endlessStats.highestScore) {
+            endlessStats.highestScore = score;
+            localStorage.setItem('highestScore', endlessStats.highestScore);
+        }
+
+        endlessGameOverScreen.style.display = 'block';
+        gameContainer.style.display = 'none';
+        document.getElementById('top-right-game-stats').style.display = 'none';
+        headingText.style.display = 'none';
+        subHeadingText.style.display = 'none';
+        flagImg.style.display = 'none';
+        document.getElementById('options').style.display = 'none';
+        document.getElementById('endless-score-display').textContent = "Your Score: " + score;
+        document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + endlessStats.highestScore;
+    }
 
     function isNewDay(savedDate) {
         const currentDate = new Date().toDateString();
@@ -230,15 +275,80 @@ document.addEventListener("DOMContentLoaded", function () {
         total = 0;
         gameState = "playing";
         usedCountries = [];
-        // Reset UI elements
-        document.getElementById('game-over-screen').style.display = 'none';
+        gameOverScreen.style.display = 'none';
+        endlessGameOverScreen.style.display = 'none';
         headingText.style.display = 'block';
         subHeadingText.style.display = 'block';
         flagImg.style.display = 'block';
         document.getElementById('options').style.display = 'block';
         hearts.forEach(heart => heart.classList.remove('heart-lost'));
-        // Now, fetch a new country
+        updateUI(); 
         nextCountry();
+        document.getElementById('top-right-game-stats').style.display = 'flex';
+    }
+
+    function restartEndlessMode() {
+        endlessGameOverScreen.style.display = 'none';
+        nextBtn.disabled = false;
+        lives = 3;
+        score = 0;
+        total = 0;
+        gameState = "playing";
+        usedCountries = [];
+        gameContainer.style.display = 'flex';
+        headingText.style.display = 'block';
+        subHeadingText.style.display = 'block';
+        flagImg.style.display = 'block';
+        document.getElementById('options').style.display = 'block';
+        document.getElementById('top-right-game-stats').style.display = 'flex';
+        hearts.forEach(heart => heart.classList.remove('heart-lost'));
+        scoreDisplay.textContent = "Score: " + score + "/" + total;
+        isEndlessMode = true;
+        endlessStats.timesPlayed++;
+        nextCountry();
+    }
+
+    function backToMainMenu() {
+        endlessGameOverScreen.style.display = 'none';
+        modeSelection.style.display = 'flex';
+        gameContainer.style.display = 'none';
+        document.getElementById('top-right-game-stats').style.display = 'none';
+    }
+
+    function startDailyChallenge() {
+        if (hasPlayedDaily) {
+            gameOverScreen.style.display = 'block';
+            headingText.hidden = true;
+            return;
+        }
+        isEndlessMode = false;
+        hasPlayedDaily = true;
+        modeSelection.style.display = 'none';
+        gameContainer.style.display = 'flex';
+        restartGame();
+        endlessModeBtn.disabled = false;
+        localStorage.setItem('dailyChallengePlayed', today);
+        dailyChallengeBtn.disabled = true; // Disable the daily challenge button
+        dailyStats.timesPlayed++;
+        playedDates.push(today);
+    }
+
+    function startEndlessMode() {
+        if (hasPlayedDaily) {
+            isEndlessMode = true;
+            modeSelection.style.display = 'none';
+            gameContainer.style.display = 'flex';
+            endlessStats.timesPlayed++;
+            restartGame();
+        } else {
+            showEndlessModeInfo();
+        }
+    }
+
+    function showEndlessModeInfo() {
+        if (!hasPlayedDaily) {
+           // alert('Please complete the daily challenge to unlock endless mode.');
+        }
     }
 
     function storeCurrentFlag(country) {
@@ -246,7 +356,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateUI() {
-        // Update the UI with the loaded data
         scoreDisplay.textContent = "Score: " + score + "/" + total;
         hearts.forEach((heart, index) => {
             if (index < lives) {
@@ -256,39 +365,22 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
 
-        // If the game is over, show the game over screen
         if (lives === 0) {
             gameState = "over";
             nextBtn.disabled = true;
             setTimeout(() => {
-                //alert('Thanks for playing!');
                 document.getElementById('final-score-display').textContent = score + "/" + total;
-                //document.getElementById('game-over-overlay').style.display = 'flex';
                 showStatsModal();
-
-                //message.hidden = true;
-                //facts.hidden = true;
-                //nextBtn.hidden = true;
-                //headingText.hidden = false;
-                //subHeadingText.hidden = false;
-
-
-
-
                 headingText.style.display = 'none';
                 subHeadingText.style.display = 'none';
-                //flagImg.style.display = 'none';
-                //document.getElementById('options').style.display = 'none';
-                //document.getElementById('game-over-screen').style.display = 'block';
-
             }, 1000);
-
-            showGameOver();
-
-
+            if (isEndlessMode) {
+                showEndlessGameOver();
+            } else {
+                showGameOver();
+            }
         }
     }
-
 
     function showStatsModal() {
         updateStats();
@@ -299,55 +391,50 @@ document.addEventListener("DOMContentLoaded", function () {
         statsModal.style.display = 'none';
     }
 
-    function updateStats() {
-        document.getElementById('times-played').textContent = playedDates.length;
-        document.getElementById('current-streak').textContent = currentStreak;
-        document.getElementById('max-streak').textContent = maxStreak;
-        // For percentage right:
-        const percentageRight = (score / total) * 100;
-
-        const overallPercentageRight = overallTotal === 0 ? 0 : (overallScore / overallTotal) * 100;
-        const recentPercentageRight = total === 0 ? 0 : (score / total) * 100;
-        document.getElementById('percentage-daily').textContent = `${recentPercentageRight.toFixed(0)}%`;
-        // document.getElementById('percentage-overall').textContent = `Overall: ${overallPercentageRight.toFixed(0)}%`;
+    function showDailyStats() {
+        document.getElementById('daily-stats').style.display = 'block';
+        document.getElementById('endless-stats').style.display = 'none';
+        dailyStatsTab.classList.add('active');
+        endlessStatsTab.classList.remove('active');
     }
 
-    // Function to share score on Twitter
-    // function shareOnTwitter() {
-    //     const text = `I scored ${score} on the flaggy game! Try it out now!`;
-    //     const url = 'https://yourquizapp.com'; // Replace with your app's URL
-    //     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
-    // }
-    //document.getElementById('share-button').addEventListener('click', shareOnTwitter);
+    function showEndlessStats() {
+        document.getElementById('endless-stats').style.display = 'block';
+        document.getElementById('daily-stats').style.display = 'none';
+        endlessStatsTab.classList.add('active');
+        dailyStatsTab.classList.remove('active');
+    }
 
+    function updateStats() {
+        document.getElementById('daily-times-played-value').textContent = playedDates.length;
+        document.getElementById('daily-current-streak-value').textContent = dailyStats.currentStreak;
+        document.getElementById('daily-max-streak-value').textContent = dailyStats.maxStreak;
+        const recentPercentageRight = dailyStats.overallTotal === 0 ? 0 : (dailyStats.overallScore / dailyStats.overallTotal) * 100;
+        //document.getElementById('daily-percentage-daily-value').textContent = `${recentPercentageRight.toFixed(0)}%`;
+
+        document.getElementById('endless-times-played-value').textContent = endlessStats.timesPlayed;
+        document.getElementById('endless-highest-score-value').textContent = endlessStats.highestScore;
+        document.getElementById('endless-total-score-value').textContent = endlessStats.totalScore;
+    }
 
     function copiedResultsToast() {
-        // Get the snackbar DIV
         var resultsToast = document.getElementById("resultsToast");
-
-        // Add the "show" class to DIV
         resultsToast.className = "show";
-
-        // After 3 seconds, remove the show class from DIV
         setTimeout(function () { resultsToast.className = resultsToast.className.replace("show", ""); }, 3000);
     }
 
-    // Function to share score
     function shareScore() {
-        const scoreText = `flagtriv ${score}/${total}`; // Modify this text as needed
+        const scoreText = `flagtriv: ${score}/${total} www.flagtriv.com`;
 
-        // Check if the Web Share API is supported
         if (navigator.share) {
-            // Use the Web Share API
             navigator.share({
                 title: 'Check out my score!',
                 text: scoreText,
-                url: document.URL // You can also share a URL if needed
+                url: document.URL
             }).then(() => {
                 console.log('Thanks for sharing!');
             }).catch(console.error);
         } else {
-            // Fallback for desktop browsers
             const textArea = document.createElement("textarea");
             textArea.value = scoreText;
             document.body.appendChild(textArea);
@@ -361,21 +448,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.error('Fallback: Oops, unable to copy', err);
             }
             document.body.removeChild(textArea);
-            //alert('Score copied to clipboard: ' + scoreText); // Inform the user
-            copiedResultsToast()
+            copiedResultsToast();
         }
     }
 
-    // Update the event listener for your share button
     document.getElementById('share-button').addEventListener('click', shareScore);
-
-
-
 
     function nextCountry() {
         nextBtn.disabled = false;
         saveGameState();
-        // Check if there's a stored flag in localStorage and parse it if present
         const storedFlagJSON = localStorage.getItem('currentFlag');
 
         if (storedFlagJSON) {
@@ -385,23 +466,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 updateOptions(currentCountry);
             } catch (e) {
                 console.error('Error parsing stored flag:', e);
-                // Handle the error, for example, by fetching a new country
                 fetchNewCountry();
             }
         } else {
-            // If there's no current country stored, fetch a new one
             fetchNewCountry();
         }
 
-        // Enable option buttons
         options.forEach(button => {
             button.disabled = false;
             button.classList.remove('disabled', 'correct-answer', 'wrong-answer');
         });
 
-        timesPlayed++;
-
-        // Update UI to reflect the new state
         message.textContent = "";
         facts.hidden = true;
         nextBtn.hidden = true;
@@ -409,18 +484,16 @@ document.addEventListener("DOMContentLoaded", function () {
         subHeadingText.hidden = false;
     }
 
-
     function fetchNewCountry() {
-        const countryCodes = Object.keys(countries); // Get an array of country codes
+        const countryCodes = Object.keys(countries);
         const randomIndex = Math.floor(Math.random() * countryCodes.length);
         const countryCode = countryCodes[randomIndex];
         currentCountry = countries[countryCode];
 
-        flagImg.src = currentCountry.flag.large; // Adjust according to your JSON structure
+        flagImg.src = currentCountry.flag.large;
         updateOptions();
         localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
     }
-
 
     function loseLife() {
         if (lives > 0) {
@@ -431,74 +504,50 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (lives === 0) {
             gameState = "over";
-            //updateUI(); // Add this call to ensure UI is updated when the game is over
             nextBtn.disabled = true;
             setTimeout(() => {
-                //alert('Thanks for playing!');
                 document.getElementById('final-score-display').textContent = score + "/" + total;
-                //document.getElementById('game-over-overlay').style.display = 'flex';
                 showStatsModal();
-
-                //message.hidden = true;
-                //facts.hidden = true;
-                //nextBtn.hidden = true;
-                //headingText.hidden = false;
-                //subHeadingText.hidden = false;
-
-
-
-
                 headingText.style.display = 'none';
                 subHeadingText.style.display = 'none';
-                //flagImg.style.display = 'none';
-                //document.getElementById('options').style.display = 'none';
-                //document.getElementById('game-over-screen').style.display = 'block';
-
-            }, 1000);
+                gameContainer.style.display = 'none';
+            }, 2000);
+            if (isEndlessMode) {
+                showEndlessGameOver();
+            } else {
+                showGameOver();
+            }
         }
         saveGameState();
     }
 
-
-
-
-
     function saveGameState() {
+        dailyStats.overallScore += score;
+        dailyStats.overallTotal += total;
+        endlessStats.totalScore += score;
 
-        overallScore += score; // Update the overall score with the current game's score
-        overallTotal += total; // Update the overall total with the current game's total
-        // Always ensure streaks are updated before saving the game state
         const streaks = calculateStreaks(playedDates);
-        currentStreak = streaks.currentStreak;
-        maxStreak = streaks.maxStreak;
-
-
+        dailyStats.currentStreak = streaks.currentStreak;
+        dailyStats.maxStreak = streaks.maxStreak;
 
         const gameStateData = {
             gameState: gameState,
             score: score,
             total: total,
             lives: lives,
-            timesPlayed: timesPlayed,
-            currentStreak: currentStreak,
-            maxStreak: maxStreak,
             usedCountries: usedCountries,
             currentCountry: currentCountry,
             playedDates: playedDates,
-
-            overallScore: overallScore,
-            overallTotal: overallTotal,
+            dailyStats: dailyStats,
+            endlessStats: endlessStats,
+            isEndlessMode: isEndlessMode,
+            hasPlayedDaily: hasPlayedDaily
         };
 
         localStorage.setItem('countryGame', JSON.stringify(gameStateData));
         localStorage.setItem('playedDates', JSON.stringify(playedDates));
-
         localStorage.setItem('gameEndDate', new Date().toDateString());
     }
-
-
-
-
 
     function updateOptions() {
         const allOtherCountryCodes = Object.keys(countries).filter(code => code !== currentCountry.alpha2Code);
@@ -527,26 +576,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
         localStorage.removeItem('currentFlag'); // Remove the stored flag after user makes a choice
 
-
         if (selectedCountryName === currentCountry.name) {
             message.textContent = "🎉 Correct! Well done!";
             score++;
-            currentStreak++;
-            overallScore++;
-            if (currentStreak > maxStreak) {
-                maxStreak = currentStreak;
-            }
-            else {
-                currentStreak = 0;
+            dailyStats.currentStreak++;
+            dailyStats.overallScore++;
+            if (dailyStats.currentStreak > dailyStats.maxStreak) {
+                dailyStats.maxStreak = dailyStats.currentStreak;
+            } else {
+                dailyStats.currentStreak = 0;
                 const streaks = calculateStreaks(playedDates);
-                maxStreak = streaks.maxStreak;
+                dailyStats.maxStreak = streaks.maxStreak;
             }
 
             event.target.classList.add('correct-answer');
         } else {
             message.textContent = "😢 Oops, that's not correct.";
             event.target.classList.add('wrong-answer');
-            currentStreak = 0;
+            dailyStats.currentStreak = 0;
             loseLife();
             saveGameState();
 
@@ -559,7 +606,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         total++;
-        overallTotal++;
+        dailyStats.overallTotal++;
         scoreDisplay.textContent = "Score: " + score + "/" + total;
         showFacts(currentCountry);
         headingText.style.display = 'none';
@@ -575,15 +622,38 @@ document.addEventListener("DOMContentLoaded", function () {
         facts.innerHTML = `
             <p class="fact-text"><strong>Capital:</strong> ${country.capital}</p>
             <p class="fact-text"><strong>Location:</strong> ${country.subregion}</p>
-           
-            
         `;
         facts.hidden = false;
     }
-    console.log("Current Streak:", currentStreak);
-    console.log("Max Streak:", maxStreak);
-    console.log("Overall Score:", overallScore);
-    console.log("Overall Total:", overallTotal);
-    //console.log("Percentage:", overallPercentageRight);
 
+    function confetti() {
+        const duration = 5 * 1000;
+        const end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 3,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#bb0000', '#ffffff'],
+            });
+            confetti({
+                particleCount: 3,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#bb0000', '#ffffff'],
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }
+
+    console.log("Current Streak:", dailyStats.currentStreak);
+    console.log("Max Streak:", dailyStats.maxStreak);
+    console.log("Overall Score:", dailyStats.overallScore);
+    console.log("Overall Total:", dailyStats.overallTotal);
 });
