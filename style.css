@@ -360,7 +360,7 @@ body {
     font-weight: 400;
 }
 
-#see-stats-from-gameover,
+
 #play-endless-from-gameover,
 #try-again {
     position: relative;
@@ -376,6 +376,23 @@ body {
     cursor: pointer;
 }
 
+#see-stats-from-gameover{
+    position: relative;
+    padding: 16px 24px;
+    background-color: #333333;
+    font-weight: 400;
+    color: rgb(255, 255, 255) ;
+    border-radius: 100px;
+    font-family: 'Roboto', arial, sans-serif;
+    font-size: 16px;
+    border-radius: 40px;
+    border: 1px solid #f8f9fa;
+    cursor: pointer;
+}
+#see-stats-from-gameover:hover{
+    background-color: #1d1d1d;
+    color: white;
+}
 #main-menu{
 position: relative;
     padding: 16px 24px;
@@ -393,7 +410,7 @@ position: relative;
     color: white;
 }
 
-#see-stats-from-gameover:hover,
+
 #play-endless-from-gameover:hover,
 #try-again:hover {
     background-color: #014cec;
