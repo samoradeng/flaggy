@@ -83,17 +83,18 @@ document.addEventListener("DOMContentLoaded", function () {
         gameState = "playing";
         usedCountries = [];
         gameContainer.style.display = 'flex';  // Show the game container
-        headingText.style.display = 'block';
-        subHeadingText.style.display = 'block';
+        headingText.style.display = 'none';
+        subHeadingText.style.display = 'none';
         flagImg.style.display = 'block';
         document.getElementById('options').style.display = 'block';
-        document.getElementById('top-right-game-stats').style.display = 'flex';
+        document.getElementById('top-right-game-stats').style.display = 'flex'; // Show hearts, score, and stats button
         hearts.forEach(heart => heart.classList.remove('heart-lost'));
         scoreDisplay.textContent = "Score: " + score + "/" + total;
         isEndlessMode = true;
         endlessStats.timesPlayed++;
         nextCountry();
     }
+    
 
     function updateUI() {
         scoreDisplay.textContent = "Score: " + score + "/" + total;
@@ -163,8 +164,9 @@ document.addEventListener("DOMContentLoaded", function () {
         endlessGameOverScreen.style.display = 'none';
         modeSelection.style.display = 'flex';  // Show the mode selection again
         gameContainer.style.display = 'none';
-        document.getElementById('top-right-game-stats').style.display = 'none';
+        document.getElementById('top-right-game-stats').style.display = 'none'; // Hide hearts, score, and stats button
     }
+    
 
     function nextCountry() {
         nextBtn.disabled = false;
