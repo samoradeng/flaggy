@@ -241,6 +241,11 @@ body {
     border-radius: 50%;
 }
 
+/* Initially hide the hearts, score, and stats button */
+#top-right-game-stats {
+    display: none;
+}
+
 #top-right-game-stats {
     position: fixed;
     display: flex;
@@ -586,9 +591,30 @@ position: relative;
     100% { transform: translateX(0); }
 }
 
+
 .option.wrong-answer {
     animation: shake 0.5s;
 }
+
+
+@media only screen and (max-width: 600px) {
+    #Welcome-module_SubHeading {
+        font-size: 24px;
+        margin: 0 auto; /* Center text */
+        margin-bottom: 16px;
+        white-space: nowrap; /* Prevent wrapping */
+        overflow: hidden; /* Prevent overflow */
+        text-overflow: ellipsis; /* Add ellipsis for overflow text */
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .Welcome-module_title {
+        margin-bottom: 8px;
+    }
+}
+
+
 
 #mode-selection {
     position: absolute;
