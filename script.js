@@ -30,6 +30,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let playerName = '';
     let gameId = '';
     let multiplayerTimer = null;
+    let gameUpdateInterval = null;
+    let playerId = '';
     
     // Initialize game systems
     let dailyChallenge;
@@ -115,6 +117,9 @@ document.addEventListener("DOMContentLoaded", function () {
         continentFilter = new ContinentFilter();
         flagFacts = new FlagFacts();
 
+        // Generate unique player ID
+        playerId = generatePlayerId();
+
         // Update UI
         updateTopBar();
         updateSoundToggle();
@@ -168,6 +173,10 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('copy-challenge-link')?.addEventListener('click', copyChallengeLink);
     }
 
+    function generatePlayerId() {
+        return 'player_' + Math.random().toString(36).substr(2, 9);
+    }
+
     function checkForMultiplayerGame() {
         const urlParams = new URLSearchParams(window.location.search);
         const gameIdParam = urlParams.get('game');
@@ -182,10 +191,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateDailyChallengeButton() {
         if (dailyChallenge.hasPlayedToday()) {
-            dailyChallengeBtn.textContent = 'Completed Today';
+            dailyChallengeBtn.textContent = '✅ Completed Today';
             dailyChallengeBtn.disabled = true;
         } else {
-            dailyChallengeBtn.textContent = 'Daily Challenge';
+            dailyChallengeBtn.textContent = '📅 Daily Challenge';
             dailyChallengeBtn.disabled = false;
         }
     }
@@ -276,18 +285,30 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Generate unique game ID
         gameId = generateGameId();
+        playerName = 'Host';
         
         // Create multiplayer game object
         multiplayerGame = {
             id: gameId,
             flagCount: parseInt(flagCount),
             continents: selectedContinents,
-            players: [],
+            players: {},
             flags: [],
             currentFlag: 0,
             status: 'waiting',
-            host: true,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            gameStarted: false,
+            gameEnded: false
+        };
+        
+        // Add host as first player
+        multiplayerGame.players[playerId] = {
+            id: playerId,
+            name: playerName,
+            score: 0,
+            answers: [],
+            isHost: true,
+            joinedAt: Date.now()
         };
         
         // Generate flags for the game
@@ -305,8 +326,8 @@ document.addEventListener("DOMContentLoaded", function () {
         
         multiplayerGame.flags = selectedFlags;
         
-        // Store in localStorage (in real app, this would be a backend)
-        localStorage.setItem(`game_${gameId}`, JSON.stringify(multiplayerGame));
+        // Store in localStorage
+        saveMultiplayerGame();
         
         // Show challenge link
         const challengeLink = `${window.location.origin}${window.location.pathname}?game=${gameId}`;
@@ -345,12 +366,43 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         
-        multiplayerGame.host = false;
+        // Check if game already started
+        if (multiplayerGame.gameStarted) {
+            alert('This game has already started. Please ask your friend to create a new challenge.');
+            return;
+        }
+        
         gameId = inputGameId;
         playerName = nickname;
         
+        // Add player to game
+        multiplayerGame.players[playerId] = {
+            id: playerId,
+            name: playerName,
+            score: 0,
+            answers: [],
+            isHost: false,
+            joinedAt: Date.now()
+        };
+        
+        // Save updated game
+        saveMultiplayerGame();
+        
         joinChallengeModal.style.display = 'none';
         showMultiplayerLobby();
+    }
+
+    function saveMultiplayerGame() {
+        localStorage.setItem(`game_${gameId}`, JSON.stringify(multiplayerGame));
+    }
+
+    function loadMultiplayerGame() {
+        const gameData = localStorage.getItem(`game_${gameId}`);
+        if (gameData) {
+            multiplayerGame = JSON.parse(gameData);
+            return true;
+        }
+        return false;
     }
 
     function showMultiplayerLobby() {
@@ -366,7 +418,9 @@ document.addEventListener("DOMContentLoaded", function () {
             : `🌍 ${multiplayerGame.continents.length} Continents`;
         document.getElementById('lobby-continents').textContent = continentText;
         
-        if (multiplayerGame.host) {
+        // Show/hide start button based on host status
+        const isHost = multiplayerGame.players[playerId]?.isHost;
+        if (isHost) {
             document.getElementById('start-multiplayer-game').style.display = 'block';
             document.getElementById('lobby-waiting').style.display = 'none';
         } else {
@@ -375,29 +429,67 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         
         updatePlayersList();
+        
+        // Start polling for game updates
+        startGamePolling();
+    }
+
+    function startGamePolling() {
+        // Clear any existing interval
+        if (gameUpdateInterval) {
+            clearInterval(gameUpdateInterval);
+        }
+        
+        gameUpdateInterval = setInterval(() => {
+            if (loadMultiplayerGame()) {
+                updatePlayersList();
+                
+                // Check if game started
+                if (multiplayerGame.gameStarted && !isMultiplayerMode) {
+                    clearInterval(gameUpdateInterval);
+                    startMultiplayerGameplay();
+                }
+            }
+        }, 1000); // Poll every second
     }
 
     function updatePlayersList() {
         const playersList = document.getElementById('players-list');
         playersList.innerHTML = '';
         
-        // Add current player
-        const playerDiv = document.createElement('div');
-        playerDiv.className = 'player-item';
-        playerDiv.innerHTML = `
-            <span>👤 ${playerName || 'You'}</span>
-            ${multiplayerGame.host ? '<span class="host-badge">Host</span>' : ''}
-        `;
-        playersList.appendChild(playerDiv);
+        // Show all players
+        Object.values(multiplayerGame.players).forEach(player => {
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'player-item';
+            playerDiv.innerHTML = `
+                <span>👤 ${player.name}</span>
+                ${player.isHost ? '<span class="host-badge">Host</span>' : ''}
+                <span class="player-status">✅ Ready</span>
+            `;
+            playersList.appendChild(playerDiv);
+        });
         
-        // Show ready status
-        const readyDiv = document.createElement('div');
-        readyDiv.className = 'ready-status';
-        readyDiv.textContent = '✅ Ready to play!';
-        playersList.appendChild(readyDiv);
+        // Update player count
+        const playerCount = Object.keys(multiplayerGame.players).length;
+        document.getElementById('lobby-waiting').textContent = 
+            `⏳ Waiting for host to start the game... (${playerCount} player${playerCount !== 1 ? 's' : ''} joined)`;
     }
 
     function startMultiplayerGame() {
+        // Mark game as started
+        multiplayerGame.gameStarted = true;
+        multiplayerGame.status = 'playing';
+        saveMultiplayerGame();
+        
+        // Clear polling interval
+        if (gameUpdateInterval) {
+            clearInterval(gameUpdateInterval);
+        }
+        
+        startMultiplayerGameplay();
+    }
+
+    function startMultiplayerGameplay() {
         isMultiplayerMode = true;
         isChallengeMode = false;
         isZenMode = false;
@@ -448,6 +540,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const timerElement = document.getElementById('multiplayer-timer');
             if (timerElement) {
                 timerElement.textContent = `⏱️ ${timeLeft}s`;
+                
+                // Change color as time runs out
+                if (timeLeft <= 3) {
+                    timerElement.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+                } else if (timeLeft <= 5) {
+                    timerElement.style.background = 'linear-gradient(135deg, #f39c12, #e67e22)';
+                }
             }
             timeLeft--;
             
@@ -499,6 +598,9 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('final-score').textContent = `${score}/${multiplayerGame.flagCount}`;
         document.getElementById('final-accuracy').textContent = `${accuracy}%`;
         
+        // Show all players' results
+        updateMultiplayerResultsDisplay();
+        
         if (score === multiplayerGame.flagCount) {
             document.getElementById('result-message').textContent = '🏆 Perfect Score! Flag Champion!';
             AnimationEffects.showConfetti();
@@ -511,6 +613,42 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             document.getElementById('result-message').textContent = '💪 Keep practicing!';
         }
+    }
+
+    function updateMultiplayerResultsDisplay() {
+        // Create a leaderboard section
+        const resultsContent = document.querySelector('.results-content');
+        
+        // Remove existing leaderboard if any
+        const existingLeaderboard = document.getElementById('multiplayer-leaderboard');
+        if (existingLeaderboard) {
+            existingLeaderboard.remove();
+        }
+        
+        // Create leaderboard
+        const leaderboard = document.createElement('div');
+        leaderboard.id = 'multiplayer-leaderboard';
+        leaderboard.innerHTML = '<h3>🏆 Final Results</h3>';
+        
+        // Sort players by score
+        const sortedPlayers = Object.values(multiplayerGame.players).sort((a, b) => b.score - a.score);
+        
+        sortedPlayers.forEach((player, index) => {
+            const playerResult = document.createElement('div');
+            playerResult.className = 'player-result';
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅';
+            const accuracy = Math.round((player.score / multiplayerGame.flagCount) * 100);
+            
+            playerResult.innerHTML = `
+                <span>${medal} ${player.name}</span>
+                <span>${player.score}/${multiplayerGame.flagCount} (${accuracy}%)</span>
+            `;
+            leaderboard.appendChild(playerResult);
+        });
+        
+        // Insert leaderboard before final stats
+        const finalStats = document.querySelector('.final-stats');
+        resultsContent.insertBefore(leaderboard, finalStats);
     }
 
     function copyChallengeLink() {
@@ -642,7 +780,7 @@ document.addEventListener("DOMContentLoaded", function () {
         streakDisplayTop.textContent = `${streakEmoji} ${currentGameStreak} Streak`.trim();
         
         // Update lives (hide in zen mode)
-        if (isZenMode) {
+        if (isZenMode || isMultiplayerMode) {
             document.getElementById('lives-display').style.display = 'none';
         } else {
             document.getElementById('lives-display').style.display = 'flex';
@@ -766,6 +904,18 @@ document.addEventListener("DOMContentLoaded", function () {
         // Update zen stats
         if (isZenMode) {
             zenStats.totalFlags++;
+        }
+        
+        // Update multiplayer player data
+        if (isMultiplayerMode) {
+            multiplayerGame.players[playerId].answers.push({
+                flag: currentCountry.name,
+                answer: selectedCountryName,
+                correct: isCorrect,
+                timestamp: Date.now()
+            });
+            multiplayerGame.players[playerId].score = score;
+            saveMultiplayerGame();
         }
         
         updateTopBar();
@@ -1202,6 +1352,20 @@ document.addEventListener("DOMContentLoaded", function () {
         const url = new URL(window.location);
         url.searchParams.delete('game');
         window.history.replaceState({}, document.title, url);
+        
+        // Clear multiplayer data
+        isMultiplayerMode = false;
+        multiplayerGame = null;
+        gameId = '';
+        playerName = '';
+        
+        // Clear any intervals
+        if (gameUpdateInterval) {
+            clearInterval(gameUpdateInterval);
+        }
+        if (multiplayerTimer) {
+            clearInterval(multiplayerTimer);
+        }
     });
 
     // Close modal when clicking outside
