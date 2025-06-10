@@ -127,8 +127,8 @@
             <span class="close-btn" onclick="document.getElementById('create-challenge-modal').style.display='none'">
                 <img src="images/x-mark.svg">
             </span>
-            <h2>Create Challenge</h2>
-            <p class="challenge-description">Set up a challenge for your friends!</p>
+            <h2>🧑‍🤝‍🧑 Create Challenge</h2>
+            <p class="challenge-description">Set up a flag challenge for your friends!</p>
             
             <div class="challenge-setting">
                 <label for="flag-count-select">Number of Flags:</label>
@@ -140,21 +140,22 @@
             </div>
             
             <div class="challenge-setting">
-                <span>Continents: <span id="challenge-continents">🌐 All Continents</span></span>
-                <button id="change-continents" class="setting-button" onclick="document.getElementById('continent-filter-modal').style.display='block'">
-                    Change
-                </button>
+                <span>Continents:</span>
+                <span id="challenge-continents">🌐 All Continents</span>
             </div>
             
-            <button id="create-challenge-btn" class="create-challenge-btn">Create Challenge</button>
+            <p class="challenge-note">💡 You can change continent filters in Settings before creating the challenge</p>
+            
+            <button id="create-challenge-btn" class="create-challenge-btn">🚀 Create Challenge</button>
             
             <div id="challenge-link-display" style="display: none;">
-                <h3>Challenge Created!</h3>
+                <h3>🎉 Challenge Created!</h3>
                 <p>Share this link with your friends:</p>
                 <div class="link-container">
                     <input type="text" id="challenge-link" readonly>
-                    <button id="copy-challenge-link">Copy Link</button>
+                    <button id="copy-challenge-link">📋 Copy</button>
                 </div>
+                <p class="share-instruction">📱 Send this link to your friends so they can join your challenge!</p>
             </div>
         </div>
     </div>
@@ -165,53 +166,54 @@
             <span class="close-btn" onclick="document.getElementById('join-challenge-modal').style.display='none'">
                 <img src="images/x-mark.svg">
             </span>
-            <h2>Join Challenge</h2>
-            <p class="challenge-description">Enter your details to join the challenge!</p>
+            <h2>🎮 Join Challenge</h2>
+            <p class="challenge-description">Enter your details to join the flag challenge!</p>
             
             <div class="challenge-setting">
                 <label for="join-game-id">Game ID:</label>
-                <input type="text" id="join-game-id" placeholder="Enter game ID">
+                <input type="text" id="join-game-id" placeholder="Enter game ID" readonly>
             </div>
             
             <div class="challenge-setting">
                 <label for="player-nickname">Your Nickname:</label>
-                <input type="text" id="player-nickname" placeholder="Enter your nickname">
+                <input type="text" id="player-nickname" placeholder="Enter your nickname (optional)">
             </div>
             
-            <button id="join-challenge-btn" class="create-challenge-btn">Join Challenge</button>
+            <button id="join-challenge-btn" class="create-challenge-btn">🎯 Join Challenge</button>
         </div>
     </div>
 
     <!-- Multiplayer Lobby -->
     <div id="multiplayer-lobby" style="display: none;">
         <div class="lobby-content">
-            <h2>Challenge Lobby</h2>
+            <h2>🏁 Challenge Lobby</h2>
             <div class="lobby-info">
-                <p>Game ID: <span id="lobby-game-id"></span></p>
-                <p>Flags: <span id="lobby-flag-count"></span></p>
+                <p><strong>Game ID:</strong> <span id="lobby-game-id"></span></p>
+                <p><strong>Flags:</strong> <span id="lobby-flag-count"></span></p>
+                <p><strong>Regions:</strong> <span id="lobby-continents"></span></p>
             </div>
             
             <div class="players-section">
-                <h3>Players</h3>
+                <h3>👥 Players</h3>
                 <div id="players-list"></div>
             </div>
             
-            <button id="start-multiplayer-game" class="start-game-btn" style="display: none;">Start Game</button>
-            <p class="lobby-waiting">Waiting for host to start the game...</p>
+            <button id="start-multiplayer-game" class="start-game-btn" style="display: none;">🚀 Start Game</button>
+            <p id="lobby-waiting" class="lobby-waiting">⏳ Waiting for host to start the game...</p>
         </div>
     </div>
 
     <!-- Multiplayer Results -->
     <div id="multiplayer-results" style="display: none;">
         <div class="results-content">
-            <h2 id="result-message">Results</h2>
+            <h2 id="result-message">🏆 Results</h2>
             <div class="final-stats">
-                <p>Your Score: <span id="final-score"></span></p>
-                <p>Accuracy: <span id="final-accuracy"></span></p>
+                <p><strong>Your Score:</strong> <span id="final-score"></span></p>
+                <p><strong>Accuracy:</strong> <span id="final-accuracy"></span></p>
             </div>
             <div class="results-actions">
-                <button id="share-multiplayer-result">Share Result</button>
-                <button id="play-again-multiplayer">Play Again</button>
+                <button id="share-multiplayer-result">📤 Share Result</button>
+                <button id="play-again-multiplayer">🔄 Play Again</button>
             </div>
         </div>
     </div>
@@ -258,7 +260,7 @@
         <h1 id="title" class="Welcome-module_title">Flagtriv</h1>
         <span id="Welcome-module_SubHeading">Guess the world flags!</span>
         <div id="mode-buttons">
-            <button id="daily-challenge-btn">Daily Challenge</button>
+            <button id="daily-challenge-btn">📅 Daily Challenge</button>
             <button id="challenge-mode-btn">🧠 Challenge Mode</button>
             <button id="zen-mode-btn">🌿 Zen Mode</button>
             <button id="challenge-friends-btn">🧑‍🤝‍🧑 Challenge Friends</button>

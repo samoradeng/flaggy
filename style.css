@@ -245,6 +245,7 @@ body {
     border-radius: 12px;
     font-weight: 600;
     font-size: 14px;
+    animation: pulse 1s infinite;
 }
 
 /* Settings Modal */
@@ -344,6 +345,7 @@ body {
 .challenge-description {
     color: #666;
     margin-bottom: 24px;
+    font-size: 16px;
 }
 
 .challenge-setting {
@@ -357,6 +359,7 @@ body {
 
 .challenge-setting label {
     font-weight: 500;
+    color: #333;
 }
 
 .challenge-setting select,
@@ -365,47 +368,77 @@ body {
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     font-size: 14px;
+    min-width: 120px;
+}
+
+.challenge-note {
+    background-color: #f0f8ff;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #666;
+    margin: 16px 0;
+    border-left: 4px solid #4CAF50;
 }
 
 .create-challenge-btn {
-    background-color: #4CAF50;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
     border: none;
-    padding: 12px 32px;
+    padding: 14px 32px;
     border-radius: 25px;
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
     margin-top: 16px;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
 .create-challenge-btn:hover {
-    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
 }
 
 .link-container {
     display: flex;
     gap: 8px;
-    margin-top: 12px;
+    margin: 16px 0;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
 }
 
 .link-container input {
     flex: 1;
-    padding: 8px 12px;
+    padding: 12px;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     font-size: 14px;
+    font-family: monospace;
 }
 
 .link-container button {
     background-color: #0052FF;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 12px 16px;
     border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.link-container button:hover {
+    background-color: #014cec;
+}
+
+.share-instruction {
+    font-size: 14px;
+    color: #666;
+    margin-top: 12px;
+    font-style: italic;
 }
 
 /* Multiplayer Lobby */
@@ -427,51 +460,73 @@ body {
 }
 
 .lobby-info {
-    background-color: #f8f9fa;
-    padding: 16px;
-    border-radius: 8px;
-    margin: 16px 0;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+    border-left: 4px solid #4CAF50;
+}
+
+.lobby-info p {
+    margin: 8px 0;
+    font-size: 16px;
 }
 
 .players-section h3 {
     margin-bottom: 16px;
+    color: #333;
 }
 
 .player-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
+    padding: 12px 16px;
     background-color: #f8f9fa;
     border-radius: 8px;
     margin-bottom: 8px;
+    border: 2px solid #e0e0e0;
 }
 
 .host-badge {
-    background-color: #4CAF50;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
-    padding: 4px 8px;
+    padding: 4px 12px;
     border-radius: 12px;
     font-size: 12px;
+    font-weight: 600;
+}
+
+.ready-status {
+    color: #4CAF50;
     font-weight: 500;
+    margin-top: 8px;
 }
 
 .start-game-btn {
-    background-color: #0052FF;
+    background: linear-gradient(135deg, #0052FF, #014cec);
     color: white;
     border: none;
-    padding: 12px 32px;
+    padding: 14px 32px;
     border-radius: 25px;
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    margin-top: 16px;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
+}
+
+.start-game-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 82, 255, 0.4);
 }
 
 .lobby-waiting {
     color: #666;
     font-style: italic;
     margin-top: 16px;
+    font-size: 16px;
 }
 
 /* Multiplayer Results */
@@ -494,17 +549,22 @@ body {
 
 .final-stats {
     margin: 24px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
 }
 
 .final-stats p {
     font-size: 18px;
-    margin: 8px 0;
+    margin: 12px 0;
+    color: #333;
 }
 
 .results-actions {
     display: flex;
     gap: 12px;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .results-actions button {
@@ -512,18 +572,24 @@ body {
     border: none;
     border-radius: 25px;
     font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 #share-multiplayer-result {
-    background-color: #4CAF50;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
 }
 
 #play-again-multiplayer {
-    background-color: #0052FF;
+    background: linear-gradient(135deg, #0052FF, #014cec);
     color: white;
+}
+
+#share-multiplayer-result:hover,
+#play-again-multiplayer:hover {
+    transform: translateY(-2px);
 }
 
 /* Continent Filter Modal */
@@ -835,7 +901,7 @@ body {
 }
 
 #challenge-friends-btn {
-    background-color: #9b59b6;
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
     color: white;
 }
 
@@ -858,7 +924,7 @@ body {
 }
 
 #challenge-friends-btn:hover {
-    background-color: #8e44ad;
+    background: linear-gradient(135deg, #8e44ad, #7d3c98);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
 }
@@ -1130,7 +1196,7 @@ body {
 
 @keyframes pulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    50% { transform: scale(1.05); }
     100% { transform: scale(1); }
 }
 
@@ -1234,6 +1300,16 @@ body {
     
     #passport-grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 12px;
+    }
+    
+    .results-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .link-container {
+        flex-direction: column;
         gap: 12px;
     }
 }
