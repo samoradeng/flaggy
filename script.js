@@ -254,7 +254,16 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Set today's country
         currentCountry = dailyChallenge.getTodaysCountry();
-        displayCountry();
+        
+        // Only display country and enable UI if we have a valid country
+        if (currentCountry) {
+            displayCountry();
+        } else {
+            console.error('Failed to get daily country');
+            // Return to main menu if no valid country
+            returnToMainMenu();
+            return;
+        }
         
         headingText.textContent = "Daily Challenge";
         subHeadingText.textContent = "One flag per day - make it count!";
@@ -355,7 +364,11 @@ document.addEventListener("DOMContentLoaded", function () {
         nextBtn.disabled = false;
         saveGameState();
         fetchNewCountry();
-        resetQuestionUI();
+        
+        // Only reset UI if we successfully got a new country
+        if (currentCountry) {
+            resetQuestionUI();
+        }
     }
 
     function fetchNewCountry() {
@@ -364,6 +377,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         if (countryCodes.length === 0) {
             console.error('No countries available for selected continents');
+            currentCountry = null;
             return;
         }
         
@@ -376,12 +390,17 @@ document.addEventListener("DOMContentLoaded", function () {
         usedCountries.push(countryCode);
         currentCountry = filteredCountries[countryCode];
         
-        displayCountry();
+        if (currentCountry) {
+            displayCountry();
+        } else {
+            console.error('Failed to set current country');
+        }
     }
 
     function displayCountry() {
         if (!currentCountry || !currentCountry.flag || !currentCountry.flag.large) {
             console.error('Invalid country data:', currentCountry);
+            currentCountry = null;
             return;
         }
 
@@ -391,10 +410,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function resetQuestionUI() {
-        options.forEach(button => {
-            button.disabled = false;
-            button.classList.remove('disabled', 'correct-answer', 'wrong-answer');
-        });
+        // Only enable options if we have a valid current country
+        if (currentCountry) {
+            options.forEach(button => {
+                button.disabled = false;
+                button.classList.remove('disabled', 'correct-answer', 'wrong-answer');
+            });
+        } else {
+            // Disable options if no valid country
+            options.forEach(button => {
+                button.disabled = true;
+                button.classList.add('disabled');
+            });
+        }
 
         message.textContent = "";
         facts.hidden = true;
@@ -405,6 +433,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function checkAnswer(event) {
+        // Safety check: ensure we have a valid current country
+        if (!currentCountry || !currentCountry.name) {
+            console.error('No valid current country available');
+            message.textContent = "Error: No country loaded. Please try again.";
+            return;
+        }
+
         const selectedCountryName = event.target.textContent;
         const isCorrect = selectedCountryName === currentCountry.name;
         
@@ -601,6 +636,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateOptions() {
+        if (!currentCountry) {
+            console.error('Cannot update options: no current country');
+            return;
+        }
+
         const filteredCountries = continentFilter.filterCountries(countries);
         const allOtherCountryCodes = Object.keys(filteredCountries).filter(code => code !== currentCountry.alpha2Code);
         const incorrectAnswers = [];
@@ -632,6 +672,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const trivia = flagFacts.getFact(country.alpha2Code);
         flagTrivia.innerHTML = `<p class="trivia-text">${trivia}</p>`;
         flagTrivia.hidden = false;
+    }
+
+    function returnToMainMenu() {
+        gameContainer.style.display = 'none';
+        topBar.style.display = 'none';
+        modeSelection.style.display = 'block';
+        currentCountry = null;
     }
 
     function switchTab(tabName) {
