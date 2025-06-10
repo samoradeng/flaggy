@@ -20,15 +20,20 @@ document.addEventListener("DOMContentLoaded", function () {
     let isChallengeMode = false;
     let isZenMode = false;
     let isDailyMode = false;
+    let isMultiplayerMode = false;
     let dailyAttempts = 0;
-    let currentGameStreak = 0; // Track streak for current game session
+    let currentGameStreak = 0;
+    let bestStreak = parseInt(localStorage.getItem('bestStreak') || '0');
+    
+    // Multiplayer variables
+    let multiplayerGame = null;
+    let playerName = '';
+    let gameId = '';
     
     // Initialize game systems
-    let streakSystem;
     let dailyChallenge;
     let achievementSystem;
     let soundEffects;
-    let xpSystem;
     let continentFilter;
     let flagFacts;
 
@@ -47,22 +52,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const challengeModeBtn = document.getElementById('challenge-mode-btn');
     const zenModeBtn = document.getElementById('zen-mode-btn');
     const dailyChallengeBtn = document.getElementById('daily-challenge-btn');
+    const challengeFriendsBtn = document.getElementById('challenge-friends-btn');
     const modeSelection = document.getElementById('mode-selection');
     const gameContainer = document.getElementById('game-container');
     const endlessGameOverScreen = document.getElementById('endless-game-over-screen');
     const dailyCompleteScreen = document.getElementById('daily-complete-screen');
+    const multiplayerLobby = document.getElementById('multiplayer-lobby');
+    const multiplayerResults = document.getElementById('multiplayer-results');
     const playEndlessFromGameOver = document.getElementById('play-endless-from-gameover');
     const tryAgainBtn = document.getElementById('try-again');
     const seeStatsFromGameOver = document.getElementById('see-stats-from-gameover');
 
     // New consolidated UI elements
     const topBar = document.getElementById('top-bar');
-    const topProgressBar = document.getElementById('top-progress-bar');
-    const levelDisplay = document.getElementById('level-display');
     const streakDisplayTop = document.getElementById('streak-display-top');
     const livesCount = document.getElementById('lives-count');
     const scoreDisplay = document.getElementById('score-display');
-    const xpProgressTop = document.getElementById('xp-progress-top');
 
     // Settings modal elements
     const settingsBtn = document.getElementById('settings-btn');
@@ -77,9 +82,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const continentFilterClose = document.querySelector('.continent-filter-close');
     const applyContinentFilter = document.getElementById('apply-continent-filter');
 
-    // Level up modal
-    const levelUpModal = document.getElementById('level-up-modal');
-    const levelUpContinue = document.getElementById('level-up-continue');
+    // Multiplayer elements
+    const createChallengeModal = document.getElementById('create-challenge-modal');
+    const joinChallengeModal = document.getElementById('join-challenge-modal');
 
     // Load stats from localStorage
     const savedChallengeStats = JSON.parse(localStorage.getItem('challengeStats'));
@@ -103,22 +108,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function initializeGame() {
         // Initialize game systems
-        streakSystem = new StreakSystem();
         dailyChallenge = new DailyChallenge(countries);
         achievementSystem = new AchievementSystem();
         soundEffects = new SoundEffects();
-        xpSystem = new XPSystem();
         continentFilter = new ContinentFilter();
         flagFacts = new FlagFacts();
 
         // Update UI
         updateTopBar();
-        updateMainMenuStats();
         updateSoundToggle();
         updateContinentFilterButton();
 
         // Check if daily challenge is available
         updateDailyChallengeButton();
+
+        // Check for multiplayer game in URL
+        checkForMultiplayerGame();
 
         // Attach event listeners
         options.forEach(button => button.addEventListener('click', checkAnswer));
@@ -126,6 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
         challengeModeBtn.addEventListener('click', startChallengeMode);
         zenModeBtn.addEventListener('click', startZenMode);
         dailyChallengeBtn.addEventListener('click', startDailyChallenge);
+        challengeFriendsBtn.addEventListener('click', showCreateChallengeModal);
         playEndlessFromGameOver.addEventListener('click', startChallengeMode);
         tryAgainBtn.addEventListener('click', startChallengeMode);
         seeStatsFromGameOver.addEventListener('click', showStatsModal);
@@ -135,7 +141,6 @@ document.addEventListener("DOMContentLoaded", function () {
         continentFilterBtn.addEventListener('click', showContinentFilterModal);
         continentFilterClose.addEventListener('click', hideContinentFilterModal);
         applyContinentFilter.addEventListener('click', applyContinentFilterSelection);
-        levelUpContinue.addEventListener('click', hideLevelUpModal);
 
         // Stats modal tabs
         document.querySelectorAll('.tab-button').forEach(button => {
@@ -154,6 +159,22 @@ document.addEventListener("DOMContentLoaded", function () {
             startChallengeMode();
         });
         document.getElementById('share-endless-result')?.addEventListener('click', shareEndlessResult);
+
+        // Multiplayer buttons
+        document.getElementById('create-challenge-btn')?.addEventListener('click', createChallenge);
+        document.getElementById('join-challenge-btn')?.addEventListener('click', joinChallenge);
+        document.getElementById('start-multiplayer-game')?.addEventListener('click', startMultiplayerGame);
+        document.getElementById('copy-challenge-link')?.addEventListener('click', copyChallengeLink);
+    }
+
+    function checkForMultiplayerGame() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameIdParam = urlParams.get('game');
+        
+        if (gameIdParam) {
+            gameId = gameIdParam;
+            showJoinChallengeModal();
+        }
     }
 
     function updateDailyChallengeButton() {
@@ -164,22 +185,6 @@ document.addEventListener("DOMContentLoaded", function () {
             dailyChallengeBtn.textContent = 'Daily Challenge';
             dailyChallengeBtn.disabled = false;
         }
-    }
-
-    function updateMainMenuStats() {
-        const dailyStreakInfo = document.getElementById('daily-streak-info');
-        const dailyStreakCount = document.getElementById('daily-streak-count');
-        const levelInfo = document.getElementById('level-info');
-        const currentLevelDisplay = document.getElementById('current-level-display');
-        
-        if (dailyChallenge.dailyStats.streak > 0) {
-            dailyStreakCount.textContent = dailyChallenge.dailyStats.streak;
-            dailyStreakInfo.style.display = 'block';
-        }
-
-        // Update level display
-        const levelTitle = xpSystem.getLevelTitle(xpSystem.level);
-        currentLevelDisplay.textContent = levelTitle;
     }
 
     function showSettingsModal() {
@@ -250,23 +255,242 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // Multiplayer functions
+    function showCreateChallengeModal() {
+        createChallengeModal.style.display = 'block';
+    }
+
+    function showJoinChallengeModal() {
+        document.getElementById('join-game-id').value = gameId;
+        joinChallengeModal.style.display = 'block';
+    }
+
+    function createChallenge() {
+        const flagCount = document.getElementById('flag-count-select').value;
+        const selectedContinents = continentFilter.selectedContinents;
+        
+        // Generate unique game ID
+        gameId = generateGameId();
+        
+        // Create multiplayer game object
+        multiplayerGame = {
+            id: gameId,
+            flagCount: parseInt(flagCount),
+            continents: selectedContinents,
+            players: [],
+            flags: [],
+            currentFlag: 0,
+            status: 'waiting',
+            host: true
+        };
+        
+        // Generate flags for the game
+        const filteredCountries = continentFilter.filterCountries(countries);
+        const countryCodes = Object.keys(filteredCountries);
+        const selectedFlags = [];
+        
+        for (let i = 0; i < flagCount; i++) {
+            const randomIndex = Math.floor(Math.random() * countryCodes.length);
+            const countryCode = countryCodes[randomIndex];
+            selectedFlags.push(filteredCountries[countryCode]);
+            countryCodes.splice(randomIndex, 1);
+        }
+        
+        multiplayerGame.flags = selectedFlags;
+        
+        // Store in localStorage (in real app, this would be a backend)
+        localStorage.setItem(`game_${gameId}`, JSON.stringify(multiplayerGame));
+        
+        // Show challenge link
+        const challengeLink = `${window.location.origin}${window.location.pathname}?game=${gameId}`;
+        document.getElementById('challenge-link').value = challengeLink;
+        document.getElementById('challenge-link-display').style.display = 'block';
+        
+        createChallengeModal.style.display = 'none';
+        showMultiplayerLobby();
+    }
+
+    function joinChallenge() {
+        const inputGameId = document.getElementById('join-game-id').value.trim();
+        const nickname = document.getElementById('player-nickname').value.trim() || generatePlayerName();
+        
+        if (!inputGameId) {
+            alert('Please enter a game ID');
+            return;
+        }
+        
+        // Load game from localStorage
+        const gameData = localStorage.getItem(`game_${inputGameId}`);
+        if (!gameData) {
+            alert('Game not found. Please check the game ID.');
+            return;
+        }
+        
+        multiplayerGame = JSON.parse(gameData);
+        multiplayerGame.host = false;
+        gameId = inputGameId;
+        playerName = nickname;
+        
+        joinChallengeModal.style.display = 'none';
+        showMultiplayerLobby();
+    }
+
+    function showMultiplayerLobby() {
+        modeSelection.style.display = 'none';
+        multiplayerLobby.style.display = 'block';
+        
+        document.getElementById('lobby-game-id').textContent = gameId;
+        document.getElementById('lobby-flag-count').textContent = multiplayerGame.flagCount;
+        
+        if (multiplayerGame.host) {
+            document.getElementById('start-multiplayer-game').style.display = 'block';
+        }
+        
+        updatePlayersList();
+    }
+
+    function updatePlayersList() {
+        const playersList = document.getElementById('players-list');
+        playersList.innerHTML = '';
+        
+        // Add current player
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'player-item';
+        playerDiv.innerHTML = `
+            <span>${playerName || 'You'}</span>
+            ${multiplayerGame.host ? '<span class="host-badge">Host</span>' : ''}
+        `;
+        playersList.appendChild(playerDiv);
+    }
+
+    function startMultiplayerGame() {
+        isMultiplayerMode = true;
+        isChallengeMode = false;
+        isZenMode = false;
+        isDailyMode = false;
+        
+        multiplayerLobby.style.display = 'none';
+        gameContainer.style.display = 'flex';
+        topBar.style.display = 'flex';
+        
+        score = 0;
+        total = 0;
+        currentGameStreak = 0;
+        usedCountries = [];
+        
+        headingText.textContent = "Challenge Friends";
+        subHeadingText.textContent = `Flag ${total + 1} of ${multiplayerGame.flagCount}`;
+        
+        // Start with first flag
+        currentCountry = multiplayerGame.flags[0];
+        displayCountry();
+        updateTopBar();
+        
+        // Start timer
+        startMultiplayerTimer();
+    }
+
+    function startMultiplayerTimer() {
+        let timeLeft = 10;
+        const timerDisplay = document.getElementById('multiplayer-timer');
+        
+        if (!timerDisplay) {
+            const timer = document.createElement('div');
+            timer.id = 'multiplayer-timer';
+            timer.className = 'multiplayer-timer';
+            topBar.appendChild(timer);
+        }
+        
+        const timer = setInterval(() => {
+            document.getElementById('multiplayer-timer').textContent = `⏱️ ${timeLeft}s`;
+            timeLeft--;
+            
+            if (timeLeft < 0) {
+                clearInterval(timer);
+                // Auto-advance to next question
+                if (total < multiplayerGame.flagCount) {
+                    nextMultiplayerFlag();
+                } else {
+                    showMultiplayerResults();
+                }
+            }
+        }, 1000);
+    }
+
+    function nextMultiplayerFlag() {
+        total++;
+        
+        if (total < multiplayerGame.flagCount) {
+            currentCountry = multiplayerGame.flags[total];
+            displayCountry();
+            resetQuestionUI();
+            subHeadingText.textContent = `Flag ${total + 1} of ${multiplayerGame.flagCount}`;
+            updateTopBar();
+            startMultiplayerTimer();
+        } else {
+            showMultiplayerResults();
+        }
+    }
+
+    function showMultiplayerResults() {
+        gameContainer.style.display = 'none';
+        topBar.style.display = 'none';
+        multiplayerResults.style.display = 'block';
+        
+        document.getElementById('final-score').textContent = `${score}/${multiplayerGame.flagCount}`;
+        document.getElementById('final-accuracy').textContent = `${Math.round((score / multiplayerGame.flagCount) * 100)}%`;
+        
+        if (score === multiplayerGame.flagCount) {
+            document.getElementById('result-message').textContent = '🏆 Perfect Score! Flag Champion!';
+            AnimationEffects.showConfetti();
+        } else if (score >= multiplayerGame.flagCount * 0.8) {
+            document.getElementById('result-message').textContent = '🔥 Excellent work!';
+        } else {
+            document.getElementById('result-message').textContent = 'Good effort! Try again?';
+        }
+    }
+
+    function copyChallengeLink() {
+        const linkInput = document.getElementById('challenge-link');
+        linkInput.select();
+        document.execCommand('copy');
+        
+        const copyBtn = document.getElementById('copy-challenge-link');
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+            copyBtn.textContent = originalText;
+        }, 2000);
+    }
+
+    function generateGameId() {
+        return Math.random().toString(36).substr(2, 8).toUpperCase();
+    }
+
+    function generatePlayerName() {
+        const adjectives = ['Quick', 'Smart', 'Cool', 'Fast', 'Clever', 'Sharp'];
+        const nouns = ['Explorer', 'Traveler', 'Scout', 'Navigator', 'Wanderer', 'Adventurer'];
+        return adjectives[Math.floor(Math.random() * adjectives.length)] + 
+               nouns[Math.floor(Math.random() * nouns.length)];
+    }
+
     function startDailyChallenge() {
         if (dailyChallenge.hasPlayedToday()) return;
 
         isDailyMode = true;
         isChallengeMode = false;
         isZenMode = false;
+        isMultiplayerMode = false;
         dailyAttempts = 0;
         lives = 3;
         score = 0;
         total = 0;
         gameState = "playing";
-        currentGameStreak = 0; // Reset game streak
+        currentGameStreak = 0;
         
         modeSelection.style.display = 'none';
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
-        topProgressBar.style.display = 'none'; // Hide XP bar in daily mode
         
         // Set today's country
         currentCountry = dailyChallenge.getTodaysCountry();
@@ -282,27 +506,27 @@ document.addEventListener("DOMContentLoaded", function () {
         modeSelection.style.display = 'none';
         endlessGameOverScreen.style.display = 'none';
         dailyCompleteScreen.style.display = 'none';
-        levelUpModal.style.display = 'none';
+        multiplayerResults.style.display = 'none';
         
         isDailyMode = false;
         isChallengeMode = true;
         isZenMode = false;
+        isMultiplayerMode = false;
         lives = 3;
         score = 0;
         total = 0;
         gameState = "playing";
         usedCountries = [];
-        currentGameStreak = 0; // Reset game streak
+        currentGameStreak = 0;
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
-        topProgressBar.style.display = 'block';
         
         challengeStats.timesPlayed++;
         updateTopBar();
         
         headingText.textContent = "Challenge Mode";
-        subHeadingText.textContent = "Level up and unlock new challenge modes!";
+        subHeadingText.textContent = "How many flags can you guess correctly?";
         
         nextCountry();
     }
@@ -311,21 +535,21 @@ document.addEventListener("DOMContentLoaded", function () {
         modeSelection.style.display = 'none';
         endlessGameOverScreen.style.display = 'none';
         dailyCompleteScreen.style.display = 'none';
-        levelUpModal.style.display = 'none';
+        multiplayerResults.style.display = 'none';
         
         isDailyMode = false;
         isChallengeMode = false;
         isZenMode = true;
-        lives = Infinity; // No lives in zen mode
+        isMultiplayerMode = false;
+        lives = Infinity;
         score = 0;
         total = 0;
         gameState = "playing";
         usedCountries = [];
-        currentGameStreak = 0; // Reset game streak
+        currentGameStreak = 0;
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
-        topProgressBar.style.display = 'none'; // No XP in zen mode
         
         zenStats.sessionsPlayed++;
         updateTopBar();
@@ -337,16 +561,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateTopBar() {
-        // Update level (hide in zen mode)
-        if (isZenMode) {
-            levelDisplay.style.display = 'none';
-        } else {
-            levelDisplay.style.display = 'block';
-            levelDisplay.textContent = `Level ${xpSystem.level}`;
-        }
-        
         // Update streak - use current game streak
-        const streakEmoji = streakSystem.getStreakEmoji(currentGameStreak);
+        const streakEmoji = getStreakEmoji(currentGameStreak);
         streakDisplayTop.textContent = `${streakEmoji} ${currentGameStreak} Streak`.trim();
         
         // Update lives (hide in zen mode)
@@ -358,12 +574,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         
         // Update score
-        scoreDisplay.textContent = `Score: ${score}/${total}`;
-        
-        // Update XP progress bar
-        if (isChallengeMode) {
-            xpProgressTop.style.width = `${xpSystem.getXPProgress()}%`;
+        if (isMultiplayerMode) {
+            scoreDisplay.textContent = `Score: ${score}/${multiplayerGame.flagCount}`;
+        } else {
+            scoreDisplay.textContent = `Score: ${score}/${total}`;
         }
+    }
+
+    function getStreakEmoji(streak) {
+        if (streak >= 10) return '🔥🔥🔥';
+        if (streak >= 5) return '🔥🔥';
+        if (streak >= 3) return '🔥';
+        return '';
     }
 
     function toggleSound() {
@@ -376,7 +598,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function nextCountry() {
-        if (isDailyMode) return; // Daily mode only has one country
+        if (isDailyMode || isMultiplayerMode) return;
         
         nextBtn.disabled = false;
         saveGameState();
@@ -470,7 +692,11 @@ document.addEventListener("DOMContentLoaded", function () {
         headingText.style.display = 'none';
         subHeadingText.style.display = 'none';
         
-        if (!isDailyMode) {
+        if (isMultiplayerMode) {
+            setTimeout(() => {
+                nextMultiplayerFlag();
+            }, 2000);
+        } else if (!isDailyMode) {
             nextBtn.hidden = false;
         }
 
@@ -487,38 +713,26 @@ document.addEventListener("DOMContentLoaded", function () {
     function handleCorrectAnswer(button) {
         message.textContent = "🎉 Correct! Well done!";
         score++;
-        currentGameStreak++; // Increment game streak
+        currentGameStreak++;
         button.classList.add('correct-answer');
+        
+        // Update best streak
+        if (currentGameStreak > bestStreak) {
+            bestStreak = currentGameStreak;
+            localStorage.setItem('bestStreak', bestStreak.toString());
+        }
         
         // Sound effect
         soundEffects.playCorrect();
         
-        // Update global streak system
-        const streakResult = streakSystem.addCorrectAnswer();
-        
-        if (isChallengeMode) {
-            // Update XP in challenge mode
-            const xpResult = xpSystem.addXP(10, currentGameStreak);
-            
+        if (isChallengeMode || isZenMode) {
             updateTopBar();
-            
-            // Show XP gain animation
-            AnimationEffects.showXPGain(xpResult.xpGained, button);
+            AnimationEffects.showConfetti();
             
             // Check for streak milestones
-            if (streakResult.isStreakMilestone) {
+            if (isStreakMilestone(currentGameStreak)) {
                 AnimationEffects.showStreakConfetti();
                 soundEffects.playStreak();
-            } else {
-                AnimationEffects.showConfetti();
-            }
-            
-            // Level up handling
-            if (xpResult.leveledUp) {
-                setTimeout(() => {
-                    showLevelUpModal(xpResult.newLevel);
-                }, 1000);
-                soundEffects.playLevelUp();
             }
             
             // Unlock country and check achievements
@@ -551,32 +765,15 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Reset game streak
         currentGameStreak = 0;
-        streakSystem.resetStreak();
         updateTopBar();
         
-        if (!isZenMode) {
+        if (!isZenMode && !isMultiplayerMode) {
             loseLife();
         }
     }
 
-    function showLevelUpModal(newLevel) {
-        const levelTitle = xpSystem.getLevelTitle(newLevel);
-        const levelUnlock = xpSystem.getLevelUnlock(newLevel);
-        
-        document.getElementById('level-up-title').textContent = 'Level Up!';
-        document.getElementById('level-up-subtitle').textContent = levelTitle.split(' ').slice(1).join(' ');
-        document.getElementById('level-up-level').textContent = `Level ${newLevel}`;
-        document.getElementById('level-up-unlock').textContent = levelUnlock;
-        
-        levelUpModal.style.display = 'block';
-        AnimationEffects.showConfetti();
-        
-        // Update main menu display
-        updateMainMenuStats();
-    }
-
-    function hideLevelUpModal() {
-        levelUpModal.style.display = 'none';
+    function isStreakMilestone(streak) {
+        return streak > 0 && (streak % 3 === 0 || streak % 5 === 0 || streak % 10 === 0);
     }
 
     function completeDailyChallenge(correct) {
@@ -584,7 +781,6 @@ document.addEventListener("DOMContentLoaded", function () {
         
         gameContainer.style.display = 'none';
         topBar.style.display = 'none';
-        topProgressBar.style.display = 'none';
         dailyCompleteScreen.style.display = 'block';
         
         // Update daily complete screen
@@ -649,7 +845,6 @@ document.addEventListener("DOMContentLoaded", function () {
         endlessGameOverScreen.style.display = 'block';
         gameContainer.style.display = 'none';
         topBar.style.display = 'none';
-        topProgressBar.style.display = 'none';
 
         document.getElementById('endless-score-display').textContent = "Your Score: " + score;
         document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + challengeStats.highestScore;
@@ -804,12 +999,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateStats() {
         // Challenge stats
-        document.getElementById('stats-level').textContent = xpSystem.level;
-        document.getElementById('stats-xp').textContent = xpSystem.xp;
-        document.getElementById('stats-best-streak').textContent = streakSystem.bestStreak;
         document.getElementById('challenge-times-played-value').textContent = challengeStats.timesPlayed;
         document.getElementById('challenge-highest-score-value').textContent = challengeStats.highestScore;
         document.getElementById('challenge-total-score-value').textContent = challengeStats.totalScore;
+        document.getElementById('stats-best-streak').textContent = bestStreak;
         
         // Zen stats
         document.getElementById('zen-sessions-played').textContent = zenStats.sessionsPlayed;
@@ -844,6 +1037,11 @@ document.addEventListener("DOMContentLoaded", function () {
     function shareScore() {
         const mode = isChallengeMode ? 'Challenge' : isZenMode ? 'Zen' : 'Daily';
         const shareText = `🌍 Flagtriv ${mode}: ${score}/${total}\nPlay: flagtriv.com`;
+        shareToClipboard(shareText);
+    }
+
+    function shareMultiplayerResult() {
+        const shareText = `🌍 Flagtriv Challenge Friends\nScore: ${score}/${multiplayerGame.flagCount}\nAccuracy: ${Math.round((score / multiplayerGame.flagCount) * 100)}%\nPlay: flagtriv.com`;
         shareToClipboard(shareText);
     }
 
@@ -912,6 +1110,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     statsBtn.addEventListener('click', showStatsModal);
     document.getElementById('share-button').addEventListener('click', shareScore);
+    document.getElementById('share-multiplayer-result')?.addEventListener('click', shareMultiplayerResult);
+    document.getElementById('play-again-multiplayer')?.addEventListener('click', () => {
+        multiplayerResults.style.display = 'none';
+        modeSelection.style.display = 'flex';
+    });
 
     // Close modal when clicking outside
     window.addEventListener('click', (event) => {
@@ -921,11 +1124,14 @@ document.addEventListener("DOMContentLoaded", function () {
         if (event.target === continentFilterModal) {
             hideContinentFilterModal();
         }
-        if (event.target === levelUpModal) {
-            hideLevelUpModal();
-        }
         if (event.target === settingsModal) {
             hideSettingsModal();
+        }
+        if (event.target === createChallengeModal) {
+            createChallengeModal.style.display = 'none';
+        }
+        if (event.target === joinChallengeModal) {
+            joinChallengeModal.style.display = 'none';
         }
     });
 });

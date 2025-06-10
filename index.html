@@ -17,14 +17,8 @@
 
     <div id="resultsToast">Copied results to clipboard</div>
 
-    <!-- Top Progress Bar -->
-    <div id="top-progress-bar" style="display: none;">
-        <div id="xp-progress-top"></div>
-    </div>
-
     <!-- Consolidated Top Bar -->
     <div id="top-bar" style="display: none;">
-        <div id="level-display">Level 1</div>
         <div id="streak-display-top">0 Streak</div>
         <div id="lives-display">
             ❤️ <span id="lives-count">3</span>
@@ -127,16 +121,97 @@
         </div>
     </div>
 
-    <!-- Level Up Modal -->
-    <div id="level-up-modal" class="modal">
-        <div class="modal-content level-up-content">
-            <div class="level-up-animation-content">
-                <div class="level-up-icon">🆙</div>
-                <h2 id="level-up-title">Level Up!</h2>
-                <div id="level-up-subtitle">You're now a Map Scout</div>
-                <div id="level-up-level">Level 3</div>
-                <div id="level-up-unlock">🔓 Africa-only filter unlocked!</div>
-                <button id="level-up-continue">Continue</button>
+    <!-- Create Challenge Modal -->
+    <div id="create-challenge-modal" class="modal">
+        <div class="modal-content challenge-modal-content">
+            <span class="close-btn" onclick="document.getElementById('create-challenge-modal').style.display='none'">
+                <img src="images/x-mark.svg">
+            </span>
+            <h2>Create Challenge</h2>
+            <p class="challenge-description">Set up a challenge for your friends!</p>
+            
+            <div class="challenge-setting">
+                <label for="flag-count-select">Number of Flags:</label>
+                <select id="flag-count-select">
+                    <option value="5">5 Flags</option>
+                    <option value="10" selected>10 Flags</option>
+                    <option value="20">20 Flags</option>
+                </select>
+            </div>
+            
+            <div class="challenge-setting">
+                <span>Continents: <span id="challenge-continents">🌐 All Continents</span></span>
+                <button id="change-continents" class="setting-button" onclick="document.getElementById('continent-filter-modal').style.display='block'">
+                    Change
+                </button>
+            </div>
+            
+            <button id="create-challenge-btn" class="create-challenge-btn">Create Challenge</button>
+            
+            <div id="challenge-link-display" style="display: none;">
+                <h3>Challenge Created!</h3>
+                <p>Share this link with your friends:</p>
+                <div class="link-container">
+                    <input type="text" id="challenge-link" readonly>
+                    <button id="copy-challenge-link">Copy Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Challenge Modal -->
+    <div id="join-challenge-modal" class="modal">
+        <div class="modal-content challenge-modal-content">
+            <span class="close-btn" onclick="document.getElementById('join-challenge-modal').style.display='none'">
+                <img src="images/x-mark.svg">
+            </span>
+            <h2>Join Challenge</h2>
+            <p class="challenge-description">Enter your details to join the challenge!</p>
+            
+            <div class="challenge-setting">
+                <label for="join-game-id">Game ID:</label>
+                <input type="text" id="join-game-id" placeholder="Enter game ID">
+            </div>
+            
+            <div class="challenge-setting">
+                <label for="player-nickname">Your Nickname:</label>
+                <input type="text" id="player-nickname" placeholder="Enter your nickname">
+            </div>
+            
+            <button id="join-challenge-btn" class="create-challenge-btn">Join Challenge</button>
+        </div>
+    </div>
+
+    <!-- Multiplayer Lobby -->
+    <div id="multiplayer-lobby" style="display: none;">
+        <div class="lobby-content">
+            <h2>Challenge Lobby</h2>
+            <div class="lobby-info">
+                <p>Game ID: <span id="lobby-game-id"></span></p>
+                <p>Flags: <span id="lobby-flag-count"></span></p>
+            </div>
+            
+            <div class="players-section">
+                <h3>Players</h3>
+                <div id="players-list"></div>
+            </div>
+            
+            <button id="start-multiplayer-game" class="start-game-btn" style="display: none;">Start Game</button>
+            <p class="lobby-waiting">Waiting for host to start the game...</p>
+        </div>
+    </div>
+
+    <!-- Multiplayer Results -->
+    <div id="multiplayer-results" style="display: none;">
+        <div class="results-content">
+            <h2 id="result-message">Results</h2>
+            <div class="final-stats">
+                <p>Your Score: <span id="final-score"></span></p>
+                <p>Accuracy: <span id="final-accuracy"></span></p>
+            </div>
+            <div class="results-actions">
+                <button id="share-multiplayer-result">Share Result</button>
+                <button id="play-again-multiplayer">Play Again</button>
             </div>
         </div>
     </div>
@@ -186,13 +261,11 @@
             <button id="daily-challenge-btn">Daily Challenge</button>
             <button id="challenge-mode-btn">🧠 Challenge Mode</button>
             <button id="zen-mode-btn">🌿 Zen Mode</button>
+            <button id="challenge-friends-btn">🧑‍🤝‍🧑 Challenge Friends</button>
         </div>
         <div id="main-menu-stats">
             <div id="daily-streak-info" style="display: none;">
                 <span>🔥 Daily Streak: <span id="daily-streak-count">0</span></span>
-            </div>
-            <div id="level-info">
-                <span id="current-level-display">🌱 Level 1 - Rookie Traveler</span>
             </div>
         </div>
     </div>
@@ -233,14 +306,6 @@
             </div>
 
             <div id="challenge-stats" class="tab-content active">
-                <div class="stat-row">
-                    <span>Level:</span>
-                    <span id="stats-level">1</span>
-                </div>
-                <div class="stat-row">
-                    <span>Total XP:</span>
-                    <span id="stats-xp">0</span>
-                </div>
                 <div class="stat-row">
                     <span>Best Streak:</span>
                     <span id="stats-best-streak">0</span>
@@ -318,10 +383,8 @@
     </div>
 
     <!-- Load JavaScript modules -->
-    <script src="js/xpSystem.js"></script>
     <script src="js/continentFilter.js"></script>
     <script src="js/flagFacts.js"></script>
-    <script src="js/streakSystem.js"></script>
     <script src="js/dailyChallenge.js"></script>
     <script src="js/achievements.js"></script>
     <script src="js/animations.js"></script>
