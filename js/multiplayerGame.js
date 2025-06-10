@@ -246,15 +246,30 @@ class MultiplayerGame {
         this.gameFlags = [];
         const usedCountries = [];
         
-        for (let i = 0; i < gameState.totalFlags; i++) {
+        // Ensure we don't try to get more flags than available countries
+        const maxFlags = Math.min(gameState.totalFlags, countryCodes.length);
+        
+        for (let i = 0; i < maxFlags; i++) {
             let countryCode;
+            let attempts = 0;
+            const maxAttempts = countryCodes.length * 2; // Prevent infinite loop
+            
             do {
                 const randomIndex = Math.floor(Math.random() * countryCodes.length);
                 countryCode = countryCodes[randomIndex];
-            } while (usedCountries.includes(countryCode) && usedCountries.length < countryCodes.length);
+                attempts++;
+            } while (usedCountries.includes(countryCode) && attempts < maxAttempts);
             
-            usedCountries.push(countryCode);
-            this.gameFlags.push(filteredCountries[countryCode]);
+            // Only add if we found a valid country and it exists
+            if (countryCode && filteredCountries[countryCode] && !usedCountries.includes(countryCode)) {
+                usedCountries.push(countryCode);
+                this.gameFlags.push(filteredCountries[countryCode]);
+            }
+        }
+        
+        // If we couldn't generate enough unique flags, log a warning
+        if (this.gameFlags.length < gameState.totalFlags) {
+            console.warn(`Could only generate ${this.gameFlags.length} unique flags out of ${gameState.totalFlags} requested`);
         }
     }
 
@@ -333,6 +348,12 @@ class MultiplayerGame {
         this.currentFlag = this.gameFlags[this.currentFlagIndex];
         this.roundStartTime = Date.now();
         
+        // Safety check: ensure currentFlag is valid
+        if (!this.currentFlag || !this.currentFlag.flag || !this.currentFlag.flag.large) {
+            console.error('Invalid flag data at index:', this.currentFlagIndex, this.currentFlag);
+            return;
+        }
+        
         // Update flag image
         document.getElementById('flag').src = this.currentFlag.flag.large;
         
@@ -351,6 +372,12 @@ class MultiplayerGame {
         const options = document.querySelectorAll('.option');
         const allCountries = this.countries;
         const correctCountry = this.currentFlag;
+        
+        // Safety check: ensure we have a valid current flag
+        if (!correctCountry || !correctCountry.alpha2Code || !correctCountry.name) {
+            console.error('Invalid current flag for options generation:', correctCountry);
+            return;
+        }
         
         // Get other countries for incorrect options
         const otherCountries = Object.values(allCountries).filter(
@@ -379,6 +406,13 @@ class MultiplayerGame {
 
     async handleMultiplayerAnswer(event) {
         const selectedAnswer = event.target.textContent;
+        
+        // Safety check: ensure we have a valid current flag
+        if (!this.currentFlag || !this.currentFlag.name) {
+            console.error('No valid current flag available for answer handling');
+            return;
+        }
+        
         const isCorrect = selectedAnswer === this.currentFlag.name;
         const timeSpent = Date.now() - this.roundStartTime;
         
@@ -432,6 +466,12 @@ class MultiplayerGame {
 
     showMultiplayerFacts() {
         const facts = document.getElementById('facts');
+        
+        // Safety check: ensure we have a valid current flag
+        if (!this.currentFlag || !this.currentFlag.capital || !this.currentFlag.subregion) {
+            console.error('Invalid current flag for facts display:', this.currentFlag);
+            return;
+        }
         
         facts.innerHTML = `
             <p class="fact-text"><strong>Capital:</strong> ${this.currentFlag.capital}</p>

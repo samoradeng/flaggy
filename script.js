@@ -184,7 +184,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateContinentFilterInSettings() {
         const selectionText = document.getElementById('continent-selection-text');
-        selectionText.textContent = continentFilter.getSelectionText();
+        // Add null check to prevent TypeError
+        if (selectionText) {
+            selectionText.textContent = continentFilter.getSelectionText();
+        }
     }
 
     function updateContinentFilterButton() {
