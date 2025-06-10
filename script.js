@@ -332,7 +332,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Save updated challenge data
-        const storageKey = `challenge_${gameId}`;
         localStorage.setItem(storageKey, JSON.stringify(challengeData));
         
         const allChallenges = JSON.parse(localStorage.getItem('allChallenges') || '{}');
