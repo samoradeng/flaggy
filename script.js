@@ -235,6 +235,7 @@ document.addEventListener("DOMContentLoaded", function () {
         score = 0;
         total = 0;
         gameState = "playing";
+        streakSystem.resetStreak(); // Reset streak for daily challenge
         
         modeSelection.style.display = 'none';
         gameContainer.style.display = 'flex';
@@ -265,6 +266,7 @@ document.addEventListener("DOMContentLoaded", function () {
         total = 0;
         gameState = "playing";
         usedCountries = [];
+        streakSystem.resetStreak(); // Reset streak for new game
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
@@ -293,6 +295,7 @@ document.addEventListener("DOMContentLoaded", function () {
         total = 0;
         gameState = "playing";
         usedCountries = [];
+        streakSystem.resetStreak(); // Reset streak for new session
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
@@ -308,8 +311,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateTopBar() {
-        // Update level
-        levelDisplay.textContent = `Level ${xpSystem.level}`;
+        // Update level (hide in zen mode)
+        if (isZenMode) {
+            levelDisplay.style.display = 'none';
+        } else {
+            levelDisplay.style.display = 'block';
+            levelDisplay.textContent = `Level ${xpSystem.level}`;
+        }
         
         // Update streak
         const streakEmoji = streakSystem.getStreakEmoji(streakSystem.currentStreak);
@@ -426,6 +434,11 @@ document.addEventListener("DOMContentLoaded", function () {
             dailyAttempts++;
         }
         
+        // Update zen stats
+        if (isZenMode) {
+            zenStats.totalFlags++;
+        }
+        
         updateTopBar();
         showFacts(currentCountry);
         showFlagTrivia(currentCountry);
@@ -496,6 +509,9 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             
             updateTopBar();
+            AnimationEffects.showConfetti();
+        } else if (isDailyMode) {
+            // Daily mode - just show confetti
             AnimationEffects.showConfetti();
         }
     }
