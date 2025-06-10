@@ -30,6 +30,9 @@
             ❤️ <span id="lives-count">3</span>
         </div>
         <div id="control-buttons">
+            <button id="continent-filter-btn" title="Select Continents">
+                🌐
+            </button>
             <button id="stats-btn" title="Statistics">
                 📊
             </button>
@@ -38,6 +41,74 @@
             </button>
         </div>
         <div id="score-display">Score: 0/0</div>
+    </div>
+
+    <!-- Continent Filter Modal -->
+    <div id="continent-filter-modal" class="modal">
+        <div class="modal-content continent-filter-content">
+            <span class="close-btn continent-filter-close">
+                <img src="images/x-mark.svg">
+            </span>
+            <h2>Select Continents</h2>
+            <p class="filter-description">Choose which continents to include in your game</p>
+            
+            <div class="continent-options">
+                <button class="continent-option active" data-continent="all">
+                    <span class="continent-emoji">🌐</span>
+                    <span class="continent-name">All Continents</span>
+                </button>
+                
+                <button class="continent-option" data-continent="Africa">
+                    <span class="continent-emoji">🌍</span>
+                    <span class="continent-name">Africa</span>
+                    <span class="continent-lock">🔒</span>
+                </button>
+                
+                <button class="continent-option" data-continent="Asia">
+                    <span class="continent-emoji">🌏</span>
+                    <span class="continent-name">Asia</span>
+                    <span class="continent-lock">🔒</span>
+                </button>
+                
+                <button class="continent-option" data-continent="Europe">
+                    <span class="continent-emoji">🇪🇺</span>
+                    <span class="continent-name">Europe</span>
+                    <span class="continent-lock">🔒</span>
+                </button>
+                
+                <button class="continent-option" data-continent="Americas">
+                    <span class="continent-emoji">🌎</span>
+                    <span class="continent-name">Americas</span>
+                    <span class="continent-lock">🔒</span>
+                </button>
+                
+                <button class="continent-option" data-continent="Oceania">
+                    <span class="continent-emoji">🏝️</span>
+                    <span class="continent-name">Oceania</span>
+                    <span class="continent-lock">🔒</span>
+                </button>
+            </div>
+            
+            <div class="filter-selection-summary">
+                <span id="selection-summary">🌐 All Continents selected</span>
+            </div>
+            
+            <button id="apply-continent-filter" class="apply-filter-btn">Apply Filter</button>
+        </div>
+    </div>
+
+    <!-- Level Up Modal -->
+    <div id="level-up-modal" class="modal">
+        <div class="modal-content level-up-content">
+            <div class="level-up-animation-content">
+                <div class="level-up-icon">🆙</div>
+                <h2 id="level-up-title">Level Up!</h2>
+                <div id="level-up-subtitle">You're now a Map Scout</div>
+                <div id="level-up-level">Level 3</div>
+                <div id="level-up-unlock">🔓 Africa-only filter unlocked!</div>
+                <button id="level-up-continue">Continue</button>
+            </div>
+        </div>
     </div>
 
     <!-- Daily Challenge Complete Screen -->
@@ -50,6 +121,7 @@
             </div>
             <div id="daily-attempts-display"></div>
             <div id="daily-streak-display"></div>
+            <div id="daily-global-stat"></div>
             <p id="daily-next-challenge">Next challenge in: <span id="countdown-timer"></span></p>
             <button id="share-daily-result">Share Result</button>
             <button id="play-endless-from-daily">Play Endless Mode</button>
@@ -88,6 +160,9 @@
             <div id="daily-streak-info" style="display: none;">
                 <span>🔥 Daily Streak: <span id="daily-streak-count">0</span></span>
             </div>
+            <div id="level-info">
+                <span id="current-level-display">🌱 Level 1 - Rookie Traveler</span>
+            </div>
         </div>
     </div>
 
@@ -104,6 +179,9 @@
         <p id="message"></p>
         <div id="facts" hidden>
             <!-- Country facts will be displayed here -->
+        </div>
+        <div id="flag-trivia" hidden>
+            <!-- Flag trivia will be displayed here -->
         </div>
         <button id="next" hidden>Next country</button>
     </div>
@@ -178,6 +256,9 @@
                 <div id="passport-progress">
                     <span id="countries-unlocked">0 Countries Discovered</span>
                 </div>
+                <div id="continent-progress">
+                    <!-- Continent progress will be populated here -->
+                </div>
                 <div id="passport-grid"></div>
             </div>
 
@@ -186,6 +267,9 @@
     </div>
 
     <!-- Load JavaScript modules -->
+    <script src="js/xpSystem.js"></script>
+    <script src="js/continentFilter.js"></script>
+    <script src="js/flagFacts.js"></script>
     <script src="js/streakSystem.js"></script>
     <script src="js/dailyChallenge.js"></script>
     <script src="js/achievements.js"></script>

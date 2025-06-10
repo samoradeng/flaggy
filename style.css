@@ -104,6 +104,22 @@ body {
     text-align: left;
 }
 
+#flag-trivia {
+    margin-top: 12px;
+    width: 90%;
+    text-align: center;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+}
+
+.trivia-text {
+    font-style: italic;
+    color: #666;
+    font-size: 14px;
+}
+
 .correct-answer {
     background-color: #4CAF50;
     color: white;
@@ -245,7 +261,7 @@ body {
     gap: 4px;
 }
 
-#stats-btn, #sound-toggle {
+#stats-btn, #sound-toggle, #continent-filter-btn {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -259,7 +275,7 @@ body {
     font-size: 16px;
 }
 
-#stats-btn:hover, #sound-toggle:hover {
+#stats-btn:hover, #sound-toggle:hover, #continent-filter-btn:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -268,6 +284,10 @@ body {
     background-size: 16px 16px;
     background-repeat: no-repeat;
     background-position: center;
+}
+
+#continent-filter-btn {
+    font-size: 14px;
 }
 
 #sound-icon {
@@ -326,6 +346,152 @@ body {
 
 .close-btn:hover {
     background-color: #F0F0F0;
+}
+
+/* Continent Filter Modal */
+.continent-filter-content {
+    max-width: 500px;
+    text-align: center;
+}
+
+.filter-description {
+    color: #666;
+    margin-bottom: 24px;
+}
+
+.continent-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.continent-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.continent-option:hover:not(.locked) {
+    border-color: #4CAF50;
+    background-color: #f8f9fa;
+}
+
+.continent-option.active {
+    border-color: #4CAF50;
+    background-color: #e8f5e8;
+}
+
+.continent-option.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+}
+
+.continent-emoji {
+    font-size: 24px;
+}
+
+.continent-name {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+}
+
+.continent-lock {
+    font-size: 16px;
+    color: #999;
+}
+
+.filter-selection-summary {
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-weight: 500;
+}
+
+.apply-filter-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.apply-filter-btn:hover {
+    background-color: #45a049;
+}
+
+/* Level Up Modal */
+.level-up-content {
+    max-width: 400px;
+    text-align: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+}
+
+.level-up-animation-content {
+    padding: 32px;
+}
+
+.level-up-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+#level-up-title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+#level-up-subtitle {
+    font-size: 18px;
+    margin-bottom: 16px;
+    opacity: 0.9;
+}
+
+#level-up-level {
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 16px;
+}
+
+#level-up-unlock {
+    font-size: 16px;
+    margin-bottom: 24px;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+}
+
+#level-up-continue {
+    background-color: white;
+    color: #667eea;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+#level-up-continue:hover {
+    transform: translateY(-2px);
 }
 
 /* Tabs */
@@ -445,6 +611,43 @@ body {
 }
 
 /* Passport styles */
+#continent-progress {
+    margin: 16px 0;
+}
+
+.continent-progress-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.continent-progress-item:last-child {
+    border-bottom: none;
+}
+
+.continent-progress-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.continent-progress-bar {
+    width: 100px;
+    height: 6px;
+    background-color: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.continent-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
 #passport-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -529,11 +732,18 @@ body {
     margin-top: 16px;
 }
 
-#daily-streak-info {
+#daily-streak-info,
+#level-info {
     background-color: #f8f9fa;
     padding: 12px 16px;
     border-radius: 8px;
     font-weight: 500;
+    margin-bottom: 8px;
+}
+
+#level-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
 }
 
 /* Game over screens */
@@ -571,10 +781,19 @@ body {
 #endless-highest-score-display,
 #final-streak-display,
 #daily-attempts-display,
-#daily-streak-display {
+#daily-streak-display,
+#daily-global-stat {
     font-size: 16px;
     margin: 8px 0;
     color: #666;
+}
+
+#daily-global-stat {
+    background-color: #f0f8ff;
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+    font-style: italic;
 }
 
 #daily-flag-result {
@@ -886,7 +1105,7 @@ body {
         top: 50px;
     }
     
-    #stats-btn, #sound-toggle {
+    #stats-btn, #sound-toggle, #continent-filter-btn {
         width: 28px;
         height: 28px;
         font-size: 14px;
@@ -905,6 +1124,10 @@ body {
         width: 95%;
         padding: 24px;
         max-height: 90vh;
+    }
+    
+    .continent-filter-content {
+        max-width: none;
     }
     
     #mode-buttons {

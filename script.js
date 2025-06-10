@@ -20,12 +20,16 @@ document.addEventListener("DOMContentLoaded", function () {
     let dailyChallenge;
     let achievementSystem;
     let soundEffects;
+    let xpSystem;
+    let continentFilter;
+    let flagFacts;
 
     // DOM elements
     const flagImg = document.getElementById('flag');
     const options = document.querySelectorAll('.option');
     const message = document.getElementById('message');
     const facts = document.getElementById('facts');
+    const flagTrivia = document.getElementById('flag-trivia');
     const nextBtn = document.getElementById('next');
     const headingText = document.getElementById('heading');
     const subHeadingText = document.getElementById('subHeading');
@@ -55,6 +59,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const soundToggle = document.getElementById('sound-toggle');
     const soundIcon = document.getElementById('sound-icon');
 
+    // Continent filter elements
+    const continentFilterBtn = document.getElementById('continent-filter-btn');
+    const continentFilterModal = document.getElementById('continent-filter-modal');
+    const continentFilterClose = document.querySelector('.continent-filter-close');
+    const applyContinentFilter = document.getElementById('apply-continent-filter');
+
+    // Level up modal
+    const levelUpModal = document.getElementById('level-up-modal');
+    const levelUpContinue = document.getElementById('level-up-continue');
+
     // Load stats from localStorage
     const savedStats = JSON.parse(localStorage.getItem('countryGame'));
     if (savedStats && savedStats.endlessStats) {
@@ -80,11 +94,15 @@ document.addEventListener("DOMContentLoaded", function () {
         dailyChallenge = new DailyChallenge(countries);
         achievementSystem = new AchievementSystem();
         soundEffects = new SoundEffects();
+        xpSystem = new XPSystem();
+        continentFilter = new ContinentFilter();
+        flagFacts = new FlagFacts();
 
         // Update UI
         updateTopBar();
         updateMainMenuStats();
         updateSoundToggle();
+        updateContinentFilterButton();
 
         // Check if daily challenge is available
         updateDailyChallengeButton();
@@ -98,10 +116,19 @@ document.addEventListener("DOMContentLoaded", function () {
         tryAgainBtn.addEventListener('click', startEndlessMode);
         seeStatsFromGameOver.addEventListener('click', showStatsModal);
         soundToggle.addEventListener('click', toggleSound);
+        continentFilterBtn.addEventListener('click', showContinentFilterModal);
+        continentFilterClose.addEventListener('click', hideContinentFilterModal);
+        applyContinentFilter.addEventListener('click', applyContinentFilterSelection);
+        levelUpContinue.addEventListener('click', hideLevelUpModal);
 
         // Stats modal tabs
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
+        });
+
+        // Continent filter options
+        document.querySelectorAll('.continent-option').forEach(button => {
+            button.addEventListener('click', toggleContinentOption);
         });
 
         // Daily challenge specific buttons
@@ -126,10 +153,72 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateMainMenuStats() {
         const dailyStreakInfo = document.getElementById('daily-streak-info');
         const dailyStreakCount = document.getElementById('daily-streak-count');
+        const levelInfo = document.getElementById('level-info');
+        const currentLevelDisplay = document.getElementById('current-level-display');
         
         if (dailyChallenge.dailyStats.streak > 0) {
             dailyStreakCount.textContent = dailyChallenge.dailyStats.streak;
             dailyStreakInfo.style.display = 'block';
+        }
+
+        // Update level display
+        const levelTitle = xpSystem.getLevelTitle(xpSystem.level);
+        currentLevelDisplay.textContent = levelTitle;
+    }
+
+    function updateContinentFilterButton() {
+        continentFilterBtn.textContent = continentFilter.getSelectionText().split(' ')[0]; // Just the emoji
+        continentFilterBtn.title = continentFilter.getSelectionText();
+    }
+
+    function showContinentFilterModal() {
+        updateContinentFilterModal();
+        continentFilterModal.style.display = 'block';
+    }
+
+    function hideContinentFilterModal() {
+        continentFilterModal.style.display = 'none';
+    }
+
+    function updateContinentFilterModal() {
+        const options = document.querySelectorAll('.continent-option');
+        const selectionSummary = document.getElementById('selection-summary');
+        
+        options.forEach(option => {
+            const continentId = option.dataset.continent;
+            const isSelected = continentFilter.selectedContinents.includes(continentId);
+            const isUnlocked = continentId === 'all' || xpSystem.unlockedFeatures.continentsUnlocked.includes(continentId);
+            
+            option.classList.toggle('active', isSelected);
+            option.classList.toggle('locked', !isUnlocked);
+            
+            const lockIcon = option.querySelector('.continent-lock');
+            if (lockIcon) {
+                lockIcon.style.display = isUnlocked ? 'none' : 'inline';
+            }
+        });
+        
+        selectionSummary.textContent = continentFilter.getSelectionText();
+    }
+
+    function toggleContinentOption(event) {
+        const option = event.currentTarget;
+        const continentId = option.dataset.continent;
+        const isUnlocked = continentId === 'all' || xpSystem.unlockedFeatures.continentsUnlocked.includes(continentId);
+        
+        if (!isUnlocked) return;
+        
+        continentFilter.toggleContinent(continentId);
+        updateContinentFilterModal();
+    }
+
+    function applyContinentFilterSelection() {
+        updateContinentFilterButton();
+        hideContinentFilterModal();
+        
+        // If in endless mode, restart with new filter
+        if (isEndlessMode) {
+            startEndlessMode();
         }
     }
 
@@ -163,6 +252,7 @@ document.addEventListener("DOMContentLoaded", function () {
         modeSelection.style.display = 'none';
         endlessGameOverScreen.style.display = 'none';
         dailyCompleteScreen.style.display = 'none';
+        levelUpModal.style.display = 'none';
         
         isDailyMode = false;
         isEndlessMode = true;
@@ -187,7 +277,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateTopBar() {
         // Update level
-        levelDisplay.textContent = `Level ${streakSystem.level}`;
+        levelDisplay.textContent = `Level ${xpSystem.level}`;
         
         // Update streak
         const streakEmoji = streakSystem.getStreakEmoji(streakSystem.currentStreak);
@@ -201,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Update XP progress bar
         if (isEndlessMode) {
-            xpProgressTop.style.width = `${streakSystem.getXPProgress()}%`;
+            xpProgressTop.style.width = `${xpSystem.getXPProgress()}%`;
         }
     }
 
@@ -225,9 +315,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function fetchNewCountry() {
-        const countryCodes = Object.keys(countries);
+        const filteredCountries = continentFilter.filterCountries(countries);
+        const countryCodes = Object.keys(filteredCountries);
+        
         if (countryCodes.length === 0) {
-            console.error('No countries available');
+            console.error('No countries available for selected continents');
             return;
         }
         
@@ -238,7 +330,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } while (usedCountries.includes(countryCode) && usedCountries.length < countryCodes.length);
         
         usedCountries.push(countryCode);
-        currentCountry = countries[countryCode];
+        currentCountry = filteredCountries[countryCode];
         
         displayCountry();
     }
@@ -262,6 +354,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         message.textContent = "";
         facts.hidden = true;
+        flagTrivia.hidden = true;
         nextBtn.hidden = true;
         headingText.hidden = false;
         subHeadingText.hidden = false;
@@ -298,6 +391,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         updateTopBar();
         showFacts(currentCountry);
+        showFlagTrivia(currentCountry);
         headingText.style.display = 'none';
         subHeadingText.style.display = 'none';
         
@@ -325,23 +419,27 @@ document.addEventListener("DOMContentLoaded", function () {
         
         if (isEndlessMode) {
             // Update streak and XP
-            const result = streakSystem.addCorrectAnswer();
+            const streakResult = streakSystem.addCorrectAnswer();
+            const xpResult = xpSystem.addXP(10, streakSystem.currentStreak);
+            
             updateTopBar();
             
             // Show XP gain animation
-            AnimationEffects.showXPGain(result.xpGained, button);
+            AnimationEffects.showXPGain(xpResult.xpGained, button);
             
             // Check for streak milestones
-            if (result.isStreakMilestone) {
+            if (streakResult.isStreakMilestone) {
                 AnimationEffects.showStreakConfetti();
                 soundEffects.playStreak();
             } else {
                 AnimationEffects.showConfetti();
             }
             
-            // Level up animation
-            if (result.leveledUp) {
-                AnimationEffects.showLevelUpAnimation(result.newLevel);
+            // Level up handling
+            if (xpResult.leveledUp) {
+                setTimeout(() => {
+                    showLevelUpModal(xpResult.newLevel);
+                }, 1000);
                 soundEffects.playLevelUp();
             }
             
@@ -369,6 +467,26 @@ document.addEventListener("DOMContentLoaded", function () {
         loseLife();
     }
 
+    function showLevelUpModal(newLevel) {
+        const levelTitle = xpSystem.getLevelTitle(newLevel);
+        const levelUnlock = xpSystem.getLevelUnlock(newLevel);
+        
+        document.getElementById('level-up-title').textContent = 'Level Up!';
+        document.getElementById('level-up-subtitle').textContent = levelTitle.split(' ').slice(1).join(' ');
+        document.getElementById('level-up-level').textContent = `Level ${newLevel}`;
+        document.getElementById('level-up-unlock').textContent = levelUnlock;
+        
+        levelUpModal.style.display = 'block';
+        AnimationEffects.showConfetti();
+        
+        // Update main menu display
+        updateMainMenuStats();
+    }
+
+    function hideLevelUpModal() {
+        levelUpModal.style.display = 'none';
+    }
+
     function completeDailyChallenge(correct) {
         dailyChallenge.submitResult(correct, dailyAttempts);
         
@@ -383,6 +501,10 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('daily-result-country').textContent = currentCountry.name;
         document.getElementById('daily-attempts-display').textContent = `Attempts: ${dailyAttempts}/3`;
         document.getElementById('daily-streak-display').textContent = `Daily Streak: ${dailyChallenge.dailyStats.streak}`;
+        
+        // Show fake global stat
+        const globalStat = flagFacts.getRandomGlobalStat();
+        document.getElementById('daily-global-stat').textContent = globalStat;
         
         // Start countdown timer
         startCountdownTimer();
@@ -444,13 +566,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateOptions() {
-        const allOtherCountryCodes = Object.keys(countries).filter(code => code !== currentCountry.alpha2Code);
+        const filteredCountries = continentFilter.filterCountries(countries);
+        const allOtherCountryCodes = Object.keys(filteredCountries).filter(code => code !== currentCountry.alpha2Code);
         const incorrectAnswers = [];
         
         while (incorrectAnswers.length < 3 && allOtherCountryCodes.length > 0) {
             const randomIndex = Math.floor(Math.random() * allOtherCountryCodes.length);
             const countryCode = allOtherCountryCodes[randomIndex];
-            incorrectAnswers.push(countries[countryCode].name);
+            incorrectAnswers.push(filteredCountries[countryCode].name);
             allOtherCountryCodes.splice(randomIndex, 1);
         }
 
@@ -468,6 +591,12 @@ document.addEventListener("DOMContentLoaded", function () {
             <p class="fact-text"><strong>Location:</strong> ${country.subregion}</p>
         `;
         facts.hidden = false;
+    }
+
+    function showFlagTrivia(country) {
+        const trivia = flagFacts.getFact(country.alpha2Code);
+        flagTrivia.innerHTML = `<p class="trivia-text">${trivia}</p>`;
+        flagTrivia.hidden = false;
     }
 
     function switchTab(tabName) {
@@ -515,6 +644,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const unlockedCountries = JSON.parse(localStorage.getItem('unlockedCountries') || '[]');
         document.getElementById('countries-unlocked').textContent = `${unlockedCountries.length} Countries Discovered`;
         
+        // Update continent progress
+        updateContinentProgress();
+        
         const passportGrid = document.getElementById('passport-grid');
         passportGrid.innerHTML = '';
         
@@ -534,6 +666,46 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function updateContinentProgress() {
+        const continentProgress = document.getElementById('continent-progress');
+        const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
+        const continentCounts = {};
+        const continentTotals = {};
+        
+        // Count countries per continent
+        Object.values(countries).forEach(country => {
+            const region = country.region;
+            continentTotals[region] = (continentTotals[region] || 0) + 1;
+        });
+        
+        Object.values(countryDetails).forEach(country => {
+            const region = country.region;
+            continentCounts[region] = (continentCounts[region] || 0) + 1;
+        });
+        
+        continentProgress.innerHTML = '';
+        
+        continentFilter.availableContinents.forEach(continent => {
+            const count = continentCounts[continent.id] || 0;
+            const total = continentTotals[continent.id] || 1;
+            const percentage = Math.round((count / total) * 100);
+            
+            const div = document.createElement('div');
+            div.className = 'continent-progress-item';
+            div.innerHTML = `
+                <div class="continent-progress-name">
+                    <span>${continent.emoji}</span>
+                    <span>${continent.name}</span>
+                </div>
+                <div class="continent-progress-bar">
+                    <div class="continent-progress-fill" style="width: ${percentage}%"></div>
+                </div>
+                <span>${count}/${total}</span>
+            `;
+            continentProgress.appendChild(div);
+        });
+    }
+
     function showStatsModal() {
         updateStats();
         statsModal.style.display = 'block';
@@ -541,8 +713,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateStats() {
         // Endless stats
-        document.getElementById('stats-level').textContent = streakSystem.level;
-        document.getElementById('stats-xp').textContent = streakSystem.xp;
+        document.getElementById('stats-level').textContent = xpSystem.level;
+        document.getElementById('stats-xp').textContent = xpSystem.xp;
         document.getElementById('stats-best-streak').textContent = streakSystem.bestStreak;
         document.getElementById('endless-times-played-value').textContent = endlessStats.timesPlayed;
         document.getElementById('endless-highest-score-value').textContent = endlessStats.highestScore;
@@ -566,12 +738,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function shareEndlessResult() {
-        const shareText = `Flagtriv Endless Mode\nScore: ${score}/${total}\nBest Streak: ${streakSystem.currentStreak}\nflagtriv.com`;
+        const shareText = `🌍 Flagtriv Endless Mode\nScore: ${score}/${total}\nBest Streak: ${streakSystem.currentStreak}\nflagtriv.com`;
         shareToClipboard(shareText);
     }
 
     function shareScore() {
-        const shareText = `flagtriv: ${score}/${total} www.flagtriv.com`;
+        const shareText = `🌍 Flagtriv: ${score}/${total}\nPlay: flagtriv.com`;
         shareToClipboard(shareText);
     }
 
@@ -604,6 +776,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function showCopiedToast() {
         const resultsToast = document.getElementById("resultsToast");
+        resultsToast.textContent = "🔥 Copied! Now challenge a friend.";
         resultsToast.className = "show";
         setTimeout(() => {
             resultsToast.className = resultsToast.className.replace("show", "");
@@ -637,6 +810,12 @@ document.addEventListener("DOMContentLoaded", function () {
     window.addEventListener('click', (event) => {
         if (event.target === statsModal) {
             statsModal.style.display = 'none';
+        }
+        if (event.target === continentFilterModal) {
+            hideContinentFilterModal();
+        }
+        if (event.target === levelUpModal) {
+            hideLevelUpModal();
         }
     });
 });
