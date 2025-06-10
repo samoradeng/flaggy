@@ -379,7 +379,7 @@ body {
     position: relative;
 }
 
-.continent-option:hover:not(.locked) {
+.continent-option:hover {
     border-color: #4CAF50;
     background-color: #f8f9fa;
 }
@@ -387,12 +387,6 @@ body {
 .continent-option.active {
     border-color: #4CAF50;
     background-color: #e8f5e8;
-}
-
-.continent-option.locked {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background-color: #f5f5f5;
 }
 
 .continent-emoji {
@@ -403,11 +397,6 @@ body {
     flex: 1;
     text-align: left;
     font-weight: 500;
-}
-
-.continent-lock {
-    font-size: 16px;
-    color: #999;
 }
 
 .filter-selection-summary {
@@ -698,29 +687,55 @@ body {
 }
 
 #daily-challenge-btn,
-#endless-mode-btn {
+#challenge-mode-btn,
+#zen-mode-btn {
     padding: 16px 32px;
     font-size: 18px;
     font-family: 'Roboto', arial, sans-serif;
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    background-color: #0052FF;
-    color: white;
     font-weight: 500;
     transition: all 0.3s ease;
     min-width: 200px;
 }
 
-#daily-challenge-btn:hover,
-#endless-mode-btn:hover {
+#daily-challenge-btn {
+    background-color: #ff6b35;
+    color: white;
+}
+
+#challenge-mode-btn {
+    background-color: #0052FF;
+    color: white;
+}
+
+#zen-mode-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#daily-challenge-btn:hover {
+    background-color: #e55a2b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+#challenge-mode-btn:hover {
     background-color: #014cec;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
 }
 
+#zen-mode-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
 #daily-challenge-btn:disabled,
-#endless-mode-btn:disabled {
+#challenge-mode-btn:disabled,
+#zen-mode-btn:disabled {
     background-color: #e0e0e0;
     color: #999;
     cursor: not-allowed;
@@ -1135,7 +1150,8 @@ body {
     }
     
     #daily-challenge-btn,
-    #endless-mode-btn {
+    #challenge-mode-btn,
+    #zen-mode-btn {
         min-width: auto;
         width: 100%;
     }

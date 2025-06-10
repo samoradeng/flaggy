@@ -5,13 +5,20 @@ document.addEventListener("DOMContentLoaded", function () {
     let score = 0;
     let total = 0;
     let gameState = "playing";
-    let endlessStats = {
+    let challengeStats = {
         timesPlayed: 0,
         highestScore: 0,
         totalScore: 0
     };
+    let zenStats = {
+        sessionsPlayed: 0,
+        highestStreak: 0,
+        totalFlags: 0,
+        totalCorrect: 0
+    };
     let lives = 3;
-    let isEndlessMode = false;
+    let isChallengeMode = false;
+    let isZenMode = false;
     let isDailyMode = false;
     let dailyAttempts = 0;
     
@@ -36,7 +43,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const statsBtn = document.getElementById('stats-btn');
     const statsModal = document.getElementById('stats-modal');
     const closeBtn = document.querySelector('.close-btn');
-    const endlessModeBtn = document.getElementById('endless-mode-btn');
+    const challengeModeBtn = document.getElementById('challenge-mode-btn');
+    const zenModeBtn = document.getElementById('zen-mode-btn');
     const dailyChallengeBtn = document.getElementById('daily-challenge-btn');
     const modeSelection = document.getElementById('mode-selection');
     const gameContainer = document.getElementById('game-container');
@@ -70,13 +78,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const levelUpContinue = document.getElementById('level-up-continue');
 
     // Load stats from localStorage
-    const savedStats = JSON.parse(localStorage.getItem('countryGame'));
-    if (savedStats && savedStats.endlessStats) {
-        endlessStats = savedStats.endlessStats;
+    const savedChallengeStats = JSON.parse(localStorage.getItem('challengeStats'));
+    if (savedChallengeStats) {
+        challengeStats = savedChallengeStats;
     }
 
-    if (localStorage.getItem('highestScore')) {
-        endlessStats.highestScore = parseInt(localStorage.getItem('highestScore'));
+    const savedZenStats = JSON.parse(localStorage.getItem('zenStats'));
+    if (savedZenStats) {
+        zenStats = savedZenStats;
     }
 
     // Fetch countries data and initialize game
@@ -110,10 +119,11 @@ document.addEventListener("DOMContentLoaded", function () {
         // Attach event listeners
         options.forEach(button => button.addEventListener('click', checkAnswer));
         nextBtn.addEventListener('click', nextCountry);
-        endlessModeBtn.addEventListener('click', startEndlessMode);
+        challengeModeBtn.addEventListener('click', startChallengeMode);
+        zenModeBtn.addEventListener('click', startZenMode);
         dailyChallengeBtn.addEventListener('click', startDailyChallenge);
-        playEndlessFromGameOver.addEventListener('click', startEndlessMode);
-        tryAgainBtn.addEventListener('click', startEndlessMode);
+        playEndlessFromGameOver.addEventListener('click', startChallengeMode);
+        tryAgainBtn.addEventListener('click', startChallengeMode);
         seeStatsFromGameOver.addEventListener('click', showStatsModal);
         soundToggle.addEventListener('click', toggleSound);
         continentFilterBtn.addEventListener('click', showContinentFilterModal);
@@ -135,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('share-daily-result')?.addEventListener('click', shareDailyResult);
         document.getElementById('play-endless-from-daily')?.addEventListener('click', () => {
             dailyCompleteScreen.style.display = 'none';
-            startEndlessMode();
+            startChallengeMode();
         });
         document.getElementById('share-endless-result')?.addEventListener('click', shareEndlessResult);
     }
@@ -187,15 +197,8 @@ document.addEventListener("DOMContentLoaded", function () {
         options.forEach(option => {
             const continentId = option.dataset.continent;
             const isSelected = continentFilter.selectedContinents.includes(continentId);
-            const isUnlocked = continentId === 'all' || xpSystem.unlockedFeatures.continentsUnlocked.includes(continentId);
             
             option.classList.toggle('active', isSelected);
-            option.classList.toggle('locked', !isUnlocked);
-            
-            const lockIcon = option.querySelector('.continent-lock');
-            if (lockIcon) {
-                lockIcon.style.display = isUnlocked ? 'none' : 'inline';
-            }
         });
         
         selectionSummary.textContent = continentFilter.getSelectionText();
@@ -204,9 +207,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function toggleContinentOption(event) {
         const option = event.currentTarget;
         const continentId = option.dataset.continent;
-        const isUnlocked = continentId === 'all' || xpSystem.unlockedFeatures.continentsUnlocked.includes(continentId);
-        
-        if (!isUnlocked) return;
         
         continentFilter.toggleContinent(continentId);
         updateContinentFilterModal();
@@ -216,9 +216,11 @@ document.addEventListener("DOMContentLoaded", function () {
         updateContinentFilterButton();
         hideContinentFilterModal();
         
-        // If in endless mode, restart with new filter
-        if (isEndlessMode) {
-            startEndlessMode();
+        // If in a game mode, restart with new filter
+        if (isChallengeMode) {
+            startChallengeMode();
+        } else if (isZenMode) {
+            startZenMode();
         }
     }
 
@@ -226,7 +228,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (dailyChallenge.hasPlayedToday()) return;
 
         isDailyMode = true;
-        isEndlessMode = false;
+        isChallengeMode = false;
+        isZenMode = false;
         dailyAttempts = 0;
         lives = 3;
         score = 0;
@@ -248,14 +251,15 @@ document.addEventListener("DOMContentLoaded", function () {
         updateTopBar();
     }
 
-    function startEndlessMode() {
+    function startChallengeMode() {
         modeSelection.style.display = 'none';
         endlessGameOverScreen.style.display = 'none';
         dailyCompleteScreen.style.display = 'none';
         levelUpModal.style.display = 'none';
         
         isDailyMode = false;
-        isEndlessMode = true;
+        isChallengeMode = true;
+        isZenMode = false;
         lives = 3;
         score = 0;
         total = 0;
@@ -266,11 +270,39 @@ document.addEventListener("DOMContentLoaded", function () {
         topBar.style.display = 'flex';
         topProgressBar.style.display = 'block';
         
-        endlessStats.timesPlayed++;
+        challengeStats.timesPlayed++;
         updateTopBar();
         
-        headingText.textContent = "Guess the Flag";
-        subHeadingText.textContent = "Can you identify which country or territory this is?";
+        headingText.textContent = "Challenge Mode";
+        subHeadingText.textContent = "Level up and unlock new challenge modes!";
+        
+        nextCountry();
+    }
+
+    function startZenMode() {
+        modeSelection.style.display = 'none';
+        endlessGameOverScreen.style.display = 'none';
+        dailyCompleteScreen.style.display = 'none';
+        levelUpModal.style.display = 'none';
+        
+        isDailyMode = false;
+        isChallengeMode = false;
+        isZenMode = true;
+        lives = Infinity; // No lives in zen mode
+        score = 0;
+        total = 0;
+        gameState = "playing";
+        usedCountries = [];
+        
+        gameContainer.style.display = 'flex';
+        topBar.style.display = 'flex';
+        topProgressBar.style.display = 'none'; // No XP in zen mode
+        
+        zenStats.sessionsPlayed++;
+        updateTopBar();
+        
+        headingText.textContent = "Zen Mode";
+        subHeadingText.textContent = "Relax and explore flags at your own pace";
         
         nextCountry();
     }
@@ -283,14 +315,19 @@ document.addEventListener("DOMContentLoaded", function () {
         const streakEmoji = streakSystem.getStreakEmoji(streakSystem.currentStreak);
         streakDisplayTop.textContent = `${streakEmoji} ${streakSystem.currentStreak} Streak`.trim();
         
-        // Update lives
-        livesCount.textContent = lives;
+        // Update lives (hide in zen mode)
+        if (isZenMode) {
+            document.getElementById('lives-display').style.display = 'none';
+        } else {
+            document.getElementById('lives-display').style.display = 'flex';
+            livesCount.textContent = lives;
+        }
         
         // Update score
         scoreDisplay.textContent = `Score: ${score}/${total}`;
         
         // Update XP progress bar
-        if (isEndlessMode) {
+        if (isChallengeMode) {
             xpProgressTop.style.width = `${xpSystem.getXPProgress()}%`;
         }
     }
@@ -417,9 +454,11 @@ document.addEventListener("DOMContentLoaded", function () {
         // Sound effect
         soundEffects.playCorrect();
         
-        if (isEndlessMode) {
-            // Update streak and XP
-            const streakResult = streakSystem.addCorrectAnswer();
+        // Update streak
+        const streakResult = streakSystem.addCorrectAnswer();
+        
+        if (isChallengeMode) {
+            // Update XP in challenge mode
             const xpResult = xpSystem.addXP(10, streakSystem.currentStreak);
             
             updateTopBar();
@@ -449,6 +488,15 @@ document.addEventListener("DOMContentLoaded", function () {
             newAchievements.forEach(achievement => {
                 AnimationEffects.showAchievementUnlock(achievement);
             });
+        } else if (isZenMode) {
+            // Update zen stats
+            zenStats.totalCorrect++;
+            if (streakSystem.currentStreak > zenStats.highestStreak) {
+                zenStats.highestStreak = streakSystem.currentStreak;
+            }
+            
+            updateTopBar();
+            AnimationEffects.showConfetti();
         }
     }
 
@@ -459,12 +507,12 @@ document.addEventListener("DOMContentLoaded", function () {
         // Sound effect
         soundEffects.playWrong();
         
-        if (isEndlessMode) {
-            streakSystem.resetStreak();
-            updateTopBar();
-        }
+        streakSystem.resetStreak();
+        updateTopBar();
         
-        loseLife();
+        if (!isZenMode) {
+            loseLife();
+        }
     }
 
     function showLevelUpModal(newLevel) {
@@ -535,8 +583,8 @@ document.addEventListener("DOMContentLoaded", function () {
             gameState = "over";
             nextBtn.disabled = true;
             setTimeout(() => {
-                if (isEndlessMode) {
-                    showEndlessGameOver();
+                if (isChallengeMode) {
+                    showChallengeGameOver();
                 } else if (isDailyMode) {
                     completeDailyChallenge(false);
                 }
@@ -544,16 +592,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function showEndlessGameOver() {
+    function showChallengeGameOver() {
         lives = 0;
 
-        endlessStats.totalScore += score;
-        if (score > endlessStats.highestScore) {
-            endlessStats.highestScore = score;
-            localStorage.setItem('highestScore', endlessStats.highestScore);
+        challengeStats.totalScore += score;
+        if (score > challengeStats.highestScore) {
+            challengeStats.highestScore = score;
         }
 
-        localStorage.setItem('countryGame', JSON.stringify({ endlessStats }));
+        localStorage.setItem('challengeStats', JSON.stringify(challengeStats));
 
         endlessGameOverScreen.style.display = 'block';
         gameContainer.style.display = 'none';
@@ -561,7 +608,7 @@ document.addEventListener("DOMContentLoaded", function () {
         topProgressBar.style.display = 'none';
 
         document.getElementById('endless-score-display').textContent = "Your Score: " + score;
-        document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + endlessStats.highestScore;
+        document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + challengeStats.highestScore;
         document.getElementById('final-streak-display').textContent = `Best Streak This Game: ${streakSystem.currentStreak}`;
     }
 
@@ -712,13 +759,20 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateStats() {
-        // Endless stats
+        // Challenge stats
         document.getElementById('stats-level').textContent = xpSystem.level;
         document.getElementById('stats-xp').textContent = xpSystem.xp;
         document.getElementById('stats-best-streak').textContent = streakSystem.bestStreak;
-        document.getElementById('endless-times-played-value').textContent = endlessStats.timesPlayed;
-        document.getElementById('endless-highest-score-value').textContent = endlessStats.highestScore;
-        document.getElementById('endless-total-score-value').textContent = endlessStats.totalScore;
+        document.getElementById('challenge-times-played-value').textContent = challengeStats.timesPlayed;
+        document.getElementById('challenge-highest-score-value').textContent = challengeStats.highestScore;
+        document.getElementById('challenge-total-score-value').textContent = challengeStats.totalScore;
+        
+        // Zen stats
+        document.getElementById('zen-sessions-played').textContent = zenStats.sessionsPlayed;
+        document.getElementById('zen-highest-streak').textContent = zenStats.highestStreak;
+        document.getElementById('zen-total-flags').textContent = zenStats.totalFlags;
+        const zenAccuracy = zenStats.totalFlags > 0 ? Math.round((zenStats.totalCorrect / zenStats.totalFlags) * 100) : 0;
+        document.getElementById('zen-accuracy').textContent = `${zenAccuracy}%`;
         
         // Daily stats
         document.getElementById('daily-current-streak').textContent = dailyChallenge.dailyStats.streak;
@@ -738,12 +792,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function shareEndlessResult() {
-        const shareText = `🌍 Flagtriv Endless Mode\nScore: ${score}/${total}\nBest Streak: ${streakSystem.currentStreak}\nflagtriv.com`;
+        const mode = isChallengeMode ? 'Challenge Mode' : 'Zen Mode';
+        const shareText = `🌍 Flagtriv ${mode}\nScore: ${score}/${total}\nBest Streak: ${streakSystem.currentStreak}\nflagtriv.com`;
         shareToClipboard(shareText);
     }
 
     function shareScore() {
-        const shareText = `🌍 Flagtriv: ${score}/${total}\nPlay: flagtriv.com`;
+        const mode = isChallengeMode ? 'Challenge' : isZenMode ? 'Zen' : 'Daily';
+        const shareText = `🌍 Flagtriv ${mode}: ${score}/${total}\nPlay: flagtriv.com`;
         shareToClipboard(shareText);
     }
 
@@ -791,11 +847,17 @@ document.addEventListener("DOMContentLoaded", function () {
             lives: lives,
             usedCountries: usedCountries,
             currentCountry: currentCountry,
-            endlessStats: endlessStats,
-            isEndlessMode: isEndlessMode,
+            challengeStats: challengeStats,
+            zenStats: zenStats,
+            isChallengeMode: isChallengeMode,
+            isZenMode: isZenMode,
             isDailyMode: isDailyMode
         };
         localStorage.setItem('countryGame', JSON.stringify(gameStateData));
+        
+        // Save zen stats separately
+        localStorage.setItem('zenStats', JSON.stringify(zenStats));
+        localStorage.setItem('challengeStats', JSON.stringify(challengeStats));
     }
 
     // Event listeners

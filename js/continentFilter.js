@@ -76,11 +76,6 @@ class ContinentFilter {
         
         return `🌍 ${this.selectedContinents.length} Continents`;
     }
-
-    isUnlocked(continentId, unlockedFeatures) {
-        if (continentId === 'all') return true;
-        return unlockedFeatures.continentsUnlocked.includes(continentId);
-    }
 }
 
 window.ContinentFilter = ContinentFilter;

@@ -61,31 +61,26 @@
                 <button class="continent-option" data-continent="Africa">
                     <span class="continent-emoji">🌍</span>
                     <span class="continent-name">Africa</span>
-                    <span class="continent-lock">🔒</span>
                 </button>
                 
                 <button class="continent-option" data-continent="Asia">
                     <span class="continent-emoji">🌏</span>
                     <span class="continent-name">Asia</span>
-                    <span class="continent-lock">🔒</span>
                 </button>
                 
                 <button class="continent-option" data-continent="Europe">
                     <span class="continent-emoji">🇪🇺</span>
                     <span class="continent-name">Europe</span>
-                    <span class="continent-lock">🔒</span>
                 </button>
                 
                 <button class="continent-option" data-continent="Americas">
                     <span class="continent-emoji">🌎</span>
                     <span class="continent-name">Americas</span>
-                    <span class="continent-lock">🔒</span>
                 </button>
                 
                 <button class="continent-option" data-continent="Oceania">
                     <span class="continent-emoji">🏝️</span>
                     <span class="continent-name">Oceania</span>
-                    <span class="continent-lock">🔒</span>
                 </button>
             </div>
             
@@ -124,7 +119,7 @@
             <div id="daily-global-stat"></div>
             <p id="daily-next-challenge">Next challenge in: <span id="countdown-timer"></span></p>
             <button id="share-daily-result">Share Result</button>
-            <button id="play-endless-from-daily">Play Endless Mode</button>
+            <button id="play-endless-from-daily">Play Challenge Mode</button>
         </div>
     </div>
 
@@ -133,7 +128,7 @@
             <img id="flagem-logo" src="images/Flagtriv_logo.svg">
             <p id="flagem-logo-text"></p>
             <p class="center-text-paragraph">See you tomorrow for our next challenge</p>
-            <button id="play-endless-from-gameover">Play</button>
+            <button id="play-endless-from-gameover">Play Challenge Mode</button>
         </div>
     </div>
 
@@ -154,7 +149,8 @@
         <span id="Welcome-module_SubHeading">Guess the world flags!</span>
         <div id="mode-buttons">
             <button id="daily-challenge-btn">Daily Challenge</button>
-            <button id="endless-mode-btn">Endless Mode</button>
+            <button id="challenge-mode-btn">🧠 Challenge Mode</button>
+            <button id="zen-mode-btn">🌿 Zen Mode</button>
         </div>
         <div id="main-menu-stats">
             <div id="daily-streak-info" style="display: none;">
@@ -194,13 +190,14 @@
             <h2 id="stats-header">Statistics</h2>
             
             <div class="tabs">
-                <button class="tab-button active" data-tab="endless">Endless</button>
+                <button class="tab-button active" data-tab="challenge">Challenge</button>
+                <button class="tab-button" data-tab="zen">Zen</button>
                 <button class="tab-button" data-tab="daily">Daily</button>
                 <button class="tab-button" data-tab="achievements">Achievements</button>
                 <button class="tab-button" data-tab="passport">Passport</button>
             </div>
 
-            <div id="endless-stats" class="tab-content active">
+            <div id="challenge-stats" class="tab-content active">
                 <div class="stat-row">
                     <span>Level:</span>
                     <span id="stats-level">1</span>
@@ -215,15 +212,34 @@
                 </div>
                 <div class="stat-row">
                     <span>Games Played:</span>
-                    <span id="endless-times-played-value">0</span>
+                    <span id="challenge-times-played-value">0</span>
                 </div>
                 <div class="stat-row">
                     <span>Highest Score:</span>
-                    <span id="endless-highest-score-value">0</span>
+                    <span id="challenge-highest-score-value">0</span>
                 </div>
                 <div class="stat-row">
                     <span>Total Score:</span>
-                    <span id="endless-total-score-value">0</span>
+                    <span id="challenge-total-score-value">0</span>
+                </div>
+            </div>
+
+            <div id="zen-stats" class="tab-content">
+                <div class="stat-row">
+                    <span>Sessions Played:</span>
+                    <span id="zen-sessions-played">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Highest Streak:</span>
+                    <span id="zen-highest-streak">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Total Flags Guessed:</span>
+                    <span id="zen-total-flags">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Accuracy:</span>
+                    <span id="zen-accuracy">0%</span>
                 </div>
             </div>
 

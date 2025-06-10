@@ -2,7 +2,6 @@ class XPSystem {
     constructor() {
         this.xp = parseInt(localStorage.getItem('totalXP') || '0');
         this.level = this.calculateLevel(this.xp);
-        this.unlockedFeatures = this.loadUnlockedFeatures();
     }
 
     calculateLevel(xp) {
@@ -49,9 +48,6 @@ class XPSystem {
         localStorage.setItem('totalXP', this.xp.toString());
         
         const leveledUp = this.level > oldLevel;
-        if (leveledUp) {
-            this.updateUnlockedFeatures();
-        }
         
         return {
             xpGained: totalXP,
@@ -61,68 +57,51 @@ class XPSystem {
         };
     }
 
-    updateUnlockedFeatures() {
-        this.unlockedFeatures = {
-            streakTracker: this.level >= 2,
-            mysteryMode: this.level >= 5,
-            hardcoreMode: this.level >= 8,
-            continentsUnlocked: this.getContinentsUnlocked(),
-            badgeUI: this.level >= 7,
-            fullPassport: this.level >= 9,
-            leaderboard: this.level >= 10
-        };
-        
-        localStorage.setItem('unlockedFeatures', JSON.stringify(this.unlockedFeatures));
-    }
-
-    getContinentsUnlocked() {
-        const continents = [];
-        if (this.level >= 3) continents.push('Africa');
-        if (this.level >= 6) continents.push('Europe', 'Asia');
-        if (this.level >= 8) continents.push('Americas', 'Oceania');
-        return continents;
-    }
-
-    loadUnlockedFeatures() {
-        const saved = localStorage.getItem('unlockedFeatures');
-        if (saved) {
-            return JSON.parse(saved);
-        }
-        
-        // Initialize based on current level
-        this.updateUnlockedFeatures();
-        return this.unlockedFeatures;
-    }
-
     getLevelTitle(level) {
         const titles = {
             1: '🌱 Rookie Traveler',
-            2: '🧳 Novice Nomad',
-            3: '🌍 Map Scout',
-            4: '📸 World Watcher',
-            5: '🔎 Flag Sleuth',
-            6: '✈️ Continental Champ',
-            7: '🎖️ Badge Collector',
-            8: '🧠 Geo Mastermind',
-            9: '🚩 Flag Legend',
-            10: '👑 Supreme Sovereign'
+            2: '🎯 Quick Pick',
+            3: '🧭 Region Locked',
+            4: '🧠 Blind Guess',
+            5: '💥 One Life Left',
+            6: '🤔 Fake or Real?',
+            7: '⏳ Speed Demon',
+            8: '🧪 Mystery Mode',
+            9: '🕵️‍♂️ Reverse Challenge',
+            10: '🌍 Flag Master Trial'
         };
         return titles[level] || `🌟 Level ${level} Master`;
     }
 
+    getLevelDescription(level) {
+        const descriptions = {
+            1: '4 multiple choice, easy countries, tutorial-like',
+            2: 'Only 3 options, 7s timer for bonus XP',
+            3: 'Flags from one random region — not shown which',
+            4: 'No multiple choice — shows only flag + region hint',
+            5: '1 life, no retries, streak shown onscreen',
+            6: 'One option is fake — spot the lie',
+            7: '5s timer, fast reactions = more XP',
+            8: 'Type answer only, fuzzy match OK',
+            9: 'Given country name, pick correct flag from similar-looking ones',
+            10: 'No UI hints, no retries, type-only, random continent, leaderboard unlocked'
+        };
+        return descriptions[level] || 'Advanced challenge mode';
+    }
+
     getLevelUnlock(level) {
         const unlocks = {
-            2: '🔓 Streak tracking unlocked!',
-            3: '🔓 Africa-only filter unlocked!',
-            4: '🔓 Daily streak progress unlocked!',
-            5: '🔓 Mystery Mode unlocked!',
-            6: '🔓 Europe & Asia filters unlocked!',
-            7: '🔓 Badge system unlocked!',
-            8: '🔓 Hardcore Mode unlocked!',
-            9: '🔓 Full Passport access unlocked!',
-            10: '🔓 Leaderboard access unlocked!'
+            2: '🔓 Quick Pick mode unlocked! Only 3 choices with time bonus.',
+            3: '🔓 Region Lock mode unlocked! Mystery continent challenges.',
+            4: '🔓 Blind Guess mode unlocked! No multiple choice, just hints.',
+            5: '🔓 One Life mode unlocked! High stakes, high rewards.',
+            6: '🔓 Fake or Real mode unlocked! Spot the impostor flag.',
+            7: '🔓 Speed Demon mode unlocked! Lightning-fast reactions.',
+            8: '🔓 Mystery Mode unlocked! Type-only challenges.',
+            9: '🔓 Reverse Challenge unlocked! Name to flag matching.',
+            10: '🔓 Flag Master Trial unlocked! Ultimate challenge mode!'
         };
-        return unlocks[level] || '🔓 New features unlocked!';
+        return unlocks[level] || '🔓 New challenge mode unlocked!';
     }
 }
 
