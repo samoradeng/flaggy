@@ -111,10 +111,53 @@ class MultiplayerGame {
         
         if (result.success) {
             document.getElementById('join-challenge-modal').style.display = 'none';
-            this.showLobby(gameId, result.gameState.continent, result.gameState.totalFlags);
+            
+            // Check if game is already finished
+            if (result.gameState.status === 'finished') {
+                this.showGameFinishedModal(result.gameState);
+            } else {
+                this.showLobby(gameId, result.gameState.continent, result.gameState.totalFlags);
+            }
         } else {
             alert('Failed to join challenge: ' + result.error);
         }
+    }
+
+    showGameFinishedModal(gameState) {
+        // Show the game finished modal for late joiners
+        document.getElementById('game-finished-modal').style.display = 'block';
+        
+        // Populate the leaderboard
+        const lateJoinerResults = document.getElementById('late-joiner-results');
+        lateJoinerResults.innerHTML = '';
+        
+        // Sort players by score
+        const players = Object.values(gameState.players);
+        players.sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            
+            // Calculate total time for tiebreaker
+            const aTime = a.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+            const bTime = b.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+            return aTime - bTime;
+        });
+        
+        players.forEach((player, index) => {
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'player-result';
+            
+            const rank = index + 1;
+            const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+            
+            playerDiv.innerHTML = `
+                <span>${rankEmoji} ${player.nickname}</span>
+                <span>${player.score}/${gameState.totalFlags}</span>
+            `;
+            
+            lateJoinerResults.appendChild(playerDiv);
+        });
     }
 
     showLobby(gameId, continent, flagCount) {

@@ -151,8 +151,6 @@
                 </select>
             </div>
             
-            <p class="challenge-note">💡 Choose your preferred settings and create a challenge for your friends!</p>
-            
             <button id="create-challenge-btn" class="create-challenge-btn">🚀 Create Challenge</button>
         </div>
     </div>
@@ -177,6 +175,26 @@
             </div>
             
             <button id="join-challenge-btn" class="create-challenge-btn">🎯 Join Challenge</button>
+        </div>
+    </div>
+
+    <!-- Game Finished Modal (for late joiners) -->
+    <div id="game-finished-modal" class="modal">
+        <div class="modal-content challenge-modal-content">
+            <span class="close-btn" onclick="document.getElementById('game-finished-modal').style.display='none'">
+                <img src="images/x-mark.svg">
+            </span>
+            <h2>⏰ Game Already Finished</h2>
+            <p class="challenge-description">You joined a little too late, but here are the final results!</p>
+            
+            <div id="late-joiner-leaderboard">
+                <h3>🏆 Final Leaderboard</h3>
+                <div id="late-joiner-results"></div>
+            </div>
+            
+            <button onclick="document.getElementById('game-finished-modal').style.display='none'" class="create-challenge-btn">
+                👍 Got It
+            </button>
         </div>
     </div>
 

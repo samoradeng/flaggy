@@ -371,16 +371,6 @@ body {
     min-width: 120px;
 }
 
-.challenge-note {
-    background-color: #f0f8ff;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #666;
-    margin: 16px 0;
-    border-left: 4px solid #4CAF50;
-}
-
 .create-challenge-btn {
     background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
@@ -689,6 +679,25 @@ body {
 #share-multiplayer-result:hover,
 #play-again-multiplayer:hover {
     transform: translateY(-2px);
+}
+
+/* Game Finished Modal (for late joiners) */
+#late-joiner-leaderboard {
+    margin: 24px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    border-left: 4px solid #ff6b35;
+}
+
+#late-joiner-leaderboard h3 {
+    margin: 0 0 16px 0;
+    color: #333;
+}
+
+#late-joiner-results {
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 /* Continent Filter Modal */
