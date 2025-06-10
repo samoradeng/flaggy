@@ -11,11 +11,43 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Titan+One&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.1"></script>
-    <title>Guess the Country</title>
+    <title>Flagtriv - Guess the Country</title>
 </head>
 <body>
 
     <div id="resultsToast">Copied results to clipboard</div>
+
+    <!-- XP and Level Display -->
+    <div id="xp-display" style="display: none;">
+        <div id="level-info">
+            <span id="level-text">Level 1</span>
+            <span id="xp-text">0 XP</span>
+        </div>
+        <div id="xp-bar">
+            <div id="xp-progress"></div>
+        </div>
+    </div>
+
+    <!-- Streak Display -->
+    <div id="streak-display" style="display: none;">
+        <span id="streak-text">🔥 0 Streak</span>
+    </div>
+
+    <!-- Daily Challenge Complete Screen -->
+    <div id="daily-complete-screen" style="display: none;">
+        <div class="daily-complete-content">
+            <h2 id="daily-result-heading">Well Done!</h2>
+            <div id="daily-flag-result">
+                <img id="daily-result-flag" src="" alt="Flag">
+                <p id="daily-result-country"></p>
+            </div>
+            <div id="daily-attempts-display"></div>
+            <div id="daily-streak-display"></div>
+            <p id="daily-next-challenge">Next challenge in: <span id="countdown-timer"></span></p>
+            <button id="share-daily-result">Share Result</button>
+            <button id="play-endless-from-daily">Play Endless Mode</button>
+        </div>
+    </div>
 
     <div id="game-over-screen" style="display: none;">
         <div id="logo-and-text">
@@ -23,7 +55,6 @@
             <p id="flagem-logo-text"></p>
             <p class="center-text-paragraph">See you tomorrow for our next challenge</p>
             <button id="play-endless-from-gameover">Play</button>
-            
         </div>
     </div>
 
@@ -32,49 +63,58 @@
             <h2 id="endless-game-over-heading">Game Over</h2>
             <p id="endless-score-display"></p>
             <p id="endless-highest-score-display"></p>
+            <div id="final-streak-display"></div>
             <button id="try-again">Try Again</button>
             <button id="see-stats-from-gameover">See Stats</button>
+            <button id="share-endless-result">Share Score</button>
         </div>
     </div>
-    
 
     <div id="mode-selection" style="display: flex;">
-    <h1 id="title" class="Welcome-module_title">Flagtriv</h1>
-    <span id="Welcome-module_SubHeading">Guess the world flags!</span>
-    <button id="endless-mode-btn">Play</button>
-</div>
-
-<div id="game-container" style="display: none;">
-    <h1 id="heading">Guess the Flag</h1>
-    <p id="subHeading">Can you identify which country or territory this is?</p>
-    <img id="flag" src="" alt="Country Flag">
-    <div id="options">
-        <button class="option" disabled>Option 1</button>
-        <button class="option" disabled>Option 2</button>
-        <button class="option" disabled>Option 3</button>
-        <button class="option" disabled>Option 4</button>
+        <h1 id="title" class="Welcome-module_title">Flagtriv</h1>
+        <span id="Welcome-module_SubHeading">Guess the world flags!</span>
+        <div id="mode-buttons">
+            <button id="daily-challenge-btn">Daily Challenge</button>
+            <button id="endless-mode-btn">Endless Mode</button>
+        </div>
+        <div id="main-menu-stats">
+            <div id="daily-streak-info" style="display: none;">
+                <span>🔥 Daily Streak: <span id="daily-streak-count">0</span></span>
+            </div>
+        </div>
     </div>
-    <p id="message"></p>
-    <div id="facts" hidden>
-        <!-- Country facts will be displayed here -->
+
+    <div id="game-container" style="display: none;">
+        <h1 id="heading">Guess the Flag</h1>
+        <p id="subHeading">Can you identify which country or territory this is?</p>
+        <img id="flag" src="" alt="Country Flag">
+        <div id="options">
+            <button class="option" disabled>Option 1</button>
+            <button class="option" disabled>Option 2</button>
+            <button class="option" disabled>Option 3</button>
+            <button class="option" disabled>Option 4</button>
+        </div>
+        <p id="message"></p>
+        <div id="facts" hidden>
+            <!-- Country facts will be displayed here -->
+        </div>
+        <button id="next" hidden>Next country</button>
     </div>
-    <button id="next" hidden>Next country</button>
-</div>
 
-<div id="top-right-game-stats" style="display: none;">
-    <div id="lives">
-        <img src="images/heart.svg" class="heart-icon" alt="Life">
-        <img src="images/heart.svg" class="heart-icon" alt="Life">
-        <img src="images/heart.svg" class="heart-icon" alt="Life">
+    <div id="top-right-game-stats" style="display: none;">
+        <div id="lives">
+            <img src="images/heart.svg" class="heart-icon" alt="Life">
+            <img src="images/heart.svg" class="heart-icon" alt="Life">
+            <img src="images/heart.svg" class="heart-icon" alt="Life">
+        </div>
+        <button id="stats-btn">
+            <img src="images/chart-bar.svg">
+        </button>
+        <button id="sound-toggle" title="Toggle Sound">
+            <span id="sound-icon">🔊</span>
+        </button>
+        <p id="score">Score: 0/0</p>
     </div>
-    <button id="stats-btn">
-        <img src="images/chart-bar.svg">
-    </button>
-    <p id="score">Score: 0/0</p>
-</div>
-
-
-    
 
     <div id="stats-modal" class="modal">
         <div class="modal-content">
@@ -82,15 +122,83 @@
                 <img src="images/x-mark.svg">
             </span>
             <h2 id="stats-header">Statistics</h2>
-            <div id="endless-stats">
-                <p id="endless-times-played">Played: <span id="endless-times-played-value">0</span></p>
-                <p id="endless-highest-score">Highest Score: <span id="endless-highest-score-value">0</span></p>
-                <p id="endless-total-score">Total Score: <span id="endless-total-score-value">0</span></p>
+            
+            <div class="tabs">
+                <button class="tab-button active" data-tab="endless">Endless</button>
+                <button class="tab-button" data-tab="daily">Daily</button>
+                <button class="tab-button" data-tab="achievements">Achievements</button>
+                <button class="tab-button" data-tab="passport">Passport</button>
             </div>
+
+            <div id="endless-stats" class="tab-content active">
+                <div class="stat-row">
+                    <span>Level:</span>
+                    <span id="stats-level">1</span>
+                </div>
+                <div class="stat-row">
+                    <span>Total XP:</span>
+                    <span id="stats-xp">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Best Streak:</span>
+                    <span id="stats-best-streak">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Games Played:</span>
+                    <span id="endless-times-played-value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Highest Score:</span>
+                    <span id="endless-highest-score-value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Total Score:</span>
+                    <span id="endless-total-score-value">0</span>
+                </div>
+            </div>
+
+            <div id="daily-stats" class="tab-content">
+                <div class="stat-row">
+                    <span>Current Streak:</span>
+                    <span id="daily-current-streak">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Games Played:</span>
+                    <span id="daily-games-played">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Success Rate:</span>
+                    <span id="daily-success-rate">0%</span>
+                </div>
+            </div>
+
+            <div id="achievements-stats" class="tab-content">
+                <div id="achievement-progress">
+                    <span id="achievement-count">0/8 Achievements</span>
+                    <div id="achievement-progress-bar">
+                        <div id="achievement-progress-fill"></div>
+                    </div>
+                </div>
+                <div id="achievements-list"></div>
+            </div>
+
+            <div id="passport-stats" class="tab-content">
+                <div id="passport-progress">
+                    <span id="countries-unlocked">0 Countries Discovered</span>
+                </div>
+                <div id="passport-grid"></div>
+            </div>
+
             <button id="share-button">Share</button>
         </div>
     </div>
 
+    <!-- Load JavaScript modules -->
+    <script src="js/streakSystem.js"></script>
+    <script src="js/dailyChallenge.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/soundEffects.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

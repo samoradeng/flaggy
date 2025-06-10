@@ -2,17 +2,27 @@ document.addEventListener("DOMContentLoaded", function () {
     let countries = [];
     let currentCountry = null;
     let usedCountries = [];
-    let score = 0; // Score for the current game session
-    let total = 0; // Total number of questions attempted
+    let score = 0;
+    let total = 0;
     let gameState = "playing";
     let endlessStats = {
         timesPlayed: 0,
         highestScore: 0,
-        totalScore: 0 // Overall total score across all sessions
+        totalScore: 0
     };
     let lives = 3;
-    const hearts = document.querySelectorAll('.heart-icon');
     let isEndlessMode = false;
+    let isDailyMode = false;
+    let dailyAttempts = 0;
+    
+    // Initialize game systems
+    let streakSystem;
+    let dailyChallenge;
+    let achievementSystem;
+    let soundEffects;
+
+    // DOM elements
+    const hearts = document.querySelectorAll('.heart-icon');
     const flagImg = document.getElementById('flag');
     const options = document.querySelectorAll('.option');
     const message = document.getElementById('message');
@@ -25,14 +35,28 @@ document.addEventListener("DOMContentLoaded", function () {
     const statsModal = document.getElementById('stats-modal');
     const closeBtn = document.querySelector('.close-btn');
     const endlessModeBtn = document.getElementById('endless-mode-btn');
+    const dailyChallengeBtn = document.getElementById('daily-challenge-btn');
     const modeSelection = document.getElementById('mode-selection');
     const gameContainer = document.getElementById('game-container');
     const endlessGameOverScreen = document.getElementById('endless-game-over-screen');
+    const dailyCompleteScreen = document.getElementById('daily-complete-screen');
     const playEndlessFromGameOver = document.getElementById('play-endless-from-gameover');
     const tryAgainBtn = document.getElementById('try-again');
-    const seeStatsFromGameOver = document.getElementById('see-stats-from-gameover'); // Ensure this ID matches your HTML
+    const seeStatsFromGameOver = document.getElementById('see-stats-from-gameover');
 
-    // Load stats from localStorage if available
+    // XP and Streak displays
+    const xpDisplay = document.getElementById('xp-display');
+    const levelText = document.getElementById('level-text');
+    const xpText = document.getElementById('xp-text');
+    const xpProgress = document.getElementById('xp-progress');
+    const streakDisplay = document.getElementById('streak-display');
+    const streakText = document.getElementById('streak-text');
+
+    // Sound toggle
+    const soundToggle = document.getElementById('sound-toggle');
+    const soundIcon = document.getElementById('sound-icon');
+
+    // Load stats from localStorage
     const savedStats = JSON.parse(localStorage.getItem('countryGame'));
     if (savedStats && savedStats.endlessStats) {
         endlessStats = savedStats.endlessStats;
@@ -42,137 +66,200 @@ document.addEventListener("DOMContentLoaded", function () {
         endlessStats.highestScore = parseInt(localStorage.getItem('highestScore'));
     }
 
-    // Fetch the countries data and start the game once the data is loaded
+    // Fetch countries data and initialize game
     fetch('countries.json')
         .then(response => response.json())
         .then(data => {
             countries = data;
-            // After loading countries, attach event listeners and make the buttons functional
-            options.forEach(button => button.addEventListener('click', checkAnswer));
-            nextBtn.addEventListener('click', nextCountry);
-            endlessModeBtn.addEventListener('click', restartEndlessMode);
-            playEndlessFromGameOver.addEventListener('click', restartEndlessMode);
-            tryAgainBtn.addEventListener('click', restartEndlessMode);
-            seeStatsFromGameOver.addEventListener('click', showStatsModal); // Ensure this is registered
+            initializeGame();
         })
         .catch(error => console.error('Error loading countries data:', error));
 
-    function saveGameState() {
-        // Save the current session's game state (but not the total score again)
-        const gameStateData = {
-            gameState: gameState,
-            score: score,
-            total: total,
-            lives: lives,
-            usedCountries: usedCountries,
-            currentCountry: currentCountry,
-            endlessStats: endlessStats,
-            isEndlessMode: isEndlessMode
-        };
+    function initializeGame() {
+        // Initialize game systems
+        streakSystem = new StreakSystem();
+        dailyChallenge = new DailyChallenge(countries);
+        achievementSystem = new AchievementSystem();
+        soundEffects = new SoundEffects();
 
-        localStorage.setItem('countryGame', JSON.stringify(gameStateData));
+        // Update UI
+        updateXPDisplay();
+        updateStreakDisplay();
+        updateMainMenuStats();
+        updateSoundToggle();
+
+        // Check if daily challenge is available
+        updateDailyChallengeButton();
+
+        // Attach event listeners
+        options.forEach(button => button.addEventListener('click', checkAnswer));
+        nextBtn.addEventListener('click', nextCountry);
+        endlessModeBtn.addEventListener('click', startEndlessMode);
+        dailyChallengeBtn.addEventListener('click', startDailyChallenge);
+        playEndlessFromGameOver.addEventListener('click', startEndlessMode);
+        tryAgainBtn.addEventListener('click', startEndlessMode);
+        seeStatsFromGameOver.addEventListener('click', showStatsModal);
+        soundToggle.addEventListener('click', toggleSound);
+
+        // Stats modal tabs
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
+        });
+
+        // Daily challenge specific buttons
+        document.getElementById('share-daily-result')?.addEventListener('click', shareDailyResult);
+        document.getElementById('play-endless-from-daily')?.addEventListener('click', () => {
+            dailyCompleteScreen.style.display = 'none';
+            startEndlessMode();
+        });
+        document.getElementById('share-endless-result')?.addEventListener('click', shareEndlessResult);
     }
 
-    function restartEndlessMode() {
-        modeSelection.style.display = 'none';  // Hide the play button and mode selection
+    function updateDailyChallengeButton() {
+        if (dailyChallenge.hasPlayedToday()) {
+            dailyChallengeBtn.textContent = 'Completed Today';
+            dailyChallengeBtn.disabled = true;
+        } else {
+            dailyChallengeBtn.textContent = 'Daily Challenge';
+            dailyChallengeBtn.disabled = false;
+        }
+    }
+
+    function updateMainMenuStats() {
+        const dailyStreakInfo = document.getElementById('daily-streak-info');
+        const dailyStreakCount = document.getElementById('daily-streak-count');
+        
+        if (dailyChallenge.dailyStats.streak > 0) {
+            dailyStreakCount.textContent = dailyChallenge.dailyStats.streak;
+            dailyStreakInfo.style.display = 'block';
+        }
+    }
+
+    function startDailyChallenge() {
+        if (dailyChallenge.hasPlayedToday()) return;
+
+        isDailyMode = true;
+        isEndlessMode = false;
+        dailyAttempts = 0;
+        lives = 3;
+        score = 0;
+        total = 0;
+        gameState = "playing";
+        
+        modeSelection.style.display = 'none';
+        gameContainer.style.display = 'flex';
+        document.getElementById('top-right-game-stats').style.display = 'flex';
+        xpDisplay.style.display = 'none'; // Hide XP in daily mode
+        streakDisplay.style.display = 'none'; // Hide streak in daily mode
+        
+        hearts.forEach(heart => heart.classList.remove('heart-lost'));
+        
+        // Set today's country
+        currentCountry = dailyChallenge.getTodaysCountry();
+        displayCountry();
+        
+        headingText.textContent = "Daily Challenge";
+        subHeadingText.textContent = "One flag per day - make it count!";
+    }
+
+    function startEndlessMode() {
+        modeSelection.style.display = 'none';
         endlessGameOverScreen.style.display = 'none';
-        nextBtn.disabled = false;
+        dailyCompleteScreen.style.display = 'none';
+        
+        isDailyMode = false;
+        isEndlessMode = true;
         lives = 3;
         score = 0;
         total = 0;
         gameState = "playing";
         usedCountries = [];
-        gameContainer.style.display = 'flex';  // Show the game container
-        headingText.style.display = 'none';
-        subHeadingText.style.display = 'none';
-        flagImg.style.display = 'block';
-        document.getElementById('options').style.display = 'block';
-        document.getElementById('top-right-game-stats').style.display = 'flex'; // Show hearts, score, and stats button
+        
+        gameContainer.style.display = 'flex';
+        document.getElementById('top-right-game-stats').style.display = 'flex';
+        xpDisplay.style.display = 'flex';
+        streakDisplay.style.display = 'flex';
+        
         hearts.forEach(heart => heart.classList.remove('heart-lost'));
         scoreDisplay.textContent = "Score: " + score + "/" + total;
-        isEndlessMode = true;
+        
         endlessStats.timesPlayed++;
+        updateXPDisplay();
+        updateStreakDisplay();
+        
+        headingText.textContent = "Guess the Flag";
+        subHeadingText.textContent = "Can you identify which country or territory this is?";
+        
         nextCountry();
     }
-    
 
-    function updateUI() {
-        scoreDisplay.textContent = "Score: " + score + "/" + total;
-        hearts.forEach((heart, index) => {
-            if (index < lives) {
-                heart.classList.remove('heart-lost');
-            } else {
-                heart.classList.add('heart-lost');
-            }
-        });
+    function updateXPDisplay() {
+        levelText.textContent = `Level ${streakSystem.level}`;
+        xpText.textContent = `${streakSystem.xp} XP`;
+        xpProgress.style.width = `${streakSystem.getXPProgress()}%`;
+    }
 
-        if (lives === 0) {
-            gameState = "over";
-            nextBtn.disabled = true;
-            if (isEndlessMode) {
-                showEndlessGameOver();
-            }
+    function updateStreakDisplay() {
+        const streakEmoji = streakSystem.getStreakEmoji(streakSystem.currentStreak);
+        streakText.textContent = `${streakEmoji} ${streakSystem.currentStreak} Streak`;
+        
+        if (streakSystem.currentStreak === 0) {
+            streakDisplay.style.opacity = '0.5';
+        } else {
+            streakDisplay.style.opacity = '1';
         }
     }
 
-    function showEndlessGameOver() {
-        lives = 0;
-
-        hearts.forEach(heart => {
-            heart.classList.add('heart-lost');
-        });
-
-        // Accumulate the current session's score to the total score
-        endlessStats.totalScore += score;
-
-        if (score > endlessStats.highestScore) {
-            endlessStats.highestScore = score;
-            localStorage.setItem('highestScore', endlessStats.highestScore);
-        }
-
-        localStorage.setItem('countryGame', JSON.stringify({ endlessStats }));
-
-        endlessGameOverScreen.style.display = 'block';
-        gameContainer.style.display = 'none';
-        document.getElementById('top-right-game-stats').style.display = 'none';
-        headingText.style.display = 'none';
-        subHeadingText.style.display = 'none';
-        flagImg.style.display = 'none';
-        document.getElementById('options').style.display = 'none';
-        document.getElementById('endless-score-display').textContent = "Your Score: " + score;
-        document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + endlessStats.highestScore;
+    function toggleSound() {
+        const enabled = soundEffects.toggle();
+        soundIcon.textContent = enabled ? '🔊' : '🔇';
+        updateSoundToggle();
     }
 
-    function showStatsModal() {
-        updateStats();
-        statsModal.style.display = 'block';
+    function updateSoundToggle() {
+        soundIcon.textContent = soundEffects.enabled ? '🔊' : '🔇';
     }
-
-    function updateStats() {
-        document.getElementById('endless-times-played-value').textContent = endlessStats.timesPlayed;
-        document.getElementById('endless-highest-score-value').textContent = endlessStats.highestScore;
-        document.getElementById('endless-total-score-value').textContent = endlessStats.totalScore;
-    }
-
-    closeBtn.addEventListener('click', () => {
-        statsModal.style.display = 'none';
-    });
-
-    statsBtn.addEventListener('click', showStatsModal);
-
-    function backToMainMenu() {
-        endlessGameOverScreen.style.display = 'none';
-        modeSelection.style.display = 'flex';  // Show the mode selection again
-        gameContainer.style.display = 'none';
-        document.getElementById('top-right-game-stats').style.display = 'none'; // Hide hearts, score, and stats button
-    }
-    
 
     function nextCountry() {
+        if (isDailyMode) return; // Daily mode only has one country
+        
         nextBtn.disabled = false;
         saveGameState();
         fetchNewCountry();
+        resetQuestionUI();
+    }
 
+    function fetchNewCountry() {
+        const countryCodes = Object.keys(countries);
+        if (countryCodes.length === 0) {
+            console.error('No countries available');
+            return;
+        }
+        
+        let countryCode;
+        do {
+            const randomIndex = Math.floor(Math.random() * countryCodes.length);
+            countryCode = countryCodes[randomIndex];
+        } while (usedCountries.includes(countryCode) && usedCountries.length < countryCodes.length);
+        
+        usedCountries.push(countryCode);
+        currentCountry = countries[countryCode];
+        
+        displayCountry();
+    }
+
+    function displayCountry() {
+        if (!currentCountry || !currentCountry.flag || !currentCountry.flag.large) {
+            console.error('Invalid country data:', currentCountry);
+            return;
+        }
+
+        flagImg.src = currentCountry.flag.large;
+        updateOptions();
+        localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
+    }
+
+    function resetQuestionUI() {
         options.forEach(button => {
             button.disabled = false;
             button.classList.remove('disabled', 'correct-answer', 'wrong-answer');
@@ -185,28 +272,10 @@ document.addEventListener("DOMContentLoaded", function () {
         subHeadingText.hidden = false;
     }
 
-    function fetchNewCountry() {
-        const countryCodes = Object.keys(countries);
-        if (countryCodes.length === 0) {
-            console.error('No countries available');
-            return;
-        }
-        const randomIndex = Math.floor(Math.random() * countryCodes.length);
-        const countryCode = countryCodes[randomIndex];
-        currentCountry = countries[countryCode];
-
-        if (!currentCountry || !currentCountry.flag || !currentCountry.flag.large) {
-            console.error('Invalid country data:', currentCountry);
-            return;
-        }
-
-        flagImg.src = currentCountry.flag.large;
-        updateOptions();
-        localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
-    }
-
     function checkAnswer(event) {
         const selectedCountryName = event.target.textContent;
+        const isCorrect = selectedCountryName === currentCountry.name;
+        
         options.forEach(button => {
             button.disabled = true;
             button.classList.add('disabled');
@@ -214,16 +283,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
         localStorage.removeItem('currentFlag');
 
-        if (selectedCountryName === currentCountry.name) {
-            message.textContent = "🎉 Correct! Well done!";
-            score++;
-            event.target.classList.add('correct-answer');
+        if (isCorrect) {
+            handleCorrectAnswer(event.target);
         } else {
-            message.textContent = "😢 Oops, that's not correct.";
-            event.target.classList.add('wrong-answer');
-            loseLife();
+            handleWrongAnswer(event.target);
         }
 
+        // Show correct answer
         options.forEach(button => {
             if (button.textContent === currentCountry.name) {
                 button.classList.add('correct-answer');
@@ -231,19 +297,121 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         total++;
+        if (isDailyMode) {
+            dailyAttempts++;
+        }
+        
         scoreDisplay.textContent = "Score: " + score + "/" + total;
         showFacts(currentCountry);
         headingText.style.display = 'none';
         subHeadingText.style.display = 'none';
-        nextBtn.hidden = false;
+        
+        if (!isDailyMode) {
+            nextBtn.hidden = false;
+        }
+
+        // Handle end of daily challenge
+        if (isDailyMode) {
+            setTimeout(() => {
+                completeDailyChallenge(isCorrect);
+            }, 2000);
+        }
 
         saveGameState();
+    }
+
+    function handleCorrectAnswer(button) {
+        message.textContent = "🎉 Correct! Well done!";
+        score++;
+        button.classList.add('correct-answer');
+        
+        // Sound effect
+        soundEffects.playCorrect();
+        
+        if (isEndlessMode) {
+            // Update streak and XP
+            const result = streakSystem.addCorrectAnswer();
+            updateXPDisplay();
+            updateStreakDisplay();
+            
+            // Show XP gain animation
+            AnimationEffects.showXPGain(result.xpGained, button);
+            
+            // Check for streak milestones
+            if (result.isStreakMilestone) {
+                AnimationEffects.showStreakConfetti();
+                soundEffects.playStreak();
+            } else {
+                AnimationEffects.showConfetti();
+            }
+            
+            // Level up animation
+            if (result.leveledUp) {
+                AnimationEffects.showLevelUpAnimation(result.newLevel);
+                soundEffects.playLevelUp();
+            }
+            
+            // Unlock country and check achievements
+            achievementSystem.unlockCountry(currentCountry.alpha2Code, currentCountry);
+            const newAchievements = achievementSystem.checkAchievements();
+            newAchievements.forEach(achievement => {
+                AnimationEffects.showAchievementUnlock(achievement);
+            });
+        }
+    }
+
+    function handleWrongAnswer(button) {
+        message.textContent = "😢 Oops, that's not correct.";
+        button.classList.add('wrong-answer');
+        
+        // Sound effect
+        soundEffects.playWrong();
+        
+        if (isEndlessMode) {
+            streakSystem.resetStreak();
+            updateStreakDisplay();
+        }
+        
+        loseLife();
+    }
+
+    function completeDailyChallenge(correct) {
+        dailyChallenge.submitResult(correct, dailyAttempts);
+        
+        gameContainer.style.display = 'none';
+        document.getElementById('top-right-game-stats').style.display = 'none';
+        dailyCompleteScreen.style.display = 'block';
+        
+        // Update daily complete screen
+        document.getElementById('daily-result-heading').textContent = correct ? 'Well Done!' : 'Better Luck Tomorrow!';
+        document.getElementById('daily-result-flag').src = currentCountry.flag.large;
+        document.getElementById('daily-result-country').textContent = currentCountry.name;
+        document.getElementById('daily-attempts-display').textContent = `Attempts: ${dailyAttempts}/3`;
+        document.getElementById('daily-streak-display').textContent = `Daily Streak: ${dailyChallenge.dailyStats.streak}`;
+        
+        // Start countdown timer
+        startCountdownTimer();
+        
+        // Update main menu for tomorrow
+        updateDailyChallengeButton();
+    }
+
+    function startCountdownTimer() {
+        const countdownElement = document.getElementById('countdown-timer');
+        
+        function updateCountdown() {
+            countdownElement.textContent = dailyChallenge.getTimeUntilNext();
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 60000); // Update every minute
     }
 
     function loseLife() {
         if (lives > 0) {
             lives--;
             hearts[lives].classList.add('heart-lost');
+            AnimationEffects.pulseElement(hearts[lives]);
             saveGameState();
         }
 
@@ -253,14 +421,40 @@ document.addEventListener("DOMContentLoaded", function () {
             setTimeout(() => {
                 if (isEndlessMode) {
                     showEndlessGameOver();
+                } else if (isDailyMode) {
+                    completeDailyChallenge(false);
                 }
             }, 2000);
         }
     }
 
+    function showEndlessGameOver() {
+        lives = 0;
+        hearts.forEach(heart => heart.classList.add('heart-lost'));
+
+        endlessStats.totalScore += score;
+        if (score > endlessStats.highestScore) {
+            endlessStats.highestScore = score;
+            localStorage.setItem('highestScore', endlessStats.highestScore);
+        }
+
+        localStorage.setItem('countryGame', JSON.stringify({ endlessStats }));
+
+        endlessGameOverScreen.style.display = 'block';
+        gameContainer.style.display = 'none';
+        document.getElementById('top-right-game-stats').style.display = 'none';
+        xpDisplay.style.display = 'none';
+        streakDisplay.style.display = 'none';
+
+        document.getElementById('endless-score-display').textContent = "Your Score: " + score;
+        document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + endlessStats.highestScore;
+        document.getElementById('final-streak-display').textContent = `Best Streak This Game: ${streakSystem.currentStreak}`;
+    }
+
     function updateOptions() {
         const allOtherCountryCodes = Object.keys(countries).filter(code => code !== currentCountry.alpha2Code);
         const incorrectAnswers = [];
+        
         while (incorrectAnswers.length < 3 && allOtherCountryCodes.length > 0) {
             const randomIndex = Math.floor(Math.random() * allOtherCountryCodes.length);
             const countryCode = allOtherCountryCodes[randomIndex];
@@ -284,44 +478,173 @@ document.addEventListener("DOMContentLoaded", function () {
         facts.hidden = false;
     }
 
+    function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById(`${tabName}-stats`).classList.add('active');
+        
+        // Update content based on tab
+        if (tabName === 'achievements') {
+            updateAchievementsTab();
+        } else if (tabName === 'passport') {
+            updatePassportTab();
+        }
+    }
+
+    function updateAchievementsTab() {
+        const progress = achievementSystem.getProgress();
+        document.getElementById('achievement-count').textContent = `${progress.unlocked}/${progress.total} Achievements`;
+        document.getElementById('achievement-progress-fill').style.width = `${progress.percentage}%`;
+        
+        const achievementsList = document.getElementById('achievements-list');
+        achievementsList.innerHTML = '';
+        
+        achievementSystem.achievementsList.forEach(achievement => {
+            const unlocked = achievementSystem.achievements[achievement.id];
+            const div = document.createElement('div');
+            div.className = `achievement-item ${unlocked ? 'unlocked' : 'locked'}`;
+            div.innerHTML = `
+                <span class="achievement-icon">${achievement.icon}</span>
+                <div class="achievement-info">
+                    <div class="achievement-name">${achievement.name}</div>
+                    <div class="achievement-description">${achievement.description}</div>
+                </div>
+                ${unlocked ? '<span class="achievement-check">✓</span>' : ''}
+            `;
+            achievementsList.appendChild(div);
+        });
+    }
+
+    function updatePassportTab() {
+        const unlockedCountries = JSON.parse(localStorage.getItem('unlockedCountries') || '[]');
+        document.getElementById('countries-unlocked').textContent = `${unlockedCountries.length} Countries Discovered`;
+        
+        const passportGrid = document.getElementById('passport-grid');
+        passportGrid.innerHTML = '';
+        
+        // Show a sample of unlocked countries
+        const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
+        unlockedCountries.slice(0, 20).forEach(countryCode => {
+            const country = countryDetails[countryCode];
+            if (country) {
+                const div = document.createElement('div');
+                div.className = 'passport-country';
+                div.innerHTML = `
+                    <img src="flags/${countryCode.toLowerCase()}.svg" alt="${country.name}" onerror="this.style.display='none'">
+                    <span>${country.name}</span>
+                `;
+                passportGrid.appendChild(div);
+            }
+        });
+    }
+
+    function showStatsModal() {
+        updateStats();
+        statsModal.style.display = 'block';
+    }
+
+    function updateStats() {
+        // Endless stats
+        document.getElementById('stats-level').textContent = streakSystem.level;
+        document.getElementById('stats-xp').textContent = streakSystem.xp;
+        document.getElementById('stats-best-streak').textContent = streakSystem.bestStreak;
+        document.getElementById('endless-times-played-value').textContent = endlessStats.timesPlayed;
+        document.getElementById('endless-highest-score-value').textContent = endlessStats.highestScore;
+        document.getElementById('endless-total-score-value').textContent = endlessStats.totalScore;
+        
+        // Daily stats
+        document.getElementById('daily-current-streak').textContent = dailyChallenge.dailyStats.streak;
+        document.getElementById('daily-games-played').textContent = dailyChallenge.dailyStats.totalPlayed;
+        const successRate = dailyChallenge.dailyStats.totalPlayed > 0 
+            ? Math.round((dailyChallenge.dailyStats.totalCorrect / dailyChallenge.dailyStats.totalPlayed) * 100)
+            : 0;
+        document.getElementById('daily-success-rate').textContent = `${successRate}%`;
+    }
+
+    function shareDailyResult() {
+        const result = dailyChallenge.dailyStats.results[dailyChallenge.today];
+        if (result) {
+            const shareText = dailyChallenge.getShareText(result);
+            shareToClipboard(shareText);
+        }
+    }
+
+    function shareEndlessResult() {
+        const shareText = `Flagtriv Endless Mode\nScore: ${score}/${total}\nBest Streak: ${streakSystem.currentStreak}\nflagtriv.com`;
+        shareToClipboard(shareText);
+    }
+
     function shareScore() {
-        const scoreText = `flagtriv: ${score}/${total} www.flagtriv.com`;
-    
+        const shareText = `flagtriv: ${score}/${total} www.flagtriv.com`;
+        shareToClipboard(shareText);
+    }
+
+    function shareToClipboard(text) {
         if (navigator.share) {
             navigator.share({
-                title: 'Check out my score!',
-                text: scoreText,
+                title: 'Check out my Flagtriv score!',
+                text: text,
                 url: document.URL
             }).then(() => {
                 console.log('Thanks for sharing!');
             }).catch(console.error);
         } else {
             const textArea = document.createElement("textarea");
-            textArea.value = scoreText;
+            textArea.value = text;
             document.body.appendChild(textArea);
             textArea.focus();
             textArea.select();
             try {
                 const successful = document.execCommand('copy');
-                const msg = successful ? 'successful' : 'unsuccessful';
-                console.log('Fallback: Copying text command was ' + msg);
-                showCopiedToast(); // Show the toast
+                if (successful) {
+                    showCopiedToast();
+                }
             } catch (err) {
-                console.error('Fallback: Oops, unable to copy', err);
+                console.error('Unable to copy', err);
             }
             document.body.removeChild(textArea);
         }
     }
-    
+
     function showCopiedToast() {
-        var resultsToast = document.getElementById("resultsToast");
+        const resultsToast = document.getElementById("resultsToast");
         resultsToast.className = "show";
-        setTimeout(function () { resultsToast.className = resultsToast.className.replace("show", ""); }, 3000);
+        setTimeout(() => {
+            resultsToast.className = resultsToast.className.replace("show", "");
+        }, 3000);
     }
 
+    function saveGameState() {
+        const gameStateData = {
+            gameState: gameState,
+            score: score,
+            total: total,
+            lives: lives,
+            usedCountries: usedCountries,
+            currentCountry: currentCountry,
+            endlessStats: endlessStats,
+            isEndlessMode: isEndlessMode,
+            isDailyMode: isDailyMode
+        };
+        localStorage.setItem('countryGame', JSON.stringify(gameStateData));
+    }
+
+    // Event listeners
+    closeBtn.addEventListener('click', () => {
+        statsModal.style.display = 'none';
+    });
+
+    statsBtn.addEventListener('click', showStatsModal);
     document.getElementById('share-button').addEventListener('click', shareScore);
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+        if (event.target === statsModal) {
+            statsModal.style.display = 'none';
+        }
+    });
 });
-
-
-
-
