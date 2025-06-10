@@ -30,17 +30,52 @@
             ❤️ <span id="lives-count">3</span>
         </div>
         <div id="control-buttons">
-            <button id="continent-filter-btn" title="Select Continents">
-                🌐
-            </button>
-            <button id="stats-btn" title="Statistics">
-                📊
-            </button>
-            <button id="sound-toggle" title="Toggle Sound">
-                <span id="sound-icon">🔊</span>
+            <button id="settings-btn" title="Settings">
+                ⚙️
             </button>
         </div>
         <div id="score-display">Score: 0/0</div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content settings-content">
+            <span class="close-btn settings-close">
+                <img src="images/x-mark.svg">
+            </span>
+            <h2>Settings</h2>
+            
+            <div class="settings-section">
+                <h3>🌍 Continent Filter</h3>
+                <div class="setting-item">
+                    <span>Current Selection:</span>
+                    <button id="continent-filter-btn" class="setting-button">
+                        <span id="continent-selection-text">🌐 All Continents</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>🔊 Sound</h3>
+                <div class="setting-item">
+                    <span>Sound Effects:</span>
+                    <button id="sound-toggle-setting" class="setting-button">
+                        <span id="sound-icon-setting">🔊</span>
+                        <span id="sound-status">On</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>📊 Statistics</h3>
+                <div class="setting-item">
+                    <span>View your progress:</span>
+                    <button id="stats-btn" class="setting-button">
+                        📊 View Stats
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Continent Filter Modal -->

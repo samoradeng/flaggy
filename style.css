@@ -118,6 +118,7 @@ body {
     font-style: italic;
     color: #666;
     font-size: 14px;
+    margin: 0;
 }
 
 .correct-answer {
@@ -261,7 +262,7 @@ body {
     gap: 4px;
 }
 
-#stats-btn, #sound-toggle, #continent-filter-btn {
+#settings-btn {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -275,28 +276,59 @@ body {
     font-size: 16px;
 }
 
-#stats-btn:hover, #sound-toggle:hover, #continent-filter-btn:hover {
+#settings-btn:hover {
     background-color: rgba(0, 0, 0, 0.1);
-}
-
-#stats-btn {
-    background-image: url('images/chart-bar.svg');
-    background-size: 16px 16px;
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
-#continent-filter-btn {
-    font-size: 14px;
-}
-
-#sound-icon {
-    font-size: 14px;
 }
 
 #score-display {
     color: #666;
     font-weight: 500;
+}
+
+/* Settings Modal */
+.settings-content {
+    max-width: 500px;
+}
+
+.settings-section {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-section h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+}
+
+.setting-button {
+    background-color: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.setting-button:hover {
+    border-color: #4CAF50;
+    background-color: #f0f8f0;
 }
 
 /* Hide old displays */
@@ -1120,14 +1152,10 @@ body {
         top: 50px;
     }
     
-    #stats-btn, #sound-toggle, #continent-filter-btn {
+    #settings-btn {
         width: 28px;
         height: 28px;
         font-size: 14px;
-    }
-    
-    #stats-btn {
-        background-size: 14px 14px;
     }
     
     .heart-icon-top {
@@ -1141,7 +1169,8 @@ body {
         max-height: 90vh;
     }
     
-    .continent-filter-content {
+    .continent-filter-content,
+    .settings-content {
         max-width: none;
     }
     

@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let isZenMode = false;
     let isDailyMode = false;
     let dailyAttempts = 0;
+    let currentGameStreak = 0; // Track streak for current game session
     
     // Initialize game systems
     let streakSystem;
@@ -63,9 +64,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const scoreDisplay = document.getElementById('score-display');
     const xpProgressTop = document.getElementById('xp-progress-top');
 
-    // Sound toggle
-    const soundToggle = document.getElementById('sound-toggle');
-    const soundIcon = document.getElementById('sound-icon');
+    // Settings modal elements
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsClose = document.querySelector('.settings-close');
+    const soundToggle = document.getElementById('sound-toggle-setting');
+    const soundIcon = document.getElementById('sound-icon-setting');
 
     // Continent filter elements
     const continentFilterBtn = document.getElementById('continent-filter-btn');
@@ -125,6 +129,8 @@ document.addEventListener("DOMContentLoaded", function () {
         playEndlessFromGameOver.addEventListener('click', startChallengeMode);
         tryAgainBtn.addEventListener('click', startChallengeMode);
         seeStatsFromGameOver.addEventListener('click', showStatsModal);
+        settingsBtn.addEventListener('click', showSettingsModal);
+        settingsClose.addEventListener('click', hideSettingsModal);
         soundToggle.addEventListener('click', toggleSound);
         continentFilterBtn.addEventListener('click', showContinentFilterModal);
         continentFilterClose.addEventListener('click', hideContinentFilterModal);
@@ -176,6 +182,25 @@ document.addEventListener("DOMContentLoaded", function () {
         currentLevelDisplay.textContent = levelTitle;
     }
 
+    function showSettingsModal() {
+        updateSettingsModal();
+        settingsModal.style.display = 'block';
+    }
+
+    function hideSettingsModal() {
+        settingsModal.style.display = 'none';
+    }
+
+    function updateSettingsModal() {
+        updateSoundToggle();
+        updateContinentFilterInSettings();
+    }
+
+    function updateContinentFilterInSettings() {
+        const selectionText = document.getElementById('continent-selection-text');
+        selectionText.textContent = continentFilter.getSelectionText();
+    }
+
     function updateContinentFilterButton() {
         continentFilterBtn.textContent = continentFilter.getSelectionText().split(' ')[0]; // Just the emoji
         continentFilterBtn.title = continentFilter.getSelectionText();
@@ -214,6 +239,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function applyContinentFilterSelection() {
         updateContinentFilterButton();
+        updateContinentFilterInSettings();
         hideContinentFilterModal();
         
         // If in a game mode, restart with new filter
@@ -235,7 +261,7 @@ document.addEventListener("DOMContentLoaded", function () {
         score = 0;
         total = 0;
         gameState = "playing";
-        streakSystem.resetStreak(); // Reset streak for daily challenge
+        currentGameStreak = 0; // Reset game streak
         
         modeSelection.style.display = 'none';
         gameContainer.style.display = 'flex';
@@ -266,7 +292,7 @@ document.addEventListener("DOMContentLoaded", function () {
         total = 0;
         gameState = "playing";
         usedCountries = [];
-        streakSystem.resetStreak(); // Reset streak for new game
+        currentGameStreak = 0; // Reset game streak
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
@@ -295,7 +321,7 @@ document.addEventListener("DOMContentLoaded", function () {
         total = 0;
         gameState = "playing";
         usedCountries = [];
-        streakSystem.resetStreak(); // Reset streak for new session
+        currentGameStreak = 0; // Reset game streak
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
@@ -319,9 +345,9 @@ document.addEventListener("DOMContentLoaded", function () {
             levelDisplay.textContent = `Level ${xpSystem.level}`;
         }
         
-        // Update streak
-        const streakEmoji = streakSystem.getStreakEmoji(streakSystem.currentStreak);
-        streakDisplayTop.textContent = `${streakEmoji} ${streakSystem.currentStreak} Streak`.trim();
+        // Update streak - use current game streak
+        const streakEmoji = streakSystem.getStreakEmoji(currentGameStreak);
+        streakDisplayTop.textContent = `${streakEmoji} ${currentGameStreak} Streak`.trim();
         
         // Update lives (hide in zen mode)
         if (isZenMode) {
@@ -342,7 +368,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function toggleSound() {
         const enabled = soundEffects.toggle();
-        soundIcon.textContent = enabled ? '🔊' : '🔇';
         updateSoundToggle();
     }
 
@@ -462,17 +487,18 @@ document.addEventListener("DOMContentLoaded", function () {
     function handleCorrectAnswer(button) {
         message.textContent = "🎉 Correct! Well done!";
         score++;
+        currentGameStreak++; // Increment game streak
         button.classList.add('correct-answer');
         
         // Sound effect
         soundEffects.playCorrect();
         
-        // Update streak
+        // Update global streak system
         const streakResult = streakSystem.addCorrectAnswer();
         
         if (isChallengeMode) {
             // Update XP in challenge mode
-            const xpResult = xpSystem.addXP(10, streakSystem.currentStreak);
+            const xpResult = xpSystem.addXP(10, currentGameStreak);
             
             updateTopBar();
             
@@ -504,8 +530,8 @@ document.addEventListener("DOMContentLoaded", function () {
         } else if (isZenMode) {
             // Update zen stats
             zenStats.totalCorrect++;
-            if (streakSystem.currentStreak > zenStats.highestStreak) {
-                zenStats.highestStreak = streakSystem.currentStreak;
+            if (currentGameStreak > zenStats.highestStreak) {
+                zenStats.highestStreak = currentGameStreak;
             }
             
             updateTopBar();
@@ -523,6 +549,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // Sound effect
         soundEffects.playWrong();
         
+        // Reset game streak
+        currentGameStreak = 0;
         streakSystem.resetStreak();
         updateTopBar();
         
@@ -625,7 +653,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.getElementById('endless-score-display').textContent = "Your Score: " + score;
         document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + challengeStats.highestScore;
-        document.getElementById('final-streak-display').textContent = `Best Streak This Game: ${streakSystem.currentStreak}`;
+        document.getElementById('final-streak-display').textContent = `Best Streak This Game: ${currentGameStreak}`;
     }
 
     function updateOptions() {
@@ -809,7 +837,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function shareEndlessResult() {
         const mode = isChallengeMode ? 'Challenge Mode' : 'Zen Mode';
-        const shareText = `🌍 Flagtriv ${mode}\nScore: ${score}/${total}\nBest Streak: ${streakSystem.currentStreak}\nflagtriv.com`;
+        const shareText = `🌍 Flagtriv ${mode}\nScore: ${score}/${total}\nBest Streak: ${currentGameStreak}\nflagtriv.com`;
         shareToClipboard(shareText);
     }
 
@@ -867,7 +895,8 @@ document.addEventListener("DOMContentLoaded", function () {
             zenStats: zenStats,
             isChallengeMode: isChallengeMode,
             isZenMode: isZenMode,
-            isDailyMode: isDailyMode
+            isDailyMode: isDailyMode,
+            currentGameStreak: currentGameStreak
         };
         localStorage.setItem('countryGame', JSON.stringify(gameStateData));
         
@@ -894,6 +923,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (event.target === levelUpModal) {
             hideLevelUpModal();
+        }
+        if (event.target === settingsModal) {
+            hideSettingsModal();
         }
     });
 });
