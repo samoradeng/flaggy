@@ -1,0 +1,18 @@
+{
+  "name": "flagtriv",
+  "version": "1.0.0",
+  "description": "Addictive flag guessing game with daily challenges and achievements",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve -s . -l 3000",
+    "start": "npx serve -s . -l 3000",
+    "build": "echo 'Static site - no build needed'",
+    "preview": "npx serve -s . -l 4173"
+  },
+  "keywords": ["flags", "geography", "game", "quiz", "daily-challenge"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
