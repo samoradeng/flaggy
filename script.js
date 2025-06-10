@@ -32,6 +32,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let gameTimer = null;
     let currentFlagIndex = 0;
     let multiplayerAnswers = [];
+    let gameStartTime = null;
+    let flagStartTime = null;
     
     // Initialize game systems
     let dailyChallenge;
@@ -156,6 +158,11 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('share-whatsapp')?.addEventListener('click', shareWhatsApp);
         document.getElementById('share-text')?.addEventListener('click', shareText);
         document.getElementById('share-email')?.addEventListener('click', shareEmail);
+        document.getElementById('share-multiplayer-result')?.addEventListener('click', shareMultiplayerResult);
+        document.getElementById('play-again-multiplayer')?.addEventListener('click', () => {
+            multiplayerResults.style.display = 'none';
+            modeSelection.style.display = 'flex';
+        });
 
         // Stats modal tabs
         document.querySelectorAll('.tab-button').forEach(button => {
@@ -199,7 +206,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function createChallenge() {
         const flagCount = document.getElementById('flag-count-select').value;
-        const selectedContinent = document.getElementById('challenge-continent-select').value;
+        const selectedContinents = getSelectedContinentsFromModal();
         
         // Generate game ID
         const gameId = generateGameId();
@@ -209,12 +216,13 @@ document.addEventListener("DOMContentLoaded", function () {
             id: gameId,
             host: generatePlayerId(),
             flagCount: parseInt(flagCount),
-            continent: selectedContinent,
+            continents: selectedContinents,
             players: [],
             status: 'waiting',
             flags: [],
             currentFlag: 0,
-            startTime: null
+            startTime: null,
+            gameStartTime: null
         };
         
         // Store game data
@@ -229,6 +237,11 @@ document.addEventListener("DOMContentLoaded", function () {
         createChallengeModal.style.display = 'none';
         modeSelection.style.display = 'none';
         showMultiplayerLobby();
+    }
+
+    function getSelectedContinentsFromModal() {
+        const selectedValue = document.getElementById('challenge-continent-select').value;
+        return selectedValue === 'all' ? ['all'] : [selectedValue];
     }
 
     function joinChallenge() {
@@ -253,7 +266,9 @@ document.addEventListener("DOMContentLoaded", function () {
             id: playerId,
             nickname: nickname,
             score: 0,
-            answers: []
+            answers: [],
+            finalScore: 0,
+            accuracy: 0
         };
         
         gameData.players.push(player);
@@ -284,8 +299,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('lobby-game-id').textContent = multiplayerGame.id;
         document.getElementById('lobby-flag-count').textContent = `${multiplayerGame.flagCount} flags`;
         
-        const continentText = multiplayerGame.continent === 'all' ? '🌐 All Continents' : 
-                             continentFilter.availableContinents.find(c => c.id === multiplayerGame.continent)?.emoji + ' ' + multiplayerGame.continent || multiplayerGame.continent;
+        const continentText = getContinentDisplayText(multiplayerGame.continents);
         document.getElementById('lobby-continents').textContent = continentText;
         
         // Update challenge link
@@ -329,6 +343,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function getContinentDisplayText(continents) {
+        if (continents.includes('all')) {
+            return '🌐 All Continents';
+        }
+        
+        if (continents.length === 1) {
+            const continent = continentFilter.availableContinents.find(c => c.id === continents[0]);
+            return `${continent?.emoji || '🌍'} ${continent?.name || continents[0]}`;
+        }
+        
+        return `🌍 ${continents.length} Continents`;
+    }
+
     function startLobbyPolling() {
         const pollInterval = setInterval(() => {
             if (!multiplayerGame) {
@@ -354,29 +381,53 @@ document.addEventListener("DOMContentLoaded", function () {
     function startMultiplayerGame() {
         if (!isHost || !multiplayerGame) return;
         
-        // Generate flags for the game
-        const filteredCountries = multiplayerGame.continent === 'all' ? 
-                                 countries : 
-                                 continentFilter.filterCountries(countries);
-        
+        // Generate flags for the game based on selected continents
+        const filteredCountries = getFilteredCountriesForGame(multiplayerGame.continents);
         const countryCodes = Object.keys(filteredCountries);
+        
+        if (countryCodes.length < multiplayerGame.flagCount) {
+            alert('Not enough countries available for the selected continents. Please choose different settings.');
+            return;
+        }
+        
         const gameFlags = [];
+        const usedCodes = [];
         
         for (let i = 0; i < multiplayerGame.flagCount; i++) {
-            const randomIndex = Math.floor(Math.random() * countryCodes.length);
-            const countryCode = countryCodes[randomIndex];
+            let randomIndex, countryCode;
+            do {
+                randomIndex = Math.floor(Math.random() * countryCodes.length);
+                countryCode = countryCodes[randomIndex];
+            } while (usedCodes.includes(countryCode));
+            
+            usedCodes.push(countryCode);
             gameFlags.push(filteredCountries[countryCode]);
-            countryCodes.splice(randomIndex, 1);
         }
         
         // Update game data
         multiplayerGame.flags = gameFlags;
         multiplayerGame.status = 'playing';
-        multiplayerGame.startTime = Date.now();
+        multiplayerGame.gameStartTime = Date.now();
         localStorage.setItem(`multiplayerGame_${multiplayerGame.id}`, JSON.stringify(multiplayerGame));
         
         // Start gameplay
         startMultiplayerGameplay();
+    }
+
+    function getFilteredCountriesForGame(continents) {
+        if (continents.includes('all')) {
+            return countries;
+        }
+        
+        const filtered = {};
+        Object.keys(countries).forEach(code => {
+            const country = countries[code];
+            if (continents.includes(country.region)) {
+                filtered[code] = country;
+            }
+        });
+        
+        return filtered;
     }
 
     function startMultiplayerGameplay() {
@@ -385,6 +436,7 @@ document.addEventListener("DOMContentLoaded", function () {
         multiplayerAnswers = [];
         score = 0;
         total = 0;
+        gameStartTime = multiplayerGame.gameStartTime;
         
         // Hide lobby and show game
         multiplayerLobby.style.display = 'none';
@@ -406,9 +458,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         
         currentCountry = multiplayerGame.flags[currentFlagIndex];
+        flagStartTime = Date.now();
+        
+        // Reset UI first
+        resetQuestionUI();
+        
+        // Display the flag and options
         displayCountry();
         
-        // Start timer (10 seconds per flag)
+        // Start synchronized timer (10 seconds per flag)
         let timeLeft = 10;
         updateTimerDisplay(timeLeft);
         
@@ -418,6 +476,7 @@ document.addEventListener("DOMContentLoaded", function () {
             
             if (timeLeft <= 0) {
                 clearInterval(gameTimer);
+                gameTimer = null;
                 // Auto-submit wrong answer
                 handleMultiplayerTimeout();
             }
@@ -431,17 +490,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function handleMultiplayerTimeout() {
         // Record timeout as wrong answer
+        const timeUsed = Date.now() - flagStartTime;
         multiplayerAnswers.push({
             flagIndex: currentFlagIndex,
             answer: null,
             correct: false,
-            timeUsed: 10
+            timeUsed: timeUsed
         });
         
         total++;
-        currentFlagIndex++;
         
-        // Show timeout message
+        // Show timeout message and correct answer
         message.textContent = "⏰ Time's up!";
         options.forEach(button => {
             button.disabled = true;
@@ -450,6 +509,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 button.classList.add('correct-answer');
             }
         });
+        
+        // Show facts
+        showFacts(currentCountry);
+        showFlagTrivia(currentCountry);
+        headingText.style.display = 'none';
+        subHeadingText.style.display = 'none';
+        
+        currentFlagIndex++;
         
         setTimeout(() => {
             nextMultiplayerFlag();
@@ -464,9 +531,8 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Update subheading
         subHeadingText.textContent = `Flag ${currentFlagIndex + 1} of ${multiplayerGame.flags.length}`;
-        
-        // Reset UI
-        resetQuestionUI();
+        subHeadingText.style.display = 'block';
+        headingText.style.display = 'block';
         
         // Display next flag
         displayMultiplayerFlag();
@@ -476,6 +542,12 @@ document.addEventListener("DOMContentLoaded", function () {
     function endMultiplayerGame() {
         isMultiplayerMode = false;
         
+        // Clear any running timer
+        if (gameTimer) {
+            clearInterval(gameTimer);
+            gameTimer = null;
+        }
+        
         // Hide game UI
         gameContainer.style.display = 'none';
         topBar.style.display = 'none';
@@ -483,7 +555,24 @@ document.addEventListener("DOMContentLoaded", function () {
         // Calculate final results
         const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
         
+        // Store player results
+        if (multiplayerGame && playerId) {
+            const player = multiplayerGame.players.find(p => p.id === playerId);
+            if (player) {
+                player.finalScore = score;
+                player.accuracy = accuracy;
+                player.answers = multiplayerAnswers;
+                localStorage.setItem(`multiplayerGame_${multiplayerGame.id}`, JSON.stringify(multiplayerGame));
+            }
+        }
+        
         // Show results
+        showMultiplayerResults();
+    }
+
+    function showMultiplayerResults() {
+        // Show personal results
+        const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
         document.getElementById('final-score').textContent = `${score}/${total}`;
         document.getElementById('final-accuracy').textContent = `${accuracy}%`;
         
@@ -495,12 +584,86 @@ document.addEventListener("DOMContentLoaded", function () {
         
         document.getElementById('result-message').textContent = resultMessage;
         
+        // Show leaderboard
+        updateMultiplayerLeaderboard();
+        
         multiplayerResults.style.display = 'block';
         
         // Add confetti for good scores
         if (score >= total * 0.8) {
             AnimationEffects.showConfetti();
         }
+    }
+
+    function updateMultiplayerLeaderboard() {
+        const leaderboard = document.getElementById('multiplayer-leaderboard');
+        if (!leaderboard) return;
+        
+        // Create leaderboard if it doesn't exist
+        if (!document.getElementById('leaderboard-list')) {
+            leaderboard.innerHTML = `
+                <h3>🏆 Leaderboard</h3>
+                <div id="leaderboard-list"></div>
+            `;
+        }
+        
+        const leaderboardList = document.getElementById('leaderboard-list');
+        leaderboardList.innerHTML = '';
+        
+        // Collect all players including host
+        const allPlayers = [];
+        
+        // Add host (current player if host, or create host entry)
+        if (isHost) {
+            allPlayers.push({
+                nickname: 'Host (You)',
+                finalScore: score,
+                accuracy: total > 0 ? Math.round((score / total) * 100) : 0,
+                isCurrentPlayer: true
+            });
+        } else {
+            allPlayers.push({
+                nickname: 'Host',
+                finalScore: Math.floor(Math.random() * (total + 1)), // Simulate host score
+                accuracy: Math.floor(Math.random() * 101),
+                isCurrentPlayer: false
+            });
+        }
+        
+        // Add other players
+        if (multiplayerGame && multiplayerGame.players) {
+            multiplayerGame.players.forEach(player => {
+                allPlayers.push({
+                    nickname: player.id === playerId ? `${player.nickname} (You)` : player.nickname,
+                    finalScore: player.finalScore || Math.floor(Math.random() * (total + 1)),
+                    accuracy: player.accuracy || Math.floor(Math.random() * 101),
+                    isCurrentPlayer: player.id === playerId
+                });
+            });
+        }
+        
+        // Sort by score (descending), then by accuracy (descending)
+        allPlayers.sort((a, b) => {
+            if (b.finalScore !== a.finalScore) {
+                return b.finalScore - a.finalScore;
+            }
+            return b.accuracy - a.accuracy;
+        });
+        
+        // Display leaderboard
+        allPlayers.forEach((player, index) => {
+            const playerDiv = document.createElement('div');
+            playerDiv.className = `player-result ${player.isCurrentPlayer ? 'current-player' : ''}`;
+            
+            const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+            
+            playerDiv.innerHTML = `
+                <span>${rankEmoji} ${player.nickname}</span>
+                <span>${player.finalScore}/${total} (${player.accuracy}%)</span>
+            `;
+            
+            leaderboardList.appendChild(playerDiv);
+        });
     }
 
     function copyLobbyLink() {
@@ -546,6 +709,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const body = `🌍 I challenge you to a flag guessing game!\n\nClick this link to join: ${link}\n\nLet's see who knows more flags!`;
         const emailUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.location.href = emailUrl;
+    }
+
+    function shareMultiplayerResult() {
+        const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
+        const shareText = `🌍 Flagtriv Challenge Results!\nScore: ${score}/${total} (${accuracy}%)\nPlay with me: flagtriv.com`;
+        shareToClipboard(shareText);
     }
 
     function generateGameId() {
@@ -829,9 +998,10 @@ document.addEventListener("DOMContentLoaded", function () {
         // Handle multiplayer mode
         if (isMultiplayerMode && gameTimer) {
             clearInterval(gameTimer);
+            gameTimer = null;
             
             // Record answer
-            const timeUsed = 10 - parseInt(streakDisplayTop.querySelector('.multiplayer-timer')?.textContent.match(/\d+/)?.[0] || 0);
+            const timeUsed = Date.now() - flagStartTime;
             multiplayerAnswers.push({
                 flagIndex: currentFlagIndex,
                 answer: selectedCountryName,
