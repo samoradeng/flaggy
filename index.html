@@ -140,23 +140,20 @@
             </div>
             
             <div class="challenge-setting">
-                <span>Continents:</span>
-                <span id="challenge-continents">🌐 All Continents</span>
+                <label for="challenge-continent-select">Continents:</label>
+                <select id="challenge-continent-select">
+                    <option value="all">🌐 All Continents</option>
+                    <option value="Africa">🌍 Africa</option>
+                    <option value="Asia">🌏 Asia</option>
+                    <option value="Europe">🇪🇺 Europe</option>
+                    <option value="Americas">🌎 Americas</option>
+                    <option value="Oceania">🏝️ Oceania</option>
+                </select>
             </div>
             
-            <p class="challenge-note">💡 You can change continent filters in Settings before creating the challenge</p>
+            <p class="challenge-note">💡 Choose your preferred settings and create a challenge for your friends!</p>
             
             <button id="create-challenge-btn" class="create-challenge-btn">🚀 Create Challenge</button>
-            
-            <div id="challenge-link-display" style="display: none;">
-                <h3>🎉 Challenge Created!</h3>
-                <p>Share this link with your friends:</p>
-                <div class="link-container">
-                    <input type="text" id="challenge-link" readonly>
-                    <button id="copy-challenge-link">📋 Copy</button>
-                </div>
-                <p class="share-instruction">📱 Send this link to your friends so they can join your challenge!</p>
-            </div>
         </div>
     </div>
 
@@ -191,6 +188,20 @@
                 <p><strong>Game ID:</strong> <span id="lobby-game-id"></span></p>
                 <p><strong>Flags:</strong> <span id="lobby-flag-count"></span></p>
                 <p><strong>Regions:</strong> <span id="lobby-continents"></span></p>
+            </div>
+            
+            <div class="share-section">
+                <h3>📤 Invite Friends</h3>
+                <p class="share-description">Share this link with your friends so they can join:</p>
+                <div class="link-container">
+                    <input type="text" id="lobby-challenge-link" readonly>
+                    <button id="copy-lobby-link">📋 Copy Link</button>
+                </div>
+                <div class="share-buttons">
+                    <button id="share-whatsapp" class="share-btn whatsapp">📱 WhatsApp</button>
+                    <button id="share-text" class="share-btn text">💬 Text</button>
+                    <button id="share-email" class="share-btn email">📧 Email</button>
+                </div>
             </div>
             
             <div class="players-section">
