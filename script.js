@@ -248,6 +248,24 @@ document.addEventListener("DOMContentLoaded", function () {
         isHost = true;
         multiplayerGameId = gameId;
         playerNickname = 'Host';
+
+        // Add "Go to Lobby" button after creating challenge
+        setTimeout(() => {
+            const goToLobbyBtn = document.createElement('button');
+            goToLobbyBtn.textContent = '🏁 Go to Lobby';
+            goToLobbyBtn.className = 'create-challenge-btn';
+            goToLobbyBtn.style.marginTop = '16px';
+            goToLobbyBtn.onclick = () => {
+                createChallengeModal.style.display = 'none';
+                showMultiplayerLobby(challengeData);
+            };
+            
+            const linkDisplay = document.getElementById('challenge-link-display');
+            if (!linkDisplay.querySelector('.go-to-lobby-btn')) {
+                goToLobbyBtn.classList.add('go-to-lobby-btn');
+                linkDisplay.appendChild(goToLobbyBtn);
+            }
+        }, 100);
     }
 
     function generateGameId() {
@@ -292,32 +310,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (!challengeData) {
-            // If still not found, create a basic challenge structure
-            // This handles the case where someone joins via link but the host's data isn't available
-            challengeData = {
-                id: gameId,
-                flagCount: 10,
-                continents: ['all'],
-                host: 'Unknown Host',
-                players: [],
-                status: 'waiting',
-                currentQuestion: 0,
-                questions: [],
-                createdAt: Date.now()
-            };
-            
-            // Generate some default questions
-            const countryCodes = Object.keys(countries);
-            const selectedCountries = [];
-            
-            for (let i = 0; i < 10 && countryCodes.length > 0; i++) {
-                const randomIndex = Math.floor(Math.random() * countryCodes.length);
-                const countryCode = countryCodes[randomIndex];
-                selectedCountries.push(countries[countryCode]);
-                countryCodes.splice(randomIndex, 1);
-            }
-            
-            challengeData.questions = selectedCountries;
+            alert('Game not found. Please check the game ID.');
+            return;
         }
 
         // Add player to the challenge
@@ -350,6 +344,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function showMultiplayerLobby(challengeData) {
         modeSelection.style.display = 'none';
+        createChallengeModal.style.display = 'none';
         multiplayerLobby.style.display = 'block';
         
         // Update lobby info
@@ -371,6 +366,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isHost) {
             startBtn.style.display = 'block';
             waitingText.style.display = 'none';
+            
+            // Add share link button for host in lobby
+            addShareLinkToLobby();
         } else {
             startBtn.style.display = 'none';
             waitingText.style.display = 'block';
@@ -381,6 +379,50 @@ document.addEventListener("DOMContentLoaded", function () {
             startLobbyPolling();
         }
     }
+
+    function addShareLinkToLobby() {
+        // Add a share link button in the lobby for the host
+        const lobbyContent = document.querySelector('.lobby-content');
+        let shareSection = lobbyContent.querySelector('.lobby-share-section');
+        
+        if (!shareSection) {
+            shareSection = document.createElement('div');
+            shareSection.className = 'lobby-share-section';
+            shareSection.style.marginTop = '16px';
+            shareSection.style.padding = '16px';
+            shareSection.style.backgroundColor = '#f8f9fa';
+            shareSection.style.borderRadius = '8px';
+            shareSection.style.borderLeft = '4px solid #9b59b6';
+            
+            const challengeLink = `${window.location.origin}${window.location.pathname}?game=${multiplayerGameId}`;
+            
+            shareSection.innerHTML = `
+                <p style="margin: 0 0 12px 0; font-weight: 500;">📤 Share with more friends:</p>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" value="${challengeLink}" readonly style="flex: 1; padding: 8px; border: 2px solid #e0e0e0; border-radius: 4px; font-family: monospace; font-size: 12px;">
+                    <button onclick="copyLobbyLink()" style="background: #9b59b6; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">📋 Copy</button>
+                </div>
+            `;
+            
+            // Insert before the start button
+            const startBtn = document.getElementById('start-multiplayer-game');
+            lobbyContent.insertBefore(shareSection, startBtn);
+        }
+    }
+
+    // Make copyLobbyLink available globally
+    window.copyLobbyLink = function() {
+        const input = document.querySelector('.lobby-share-section input');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        
+        try {
+            document.execCommand('copy');
+            showCopiedToast();
+        } catch (err) {
+            console.error('Failed to copy link:', err);
+        }
+    };
 
     function updatePlayersDisplay(challengeData) {
         const playersList = document.getElementById('players-list');
