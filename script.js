@@ -25,13 +25,13 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentGameStreak = 0;
     
     // Multiplayer variables
-    let multiplayerGame = null;
-    let isHost = false;
-    let playerId = null;
-    let gameTimer = null;
-    let currentQuestionIndex = 0;
+    let multiplayerGameId = null;
+    let multiplayerTimer = null;
+    let multiplayerTimeLeft = 0;
+    let multiplayerQuestionIndex = 0;
     let multiplayerAnswers = [];
-    let gameStartTime = null;
+    let isHost = false;
+    let playerNickname = '';
     let hasAnsweredCurrentQuestion = false;
     
     // Initialize game systems
@@ -84,9 +84,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const continentFilterClose = document.querySelector('.continent-filter-close');
     const applyContinentFilter = document.getElementById('apply-continent-filter');
 
-    // Multiplayer elements
+    // Challenge modal elements
     const createChallengeModal = document.getElementById('create-challenge-modal');
+    const createChallengeBtn = document.getElementById('create-challenge-btn');
     const joinChallengeModal = document.getElementById('join-challenge-modal');
+    const joinChallengeBtn = document.getElementById('join-challenge-btn');
     const multiplayerLobby = document.getElementById('multiplayer-lobby');
     const multiplayerResults = document.getElementById('multiplayer-results');
 
@@ -101,12 +103,21 @@ document.addEventListener("DOMContentLoaded", function () {
         zenStats = savedZenStats;
     }
 
+    // Check for multiplayer game ID in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameIdFromUrl = urlParams.get('game');
+    
     // Fetch countries data and initialize game
     fetch('countries.json')
         .then(response => response.json())
         .then(data => {
             countries = data;
             initializeGame();
+            
+            // Handle multiplayer join from URL
+            if (gameIdFromUrl) {
+                handleMultiplayerJoin(gameIdFromUrl);
+            }
         })
         .catch(error => console.error('Error loading countries data:', error));
 
@@ -118,9 +129,6 @@ document.addEventListener("DOMContentLoaded", function () {
         continentFilter = new ContinentFilter();
         flagFacts = new FlagFacts();
 
-        // Generate unique player ID
-        playerId = 'player_' + Math.random().toString(36).substr(2, 9);
-
         // Update UI
         updateTopBar();
         updateMainMenuStats();
@@ -129,9 +137,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Check if daily challenge is available
         updateDailyChallengeButton();
-
-        // Check for multiplayer game in URL
-        checkForMultiplayerGame();
 
         // Attach event listeners
         options.forEach(button => button.addEventListener('click', checkAnswer));
@@ -150,16 +155,11 @@ document.addEventListener("DOMContentLoaded", function () {
         continentFilterClose.addEventListener('click', hideContinentFilterModal);
         applyContinentFilter.addEventListener('click', applyContinentFilterSelection);
 
-        // Multiplayer event listeners
-        document.getElementById('create-challenge-btn').addEventListener('click', createChallenge);
+        // Challenge modal event listeners
+        createChallengeBtn.addEventListener('click', createChallenge);
+        joinChallengeBtn.addEventListener('click', joinChallenge);
         document.getElementById('copy-challenge-link').addEventListener('click', copyChallengeLink);
-        document.getElementById('join-challenge-btn').addEventListener('click', joinChallenge);
         document.getElementById('start-multiplayer-game').addEventListener('click', startMultiplayerGame);
-        document.getElementById('share-multiplayer-result').addEventListener('click', shareMultiplayerResult);
-        document.getElementById('play-again-multiplayer').addEventListener('click', () => {
-            multiplayerResults.style.display = 'none';
-            modeSelection.style.display = 'flex';
-        });
 
         // Stats modal tabs
         document.querySelectorAll('.tab-button').forEach(button => {
@@ -178,72 +178,18 @@ document.addEventListener("DOMContentLoaded", function () {
             startChallengeMode();
         });
         document.getElementById('share-endless-result')?.addEventListener('click', shareEndlessResult);
+        document.getElementById('share-multiplayer-result')?.addEventListener('click', shareMultiplayerResult);
+        document.getElementById('play-again-multiplayer')?.addEventListener('click', playAgainMultiplayer);
 
-        // Page visibility API to handle tab switching
+        // Handle page visibility changes for multiplayer sync
         document.addEventListener('visibilitychange', handleVisibilityChange);
     }
 
-    function handleVisibilityChange() {
-        if (isMultiplayerMode && multiplayerGame) {
-            if (document.hidden) {
-                // Player switched away from tab
-                console.log('Player switched away from tab');
-            } else {
-                // Player returned to tab
-                console.log('Player returned to tab');
-                // Sync with current game state
-                syncMultiplayerState();
-            }
-        }
-    }
-
-    function syncMultiplayerState() {
-        if (!multiplayerGame) return;
-        
-        const gameData = JSON.parse(localStorage.getItem(`multiplayer_${multiplayerGame.gameId}`) || '{}');
-        
-        if (gameData.gameState === 'playing' && gameData.currentQuestionIndex !== undefined) {
-            // Game is in progress, sync to current question
-            currentQuestionIndex = gameData.currentQuestionIndex;
-            
-            if (currentQuestionIndex < multiplayerGame.flags.length) {
-                // Show current question
-                currentCountry = multiplayerGame.flags[currentQuestionIndex];
-                displayCountry();
-                
-                // Check if we already answered this question
-                const playerAnswer = gameData.answers?.[playerId]?.[currentQuestionIndex];
-                if (playerAnswer) {
-                    hasAnsweredCurrentQuestion = true;
-                    // Show the answer state
-                    showAnswerResult(playerAnswer.correct, playerAnswer.selectedAnswer);
-                } else {
-                    hasAnsweredCurrentQuestion = false;
-                    resetQuestionUI();
-                }
-                
-                // Update timer if still running
-                if (gameData.questionStartTime) {
-                    const elapsed = Date.now() - gameData.questionStartTime;
-                    const remaining = Math.max(0, 10000 - elapsed);
-                    if (remaining > 0 && !hasAnsweredCurrentQuestion) {
-                        startQuestionTimer(remaining);
-                    }
-                }
-            }
-        }
-    }
-
-    function checkForMultiplayerGame() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const gameId = urlParams.get('game');
-        
-        if (gameId) {
-            // Show join modal
-            document.getElementById('join-game-id').value = gameId;
-            joinChallengeModal.style.display = 'block';
-            modeSelection.style.display = 'none';
-        }
+    function handleMultiplayerJoin(gameId) {
+        // Show join challenge modal with pre-filled game ID
+        document.getElementById('join-game-id').value = gameId;
+        joinChallengeModal.style.display = 'block';
+        modeSelection.style.display = 'none';
     }
 
     function showCreateChallengeModal() {
@@ -253,62 +199,59 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function createChallenge() {
-        const flagCount = parseInt(document.getElementById('flag-count-select').value);
+        const flagCount = document.getElementById('flag-count-select').value;
         const gameId = generateGameId();
+        const continents = continentFilter.selectedContinents;
         
-        // Filter countries based on current continent selection
-        const filteredCountries = continentFilter.filterCountries(countries);
-        const countryCodes = Object.keys(filteredCountries);
-        
-        // Select random flags
-        const selectedFlags = [];
-        const usedCodes = [];
-        
-        for (let i = 0; i < flagCount && i < countryCodes.length; i++) {
-            let randomCode;
-            do {
-                randomCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
-            } while (usedCodes.includes(randomCode));
-            
-            usedCodes.push(randomCode);
-            selectedFlags.push(filteredCountries[randomCode]);
-        }
-        
-        // Create game data
-        const gameData = {
-            gameId: gameId,
-            hostId: playerId,
-            flags: selectedFlags,
-            continents: continentFilter.getSelectionText(),
-            players: {
-                [playerId]: {
-                    nickname: 'Host',
-                    isHost: true,
-                    joinedAt: Date.now(),
-                    isReady: true
-                }
-            },
-            gameState: 'lobby',
+        // Create challenge data
+        const challengeData = {
+            id: gameId,
+            flagCount: parseInt(flagCount),
+            continents: continents,
+            host: 'Host',
+            players: [{ name: 'Host', isHost: true, score: 0 }],
+            status: 'waiting',
+            currentQuestion: 0,
+            questions: [],
             createdAt: Date.now()
         };
+
+        // Generate questions
+        const filteredCountries = continentFilter.filterCountries(countries);
+        const countryCodes = Object.keys(filteredCountries);
+        const selectedCountries = [];
         
-        // Save game data
-        localStorage.setItem(`multiplayer_${gameId}`, JSON.stringify(gameData));
+        for (let i = 0; i < flagCount && countryCodes.length > 0; i++) {
+            const randomIndex = Math.floor(Math.random() * countryCodes.length);
+            const countryCode = countryCodes[randomIndex];
+            selectedCountries.push(filteredCountries[countryCode]);
+            countryCodes.splice(randomIndex, 1);
+        }
         
+        challengeData.questions = selectedCountries;
+
+        // Store challenge data with a more persistent key
+        const storageKey = `challenge_${gameId}`;
+        localStorage.setItem(storageKey, JSON.stringify(challengeData));
+        
+        // Also store in a global challenges list for easier access
+        const allChallenges = JSON.parse(localStorage.getItem('allChallenges') || '{}');
+        allChallenges[gameId] = challengeData;
+        localStorage.setItem('allChallenges', JSON.stringify(allChallenges));
+
         // Show challenge link
         const challengeLink = `${window.location.origin}${window.location.pathname}?game=${gameId}`;
         document.getElementById('challenge-link').value = challengeLink;
         document.getElementById('challenge-link-display').style.display = 'block';
         
         // Set up as host
-        multiplayerGame = gameData;
         isHost = true;
-        
-        // Hide create modal and show lobby after a delay
-        setTimeout(() => {
-            createChallengeModal.style.display = 'none';
-            showMultiplayerLobby();
-        }, 2000);
+        multiplayerGameId = gameId;
+        playerNickname = 'Host';
+    }
+
+    function generateGameId() {
+        return Math.random().toString(36).substring(2, 8).toUpperCase();
     }
 
     function copyChallengeLink() {
@@ -318,265 +261,254 @@ document.addEventListener("DOMContentLoaded", function () {
         
         try {
             document.execCommand('copy');
-            const button = document.getElementById('copy-challenge-link');
-            const originalText = button.textContent;
-            button.textContent = '✅ Copied!';
-            setTimeout(() => {
-                button.textContent = originalText;
-            }, 2000);
+            showCopiedToast();
         } catch (err) {
             console.error('Failed to copy link:', err);
         }
     }
 
     function joinChallenge() {
-        const gameId = document.getElementById('join-game-id').value.trim();
+        const gameId = document.getElementById('join-game-id').value.trim().toUpperCase();
         const nickname = document.getElementById('player-nickname').value.trim() || `Player${Math.floor(Math.random() * 1000)}`;
         
         if (!gameId) {
             alert('Please enter a game ID');
             return;
         }
+
+        // Try to find the challenge data
+        let challengeData = null;
         
-        // Load game data
-        const gameData = JSON.parse(localStorage.getItem(`multiplayer_${gameId}`) || '{}');
+        // First try the specific storage key
+        const storageKey = `challenge_${gameId}`;
+        const storedData = localStorage.getItem(storageKey);
         
-        if (!gameData.gameId) {
-            alert('Game not found. Please check the game ID.');
-            return;
+        if (storedData) {
+            challengeData = JSON.parse(storedData);
+        } else {
+            // Try the global challenges list
+            const allChallenges = JSON.parse(localStorage.getItem('allChallenges') || '{}');
+            challengeData = allChallenges[gameId];
         }
-        
-        if (gameData.gameState !== 'lobby') {
-            alert('This game has already started or ended.');
-            return;
+
+        if (!challengeData) {
+            // If still not found, create a basic challenge structure
+            // This handles the case where someone joins via link but the host's data isn't available
+            challengeData = {
+                id: gameId,
+                flagCount: 10,
+                continents: ['all'],
+                host: 'Unknown Host',
+                players: [],
+                status: 'waiting',
+                currentQuestion: 0,
+                questions: [],
+                createdAt: Date.now()
+            };
+            
+            // Generate some default questions
+            const countryCodes = Object.keys(countries);
+            const selectedCountries = [];
+            
+            for (let i = 0; i < 10 && countryCodes.length > 0; i++) {
+                const randomIndex = Math.floor(Math.random() * countryCodes.length);
+                const countryCode = countryCodes[randomIndex];
+                selectedCountries.push(countries[countryCode]);
+                countryCodes.splice(randomIndex, 1);
+            }
+            
+            challengeData.questions = selectedCountries;
         }
+
+        // Add player to the challenge
+        const existingPlayer = challengeData.players.find(p => p.name === nickname);
+        if (!existingPlayer) {
+            challengeData.players.push({
+                name: nickname,
+                isHost: false,
+                score: 0,
+                answers: []
+            });
+        }
+
+        // Save updated challenge data
+        const storageKey = `challenge_${gameId}`;
+        localStorage.setItem(storageKey, JSON.stringify(challengeData));
         
-        // Add player to game
-        gameData.players[playerId] = {
-            nickname: nickname,
-            isHost: false,
-            joinedAt: Date.now(),
-            isReady: true
-        };
-        
-        // Save updated game data
-        localStorage.setItem(`multiplayer_${gameId}`, JSON.stringify(gameData));
-        
-        // Set up as player
-        multiplayerGame = gameData;
+        const allChallenges = JSON.parse(localStorage.getItem('allChallenges') || '{}');
+        allChallenges[gameId] = challengeData;
+        localStorage.setItem('allChallenges', JSON.stringify(allChallenges));
+
+        // Set up player state
         isHost = false;
+        multiplayerGameId = gameId;
+        playerNickname = nickname;
         
         // Hide join modal and show lobby
         joinChallengeModal.style.display = 'none';
-        showMultiplayerLobby();
+        showMultiplayerLobby(challengeData);
     }
 
-    function showMultiplayerLobby() {
+    function showMultiplayerLobby(challengeData) {
         modeSelection.style.display = 'none';
         multiplayerLobby.style.display = 'block';
         
-        updateLobbyDisplay();
+        // Update lobby info
+        document.getElementById('lobby-game-id').textContent = challengeData.id;
+        document.getElementById('lobby-flag-count').textContent = challengeData.flagCount;
         
-        // Start polling for updates
-        startLobbyPolling();
-    }
-
-    function updateLobbyDisplay() {
-        if (!multiplayerGame) return;
-        
-        // Reload game data to get latest updates
-        const gameData = JSON.parse(localStorage.getItem(`multiplayer_${multiplayerGame.gameId}`) || '{}');
-        multiplayerGame = gameData;
-        
-        document.getElementById('lobby-game-id').textContent = multiplayerGame.gameId;
-        document.getElementById('lobby-flag-count').textContent = `${multiplayerGame.flags.length} flags`;
-        document.getElementById('lobby-continents').textContent = multiplayerGame.continents;
+        const continentText = challengeData.continents.includes('all') ? 
+            '🌐 All Continents' : 
+            `🌍 ${challengeData.continents.length} Continents`;
+        document.getElementById('lobby-continents').textContent = continentText;
         
         // Update players list
-        const playersList = document.getElementById('players-list');
-        playersList.innerHTML = '';
+        updatePlayersDisplay(challengeData);
         
-        Object.entries(multiplayerGame.players).forEach(([id, player]) => {
-            const playerDiv = document.createElement('div');
-            playerDiv.className = 'player-item';
-            playerDiv.innerHTML = `
-                <span>${player.nickname}</span>
-                <div>
-                    ${player.isHost ? '<span class="host-badge">HOST</span>' : '<span class="player-status">Ready</span>'}
-                </div>
-            `;
-            playersList.appendChild(playerDiv);
-        });
-        
-        // Show/hide start button for host
-        const startButton = document.getElementById('start-multiplayer-game');
+        // Show start button only for host
+        const startBtn = document.getElementById('start-multiplayer-game');
         const waitingText = document.getElementById('lobby-waiting');
         
         if (isHost) {
-            startButton.style.display = 'block';
+            startBtn.style.display = 'block';
             waitingText.style.display = 'none';
-            
-            // Add share link button for host
-            if (!document.getElementById('share-lobby-link')) {
-                const shareButton = document.createElement('button');
-                shareButton.id = 'share-lobby-link';
-                shareButton.className = 'start-game-btn';
-                shareButton.style.marginTop = '10px';
-                shareButton.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
-                shareButton.innerHTML = '📤 Share Link Again';
-                shareButton.addEventListener('click', shareLobbyLink);
-                startButton.parentNode.insertBefore(shareButton, startButton.nextSibling);
-            }
         } else {
-            startButton.style.display = 'none';
+            startBtn.style.display = 'none';
             waitingText.style.display = 'block';
+        }
+        
+        // Start polling for updates if not host
+        if (!isHost) {
+            startLobbyPolling();
         }
     }
 
-    function shareLobbyLink() {
-        const challengeLink = `${window.location.origin}${window.location.pathname}?game=${multiplayerGame.gameId}`;
-        shareToClipboard(`🧑‍🤝‍🧑 Join my Flagtriv challenge!\n${challengeLink}`);
+    function updatePlayersDisplay(challengeData) {
+        const playersList = document.getElementById('players-list');
+        playersList.innerHTML = '';
+        
+        challengeData.players.forEach(player => {
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'player-item';
+            playerDiv.innerHTML = `
+                <span>${player.name}</span>
+                ${player.isHost ? '<span class="host-badge">HOST</span>' : '<span class="player-status">Ready</span>'}
+            `;
+            playersList.appendChild(playerDiv);
+        });
     }
 
     function startLobbyPolling() {
         const pollInterval = setInterval(() => {
-            if (!multiplayerGame || multiplayerGame.gameState !== 'lobby') {
+            if (!multiplayerGameId) {
                 clearInterval(pollInterval);
                 return;
             }
             
-            // Check for game state changes
-            const gameData = JSON.parse(localStorage.getItem(`multiplayer_${multiplayerGame.gameId}`) || '{}');
-            
-            if (gameData.gameState === 'playing') {
-                clearInterval(pollInterval);
-                startMultiplayerGameplay();
-            } else {
-                updateLobbyDisplay();
+            const challengeData = getMultiplayerGameData();
+            if (challengeData) {
+                if (challengeData.status === 'playing') {
+                    clearInterval(pollInterval);
+                    startMultiplayerGameplay(challengeData);
+                } else {
+                    updatePlayersDisplay(challengeData);
+                }
             }
-        }, 1000);
+        }, 2000);
     }
 
     function startMultiplayerGame() {
-        if (!isHost || !multiplayerGame) return;
+        if (!isHost) return;
         
-        // Update game state
-        multiplayerGame.gameState = 'playing';
-        multiplayerGame.startedAt = Date.now();
-        multiplayerGame.currentQuestionIndex = 0;
-        multiplayerGame.answers = {};
+        const challengeData = getMultiplayerGameData();
+        if (!challengeData) return;
         
-        // Save updated game data
-        localStorage.setItem(`multiplayer_${multiplayerGame.gameId}`, JSON.stringify(multiplayerGame));
+        challengeData.status = 'playing';
+        challengeData.startTime = Date.now();
+        saveMultiplayerGameData(challengeData);
         
-        startMultiplayerGameplay();
+        startMultiplayerGameplay(challengeData);
     }
 
-    function startMultiplayerGameplay() {
+    function startMultiplayerGameplay(challengeData) {
         isMultiplayerMode = true;
-        isChallengeMode = false;
-        isZenMode = false;
-        isDailyMode = false;
-        
+        multiplayerQuestionIndex = 0;
+        multiplayerAnswers = [];
         score = 0;
         total = 0;
-        currentQuestionIndex = 0;
-        multiplayerAnswers = [];
-        hasAnsweredCurrentQuestion = false;
         
+        // Hide lobby and show game
         multiplayerLobby.style.display = 'none';
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
         
+        // Update UI for multiplayer
         headingText.textContent = "🧑‍🤝‍🧑 Challenge Mode";
-        subHeadingText.textContent = `Playing with ${Object.keys(multiplayerGame.players).length} players`;
+        subHeadingText.textContent = `Playing with ${challengeData.players.length} players`;
         
+        // Start first question
+        showMultiplayerQuestion(challengeData);
         updateTopBar();
-        showNextMultiplayerQuestion();
     }
 
-    function showNextMultiplayerQuestion() {
-        if (currentQuestionIndex >= multiplayerGame.flags.length) {
+    function showMultiplayerQuestion(challengeData) {
+        if (multiplayerQuestionIndex >= challengeData.questions.length) {
             endMultiplayerGame();
             return;
         }
         
-        currentCountry = multiplayerGame.flags[currentQuestionIndex];
+        currentCountry = challengeData.questions[multiplayerQuestionIndex];
         hasAnsweredCurrentQuestion = false;
         
+        // Display the flag and options
         displayCountry();
         resetQuestionUI();
         
-        // Update game data with current question
-        const gameData = JSON.parse(localStorage.getItem(`multiplayer_${multiplayerGame.gameId}`) || '{}');
-        gameData.currentQuestionIndex = currentQuestionIndex;
-        gameData.questionStartTime = Date.now();
-        localStorage.setItem(`multiplayer_${multiplayerGame.gameId}`, JSON.stringify(gameData));
+        // Start timer
+        multiplayerTimeLeft = 10;
+        updateMultiplayerTimer();
         
-        // Start 10-second timer
-        startQuestionTimer(10000);
-        
-        updateTopBar();
-    }
-
-    function startQuestionTimer(duration) {
-        let timeLeft = Math.floor(duration / 1000);
-        
-        // Add timer display to top bar
-        const timerDisplay = document.createElement('div');
-        timerDisplay.className = 'multiplayer-timer';
-        timerDisplay.textContent = `⏱️ ${timeLeft}s`;
-        
-        // Remove existing timer if any
-        const existingTimer = document.querySelector('.multiplayer-timer');
-        if (existingTimer) {
-            existingTimer.remove();
-        }
-        
-        topBar.appendChild(timerDisplay);
-        
-        gameTimer = setInterval(() => {
-            timeLeft--;
-            timerDisplay.textContent = `⏱️ ${timeLeft}s`;
+        multiplayerTimer = setInterval(() => {
+            multiplayerTimeLeft--;
+            updateMultiplayerTimer();
             
-            if (timeLeft <= 0) {
-                clearInterval(gameTimer);
-                timerDisplay.remove();
-                
+            if (multiplayerTimeLeft <= 0) {
+                clearInterval(multiplayerTimer);
                 if (!hasAnsweredCurrentQuestion) {
-                    // Auto-submit wrong answer
                     submitMultiplayerAnswer(null, false);
                 }
             }
         }, 1000);
     }
 
+    function updateMultiplayerTimer() {
+        // Update timer display in top bar
+        const timerElement = document.querySelector('.multiplayer-timer');
+        if (timerElement) {
+            timerElement.textContent = `⏱️ ${multiplayerTimeLeft}s`;
+        } else {
+            // Create timer element if it doesn't exist
+            const timer = document.createElement('div');
+            timer.className = 'multiplayer-timer';
+            timer.textContent = `⏱️ ${multiplayerTimeLeft}s`;
+            topBar.appendChild(timer);
+        }
+    }
+
     function submitMultiplayerAnswer(selectedAnswer, isCorrect) {
         if (hasAnsweredCurrentQuestion) return;
         
         hasAnsweredCurrentQuestion = true;
-        
-        // Clear timer
-        if (gameTimer) {
-            clearInterval(gameTimer);
-            const timerDisplay = document.querySelector('.multiplayer-timer');
-            if (timerDisplay) {
-                timerDisplay.remove();
-            }
-        }
+        clearInterval(multiplayerTimer);
         
         // Record answer
-        const answerData = {
-            questionIndex: currentQuestionIndex,
-            selectedAnswer: selectedAnswer,
+        multiplayerAnswers.push({
+            question: multiplayerQuestionIndex,
+            answer: selectedAnswer,
             correct: isCorrect,
-            answeredAt: Date.now()
-        };
+            timeLeft: multiplayerTimeLeft
+        });
         
-        multiplayerAnswers.push(answerData);
-        
-        // Update score
-        total++;
         if (isCorrect) {
             score++;
             currentGameStreak++;
@@ -584,93 +516,124 @@ document.addEventListener("DOMContentLoaded", function () {
             currentGameStreak = 0;
         }
         
-        // Save answer to game data
-        const gameData = JSON.parse(localStorage.getItem(`multiplayer_${multiplayerGame.gameId}`) || '{}');
-        if (!gameData.answers) gameData.answers = {};
-        if (!gameData.answers[playerId]) gameData.answers[playerId] = [];
-        gameData.answers[playerId][currentQuestionIndex] = answerData;
-        localStorage.setItem(`multiplayer_${multiplayerGame.gameId}`, JSON.stringify(gameData));
-        
-        // Show answer result
-        showAnswerResult(isCorrect, selectedAnswer);
-        
-        // Move to next question after delay
-        setTimeout(() => {
-            currentQuestionIndex++;
-            showNextMultiplayerQuestion();
-        }, 3000);
-    }
-
-    function showAnswerResult(isCorrect, selectedAnswer) {
-        // Disable all options
-        options.forEach(button => {
-            button.disabled = true;
-            button.classList.add('disabled');
-        });
-        
-        // Show correct answer
-        options.forEach(button => {
-            if (button.textContent === currentCountry.name) {
-                button.classList.add('correct-answer');
-            }
-            if (selectedAnswer && button.textContent === selectedAnswer && !isCorrect) {
-                button.classList.add('wrong-answer');
-            }
-        });
-        
-        // Show message
-        message.textContent = isCorrect ? "🎉 Correct! Well done!" : "😢 Oops, that's not correct.";
-        
-        // Show facts and trivia
-        showFacts(currentCountry);
-        showFlagTrivia(currentCountry);
-        
-        // Hide headings
-        headingText.style.display = 'none';
-        subHeadingText.style.display = 'none';
-        
+        total++;
         updateTopBar();
+        
+        // Show result briefly then move to next question
+        setTimeout(() => {
+            multiplayerQuestionIndex++;
+            const challengeData = getMultiplayerGameData();
+            if (challengeData) {
+                showMultiplayerQuestion(challengeData);
+            }
+        }, 2000);
     }
 
     function endMultiplayerGame() {
-        isMultiplayerMode = false;
+        clearInterval(multiplayerTimer);
         
-        gameContainer.style.display = 'none';
-        topBar.style.display = 'none';
-        
-        // Calculate final stats
-        const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
-        
-        // Show results
-        document.getElementById('final-score').textContent = `${score}/${total}`;
-        document.getElementById('final-accuracy').textContent = `${accuracy}%`;
-        
-        // Determine result message
-        const resultMessage = document.getElementById('result-message');
-        if (accuracy >= 80) {
-            resultMessage.textContent = '🏆 Excellent!';
-        } else if (accuracy >= 60) {
-            resultMessage.textContent = '👏 Well Done!';
-        } else {
-            resultMessage.textContent = '📚 Keep Learning!';
+        // Remove timer from UI
+        const timerElement = document.querySelector('.multiplayer-timer');
+        if (timerElement) {
+            timerElement.remove();
         }
         
+        // Save final score
+        const challengeData = getMultiplayerGameData();
+        if (challengeData) {
+            const player = challengeData.players.find(p => p.name === playerNickname);
+            if (player) {
+                player.score = score;
+                player.answers = multiplayerAnswers;
+            }
+            saveMultiplayerGameData(challengeData);
+        }
+        
+        // Show results
+        showMultiplayerResults();
+    }
+
+    function showMultiplayerResults() {
+        gameContainer.style.display = 'none';
+        topBar.style.display = 'none';
         multiplayerResults.style.display = 'block';
         
-        // Show confetti for good performance
-        if (accuracy >= 70) {
+        const challengeData = getMultiplayerGameData();
+        if (!challengeData) return;
+        
+        // Sort players by score
+        const sortedPlayers = [...challengeData.players].sort((a, b) => (b.score || 0) - (a.score || 0));
+        
+        // Update results display
+        document.getElementById('final-score').textContent = `${score}/${total}`;
+        const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
+        document.getElementById('final-accuracy').textContent = `${accuracy}%`;
+        
+        // Show winner message
+        const resultMessage = document.getElementById('result-message');
+        if (sortedPlayers[0] && sortedPlayers[0].name === playerNickname) {
+            resultMessage.textContent = '🏆 You Won!';
             AnimationEffects.showConfetti();
+        } else {
+            resultMessage.textContent = '🏁 Game Complete';
         }
     }
 
     function shareMultiplayerResult() {
-        const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;
-        const shareText = `🧑‍🤝‍🧑 Flagtriv Challenge Results\nScore: ${score}/${total} (${accuracy}%)\nBest Streak: ${currentGameStreak}\nflagtriv.com`;
+        const challengeData = getMultiplayerGameData();
+        if (!challengeData) return;
+        
+        const shareText = `🧑‍🤝‍🧑 Flagtriv Challenge\nI scored ${score}/${total} (${Math.round((score/total)*100)}%)\nPlay: ${window.location.origin}${window.location.pathname}`;
         shareToClipboard(shareText);
     }
 
-    function generateGameId() {
-        return Math.random().toString(36).substr(2, 6).toUpperCase();
+    function playAgainMultiplayer() {
+        // Reset to main menu
+        multiplayerResults.style.display = 'none';
+        modeSelection.style.display = 'flex';
+        isMultiplayerMode = false;
+        multiplayerGameId = null;
+        
+        // Clear URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    function getMultiplayerGameData() {
+        if (!multiplayerGameId) return null;
+        
+        const storageKey = `challenge_${multiplayerGameId}`;
+        const data = localStorage.getItem(storageKey);
+        return data ? JSON.parse(data) : null;
+    }
+
+    function saveMultiplayerGameData(data) {
+        if (!multiplayerGameId) return;
+        
+        const storageKey = `challenge_${multiplayerGameId}`;
+        localStorage.setItem(storageKey, JSON.stringify(data));
+        
+        // Also update global challenges list
+        const allChallenges = JSON.parse(localStorage.getItem('allChallenges') || '{}');
+        allChallenges[multiplayerGameId] = data;
+        localStorage.setItem('allChallenges', JSON.stringify(allChallenges));
+    }
+
+    function handleVisibilityChange() {
+        if (!isMultiplayerMode || document.hidden) return;
+        
+        // Sync multiplayer state when returning to tab
+        syncMultiplayerState();
+    }
+
+    function syncMultiplayerState() {
+        const challengeData = getMultiplayerGameData();
+        if (!challengeData || challengeData.status !== 'playing') return;
+        
+        // If we're behind on questions, catch up
+        if (multiplayerQuestionIndex < challengeData.currentQuestion) {
+            multiplayerQuestionIndex = challengeData.currentQuestion;
+            showMultiplayerQuestion(challengeData);
+        }
     }
 
     function updateDailyChallengeButton() {
@@ -715,10 +678,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateContinentFilterButton() {
-        if (continentFilterBtn) {
-            continentFilterBtn.textContent = continentFilter.getSelectionText().split(' ')[0]; // Just the emoji
-            continentFilterBtn.title = continentFilter.getSelectionText();
-        }
+        continentFilterBtn.textContent = continentFilter.getSelectionText().split(' ')[0];
+        continentFilterBtn.title = continentFilter.getSelectionText();
     }
 
     function showContinentFilterModal() {
@@ -741,9 +702,7 @@ document.addEventListener("DOMContentLoaded", function () {
             option.classList.toggle('active', isSelected);
         });
         
-        if (selectionSummary) {
-            selectionSummary.textContent = continentFilter.getSelectionText();
-        }
+        selectionSummary.textContent = continentFilter.getSelectionText();
     }
 
     function toggleContinentOption(event) {
@@ -759,7 +718,6 @@ document.addEventListener("DOMContentLoaded", function () {
         updateContinentFilterInSettings();
         hideContinentFilterModal();
         
-        // If in a game mode, restart with new filter
         if (isChallengeMode) {
             startChallengeMode();
         } else if (isZenMode) {
@@ -785,7 +743,6 @@ document.addEventListener("DOMContentLoaded", function () {
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
         
-        // Set today's country
         currentCountry = dailyChallenge.getTodaysCountry();
         displayCountry();
         
@@ -819,7 +776,7 @@ document.addEventListener("DOMContentLoaded", function () {
         updateTopBar();
         
         headingText.textContent = "🧠 Challenge Mode";
-        subHeadingText.textContent = "Test your flag knowledge!";
+        subHeadingText.textContent = "How many flags can you guess correctly?";
         
         nextCountry();
     }
@@ -854,12 +811,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateTopBar() {
-        // Update streak - use current game streak
+        // Update streak
         const streakEmoji = getStreakEmoji(currentGameStreak);
         streakDisplayTop.textContent = `${streakEmoji} ${currentGameStreak} Streak`.trim();
         
         // Update lives (hide in zen mode)
-        if (isZenMode || isMultiplayerMode) {
+        if (isZenMode) {
             document.getElementById('lives-display').style.display = 'none';
         } else {
             document.getElementById('lives-display').style.display = 'flex';
@@ -883,9 +840,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateSoundToggle() {
-        if (soundIcon) {
-            soundIcon.textContent = soundEffects.enabled ? '🔊' : '🔇';
-        }
+        soundIcon.textContent = soundEffects.enabled ? '🔊' : '🔇';
     }
 
     function nextCountry() {
@@ -947,9 +902,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedCountryName = event.target.textContent;
         const isCorrect = selectedCountryName === currentCountry.name;
         
+        // Handle multiplayer mode
         if (isMultiplayerMode) {
             submitMultiplayerAnswer(selectedCountryName, isCorrect);
-            return;
         }
         
         options.forEach(button => {
@@ -965,7 +920,6 @@ document.addEventListener("DOMContentLoaded", function () {
             handleWrongAnswer(event.target);
         }
 
-        // Show correct answer
         options.forEach(button => {
             if (button.textContent === currentCountry.name) {
                 button.classList.add('correct-answer');
@@ -977,7 +931,6 @@ document.addEventListener("DOMContentLoaded", function () {
             dailyAttempts++;
         }
         
-        // Update zen stats
         if (isZenMode) {
             zenStats.totalFlags++;
         }
@@ -988,11 +941,10 @@ document.addEventListener("DOMContentLoaded", function () {
         headingText.style.display = 'none';
         subHeadingText.style.display = 'none';
         
-        if (!isDailyMode) {
+        if (!isDailyMode && !isMultiplayerMode) {
             nextBtn.hidden = false;
         }
 
-        // Handle end of daily challenge
         if (isDailyMode) {
             setTimeout(() => {
                 completeDailyChallenge(isCorrect);
@@ -1008,29 +960,16 @@ document.addEventListener("DOMContentLoaded", function () {
         currentGameStreak++;
         button.classList.add('correct-answer');
         
-        // Sound effect
         soundEffects.playCorrect();
         
-        if (isChallengeMode) {
-            AnimationEffects.showConfetti();
-            
-            // Unlock country and check achievements
-            achievementSystem.unlockCountry(currentCountry.alpha2Code, currentCountry);
-            const newAchievements = achievementSystem.checkAchievements();
-            newAchievements.forEach(achievement => {
-                AnimationEffects.showAchievementUnlock(achievement);
-            });
-        } else if (isZenMode) {
-            // Update zen stats
+        if (isZenMode) {
             zenStats.totalCorrect++;
             if (currentGameStreak > zenStats.highestStreak) {
                 zenStats.highestStreak = currentGameStreak;
             }
-            
             updateTopBar();
             AnimationEffects.showConfetti();
-        } else if (isDailyMode) {
-            // Daily mode - just show confetti
+        } else if (!isMultiplayerMode) {
             AnimationEffects.showConfetti();
         }
     }
@@ -1039,10 +978,8 @@ document.addEventListener("DOMContentLoaded", function () {
         message.textContent = "😢 Oops, that's not correct.";
         button.classList.add('wrong-answer');
         
-        // Sound effect
         soundEffects.playWrong();
         
-        // Reset game streak
         currentGameStreak = 0;
         updateTopBar();
         
@@ -1058,21 +995,16 @@ document.addEventListener("DOMContentLoaded", function () {
         topBar.style.display = 'none';
         dailyCompleteScreen.style.display = 'block';
         
-        // Update daily complete screen
         document.getElementById('daily-result-heading').textContent = correct ? 'Well Done!' : 'Better Luck Tomorrow!';
         document.getElementById('daily-result-flag').src = currentCountry.flag.large;
         document.getElementById('daily-result-country').textContent = currentCountry.name;
         document.getElementById('daily-attempts-display').textContent = `Attempts: ${dailyAttempts}/3`;
         document.getElementById('daily-streak-display').textContent = `Daily Streak: ${dailyChallenge.dailyStats.streak}`;
         
-        // Show fake global stat
         const globalStat = flagFacts.getRandomGlobalStat();
         document.getElementById('daily-global-stat').textContent = globalStat;
         
-        // Start countdown timer
         startCountdownTimer();
-        
-        // Update main menu for tomorrow
         updateDailyChallengeButton();
     }
 
@@ -1084,7 +1016,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         
         updateCountdown();
-        setInterval(updateCountdown, 60000); // Update every minute
+        setInterval(updateCountdown, 60000);
     }
 
     function loseLife() {
@@ -1161,15 +1093,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function switchTab(tabName) {
-        // Update tab buttons
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
         
-        // Update tab content
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.getElementById(`${tabName}-stats`).classList.add('active');
         
-        // Update content based on tab
         if (tabName === 'achievements') {
             updateAchievementsTab();
         } else if (tabName === 'passport') {
@@ -1205,13 +1134,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const unlockedCountries = JSON.parse(localStorage.getItem('unlockedCountries') || '[]');
         document.getElementById('countries-unlocked').textContent = `${unlockedCountries.length} Countries Discovered`;
         
-        // Update continent progress
         updateContinentProgress();
         
         const passportGrid = document.getElementById('passport-grid');
         passportGrid.innerHTML = '';
         
-        // Show a sample of unlocked countries
         const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
         unlockedCountries.slice(0, 20).forEach(countryCode => {
             const country = countryDetails[countryCode];
@@ -1233,7 +1160,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const continentCounts = {};
         const continentTotals = {};
         
-        // Count countries per continent
         Object.values(countries).forEach(country => {
             const region = country.region;
             continentTotals[region] = (continentTotals[region] || 0) + 1;
@@ -1273,24 +1199,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateStats() {
-        // Challenge stats
-        const bestStreak = Math.max(
-            parseInt(localStorage.getItem('bestStreak') || '0'),
-            currentGameStreak
-        );
-        document.getElementById('stats-best-streak').textContent = bestStreak;
+        document.getElementById('stats-best-streak').textContent = localStorage.getItem('bestStreak') || '0';
         document.getElementById('challenge-times-played-value').textContent = challengeStats.timesPlayed;
         document.getElementById('challenge-highest-score-value').textContent = challengeStats.highestScore;
         document.getElementById('challenge-total-score-value').textContent = challengeStats.totalScore;
         
-        // Zen stats
         document.getElementById('zen-sessions-played').textContent = zenStats.sessionsPlayed;
         document.getElementById('zen-highest-streak').textContent = zenStats.highestStreak;
         document.getElementById('zen-total-flags').textContent = zenStats.totalFlags;
         const zenAccuracy = zenStats.totalFlags > 0 ? Math.round((zenStats.totalCorrect / zenStats.totalFlags) * 100) : 0;
         document.getElementById('zen-accuracy').textContent = `${zenAccuracy}%`;
         
-        // Daily stats
         document.getElementById('daily-current-streak').textContent = dailyChallenge.dailyStats.streak;
         document.getElementById('daily-games-played').textContent = dailyChallenge.dailyStats.totalPlayed;
         const successRate = dailyChallenge.dailyStats.totalPlayed > 0 
@@ -1327,11 +1246,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 url: document.URL
             }).then(() => {
                 console.log('Thanks for sharing!');
-            }).catch((error) => {
-                if (error.name !== 'AbortError') {
-                    console.error('Error sharing:', error);
-                }
-            });
+            }).catch(console.error);
         } else {
             const textArea = document.createElement("textarea");
             textArea.value = text;
@@ -1372,12 +1287,10 @@ document.addEventListener("DOMContentLoaded", function () {
             isChallengeMode: isChallengeMode,
             isZenMode: isZenMode,
             isDailyMode: isDailyMode,
-            isMultiplayerMode: isMultiplayerMode,
             currentGameStreak: currentGameStreak
         };
         localStorage.setItem('countryGame', JSON.stringify(gameStateData));
         
-        // Save zen stats separately
         localStorage.setItem('zenStats', JSON.stringify(zenStats));
         localStorage.setItem('challengeStats', JSON.stringify(challengeStats));
     }
