@@ -215,12 +215,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateContinentFilterInSettings() {
         const selectionText = document.getElementById('continent-selection-text');
-        selectionText.textContent = continentFilter.getSelectionText();
+        if (selectionText && continentFilter) {
+            selectionText.textContent = continentFilter.getSelectionText();
+        }
     }
 
     function updateContinentFilterButton() {
-        continentFilterBtn.textContent = continentFilter.getSelectionText().split(' ')[0]; // Just the emoji
-        continentFilterBtn.title = continentFilter.getSelectionText();
+        if (continentFilter && continentFilterBtn) {
+            continentFilterBtn.textContent = continentFilter.getSelectionText().split(' ')[0]; // Just the emoji
+            continentFilterBtn.title = continentFilter.getSelectionText();
+        }
     }
 
     function showContinentFilterModal() {
@@ -243,7 +247,9 @@ document.addEventListener("DOMContentLoaded", function () {
             option.classList.toggle('active', isSelected);
         });
         
-        selectionSummary.textContent = continentFilter.getSelectionText();
+        if (selectionSummary && continentFilter) {
+            selectionSummary.textContent = continentFilter.getSelectionText();
+        }
     }
 
     function toggleContinentOption(event) {
@@ -271,7 +277,10 @@ document.addEventListener("DOMContentLoaded", function () {
     function showCreateChallengeModal() {
         createChallengeModal.style.display = 'block';
         // Update continent display
-        document.getElementById('challenge-continents').textContent = continentFilter.getSelectionText();
+        const challengeContinents = document.getElementById('challenge-continents');
+        if (challengeContinents && continentFilter) {
+            challengeContinents.textContent = continentFilter.getSelectionText();
+        }
     }
 
     function showJoinChallengeModal() {
@@ -808,8 +817,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateSoundToggle() {
-        soundIcon.textContent = soundEffects.enabled ? '🔊' : '🔇';
-        document.getElementById('sound-status').textContent = soundEffects.enabled ? 'On' : 'Off';
+        if (soundIcon && soundEffects) {
+            soundIcon.textContent = soundEffects.enabled ? '🔊' : '🔇';
+            const soundStatus = document.getElementById('sound-status');
+            if (soundStatus) {
+                soundStatus.textContent = soundEffects.enabled ? 'On' : 'Off';
+            }
+        }
     }
 
     function nextCountry() {
@@ -1286,7 +1300,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 url: document.URL
             }).then(() => {
                 console.log('Thanks for sharing!');
-            }).catch(console.error);
+            }).catch((error) => {
+                // Handle share cancellation gracefully
+                if (error.name === 'AbortError') {
+                    console.log('Share was cancelled by user');
+                } else {
+                    console.error('Error sharing:', error);
+                }
+            });
         } else {
             const textArea = document.createElement("textarea");
             textArea.value = text;
