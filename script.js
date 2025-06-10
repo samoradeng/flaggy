@@ -22,13 +22,11 @@ document.addEventListener("DOMContentLoaded", function () {
     let soundEffects;
 
     // DOM elements
-    const hearts = document.querySelectorAll('.heart-icon');
     const flagImg = document.getElementById('flag');
     const options = document.querySelectorAll('.option');
     const message = document.getElementById('message');
     const facts = document.getElementById('facts');
     const nextBtn = document.getElementById('next');
-    const scoreDisplay = document.getElementById('score');
     const headingText = document.getElementById('heading');
     const subHeadingText = document.getElementById('subHeading');
     const statsBtn = document.getElementById('stats-btn');
@@ -44,13 +42,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const tryAgainBtn = document.getElementById('try-again');
     const seeStatsFromGameOver = document.getElementById('see-stats-from-gameover');
 
-    // XP and Streak displays
-    const xpDisplay = document.getElementById('xp-display');
-    const levelText = document.getElementById('level-text');
-    const xpText = document.getElementById('xp-text');
-    const xpProgress = document.getElementById('xp-progress');
-    const streakDisplay = document.getElementById('streak-display');
-    const streakText = document.getElementById('streak-text');
+    // New consolidated UI elements
+    const topBar = document.getElementById('top-bar');
+    const topProgressBar = document.getElementById('top-progress-bar');
+    const levelDisplay = document.getElementById('level-display');
+    const streakDisplayTop = document.getElementById('streak-display-top');
+    const livesCount = document.getElementById('lives-count');
+    const scoreDisplay = document.getElementById('score-display');
+    const xpProgressTop = document.getElementById('xp-progress-top');
 
     // Sound toggle
     const soundToggle = document.getElementById('sound-toggle');
@@ -83,8 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
         soundEffects = new SoundEffects();
 
         // Update UI
-        updateXPDisplay();
-        updateStreakDisplay();
+        updateTopBar();
         updateMainMenuStats();
         updateSoundToggle();
 
@@ -148,11 +146,8 @@ document.addEventListener("DOMContentLoaded", function () {
         
         modeSelection.style.display = 'none';
         gameContainer.style.display = 'flex';
-        document.getElementById('top-right-game-stats').style.display = 'flex';
-        xpDisplay.style.display = 'none'; // Hide XP in daily mode
-        streakDisplay.style.display = 'none'; // Hide streak in daily mode
-        
-        hearts.forEach(heart => heart.classList.remove('heart-lost'));
+        topBar.style.display = 'flex';
+        topProgressBar.style.display = 'none'; // Hide XP bar in daily mode
         
         // Set today's country
         currentCountry = dailyChallenge.getTodaysCountry();
@@ -160,6 +155,8 @@ document.addEventListener("DOMContentLoaded", function () {
         
         headingText.textContent = "Daily Challenge";
         subHeadingText.textContent = "One flag per day - make it count!";
+        
+        updateTopBar();
     }
 
     function startEndlessMode() {
@@ -176,16 +173,11 @@ document.addEventListener("DOMContentLoaded", function () {
         usedCountries = [];
         
         gameContainer.style.display = 'flex';
-        document.getElementById('top-right-game-stats').style.display = 'flex';
-        xpDisplay.style.display = 'flex';
-        streakDisplay.style.display = 'flex';
-        
-        hearts.forEach(heart => heart.classList.remove('heart-lost'));
-        scoreDisplay.textContent = "Score: " + score + "/" + total;
+        topBar.style.display = 'flex';
+        topProgressBar.style.display = 'block';
         
         endlessStats.timesPlayed++;
-        updateXPDisplay();
-        updateStreakDisplay();
+        updateTopBar();
         
         headingText.textContent = "Guess the Flag";
         subHeadingText.textContent = "Can you identify which country or territory this is?";
@@ -193,20 +185,23 @@ document.addEventListener("DOMContentLoaded", function () {
         nextCountry();
     }
 
-    function updateXPDisplay() {
-        levelText.textContent = `Level ${streakSystem.level}`;
-        xpText.textContent = `${streakSystem.xp} XP`;
-        xpProgress.style.width = `${streakSystem.getXPProgress()}%`;
-    }
-
-    function updateStreakDisplay() {
-        const streakEmoji = streakSystem.getStreakEmoji(streakSystem.currentStreak);
-        streakText.textContent = `${streakEmoji} ${streakSystem.currentStreak} Streak`;
+    function updateTopBar() {
+        // Update level
+        levelDisplay.textContent = `Level ${streakSystem.level}`;
         
-        if (streakSystem.currentStreak === 0) {
-            streakDisplay.style.opacity = '0.5';
-        } else {
-            streakDisplay.style.opacity = '1';
+        // Update streak
+        const streakEmoji = streakSystem.getStreakEmoji(streakSystem.currentStreak);
+        streakDisplayTop.textContent = `${streakEmoji} ${streakSystem.currentStreak} Streak`.trim();
+        
+        // Update lives
+        livesCount.textContent = lives;
+        
+        // Update score
+        scoreDisplay.textContent = `Score: ${score}/${total}`;
+        
+        // Update XP progress bar
+        if (isEndlessMode) {
+            xpProgressTop.style.width = `${streakSystem.getXPProgress()}%`;
         }
     }
 
@@ -301,7 +296,7 @@ document.addEventListener("DOMContentLoaded", function () {
             dailyAttempts++;
         }
         
-        scoreDisplay.textContent = "Score: " + score + "/" + total;
+        updateTopBar();
         showFacts(currentCountry);
         headingText.style.display = 'none';
         subHeadingText.style.display = 'none';
@@ -331,8 +326,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isEndlessMode) {
             // Update streak and XP
             const result = streakSystem.addCorrectAnswer();
-            updateXPDisplay();
-            updateStreakDisplay();
+            updateTopBar();
             
             // Show XP gain animation
             AnimationEffects.showXPGain(result.xpGained, button);
@@ -369,7 +363,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         if (isEndlessMode) {
             streakSystem.resetStreak();
-            updateStreakDisplay();
+            updateTopBar();
         }
         
         loseLife();
@@ -379,7 +373,8 @@ document.addEventListener("DOMContentLoaded", function () {
         dailyChallenge.submitResult(correct, dailyAttempts);
         
         gameContainer.style.display = 'none';
-        document.getElementById('top-right-game-stats').style.display = 'none';
+        topBar.style.display = 'none';
+        topProgressBar.style.display = 'none';
         dailyCompleteScreen.style.display = 'block';
         
         // Update daily complete screen
@@ -410,8 +405,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function loseLife() {
         if (lives > 0) {
             lives--;
-            hearts[lives].classList.add('heart-lost');
-            AnimationEffects.pulseElement(hearts[lives]);
+            updateTopBar();
             saveGameState();
         }
 
@@ -430,7 +424,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function showEndlessGameOver() {
         lives = 0;
-        hearts.forEach(heart => heart.classList.add('heart-lost'));
 
         endlessStats.totalScore += score;
         if (score > endlessStats.highestScore) {
@@ -442,9 +435,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         endlessGameOverScreen.style.display = 'block';
         gameContainer.style.display = 'none';
-        document.getElementById('top-right-game-stats').style.display = 'none';
-        xpDisplay.style.display = 'none';
-        streakDisplay.style.display = 'none';
+        topBar.style.display = 'none';
+        topProgressBar.style.display = 'none';
 
         document.getElementById('endless-score-display').textContent = "Your Score: " + score;
         document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + endlessStats.highestScore;

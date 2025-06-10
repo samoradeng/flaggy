@@ -38,6 +38,7 @@ body {
     flex-direction: column;
     align-items: center;
     animation: fadeIn 1s;
+    padding: 0 16px;
 }
 
 #flag {
@@ -157,159 +158,106 @@ body {
     color: #1d1d1d;
 }
 
-/* XP and Level Display */
-#xp-display {
+/* Top Progress Bar */
+#top-progress-bar {
     position: fixed;
-    top: 16px;
-    left: 16px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 12px 16px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-}
-
-#level-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    gap: 16px;
-}
-
-#level-text {
-    font-weight: 600;
-    color: #1d1d1d;
-}
-
-#xp-text {
-    font-size: 14px;
-    color: #666;
-}
-
-#xp-bar {
-    width: 120px;
-    height: 6px;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
     background-color: #e0e0e0;
-    border-radius: 3px;
-    overflow: hidden;
+    z-index: 1000;
 }
 
-#xp-progress {
+#xp-progress-top {
     height: 100%;
     background: linear-gradient(90deg, #4CAF50, #8BC34A);
-    border-radius: 3px;
     transition: width 0.5s ease;
+    width: 0%;
 }
 
-/* Streak Display */
-#streak-display {
+/* Consolidated Top Bar */
+#top-bar {
     position: fixed;
-    top: 16px;
-    right: 16px;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 12px 16px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-    transition: opacity 0.3s ease;
-}
-
-#streak-text {
-    font-weight: 600;
-    color: #1d1d1d;
-}
-
-/* Animation Classes */
-.xp-gain-animation {
-    position: fixed;
-    color: #4CAF50;
-    font-weight: bold;
-    font-size: 18px;
-    pointer-events: none;
-    z-index: 1000;
-    animation: xpGainFloat 2s ease-out forwards;
-}
-
-.level-up-animation {
-    position: fixed;
-    top: 50%;
+    top: 8px;
     left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-    pointer-events: none;
-    animation: levelUpPulse 3s ease-out forwards;
-}
-
-.level-up-content {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 24px 32px;
-    border-radius: 16px;
-    text-align: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.level-up-text {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 8px;
-}
-
-.level-up-number {
-    font-size: 32px;
-    font-weight: 900;
-}
-
-.achievement-unlock {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-    pointer-events: none;
-    animation: achievementSlideIn 4s ease-out forwards;
-}
-
-.achievement-content {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
-    padding: 20px 24px;
-    border-radius: 16px;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    max-width: 400px;
-}
-
-.achievement-icon {
-    font-size: 32px;
-}
-
-.achievement-title {
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
     font-size: 14px;
-    opacity: 0.9;
-    margin-bottom: 4px;
+    font-weight: 500;
 }
 
-.achievement-name {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 4px;
+#level-display {
+    color: #4CAF50;
+    font-weight: 600;
 }
 
-.achievement-desc {
+#streak-display-top {
+    color: #ff6b35;
+}
+
+#lives-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #e74c3c;
+}
+
+#lives-count {
+    font-weight: 600;
+}
+
+.heart-icon-top {
+    width: 16px;
+    height: 16px;
+    color: #e74c3c;
+}
+
+#control-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+#stats-btn, #sound-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    font-size: 16px;
+}
+
+#stats-btn:hover, #sound-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+#sound-icon {
     font-size: 14px;
-    opacity: 0.8;
 }
 
-.pulse-animation {
-    animation: pulse 0.6s ease;
+#score-display {
+    color: #666;
+    font-weight: 500;
 }
 
-.shake-animation {
-    animation: shake 0.6s ease;
+/* Hide old displays */
+#xp-display,
+#streak-display,
+#top-right-game-stats {
+    display: none !important;
 }
 
 /* Modal styles */
@@ -499,67 +447,6 @@ body {
 .passport-country span {
     font-size: 12px;
     color: #333;
-}
-
-/* Top right game stats */
-#top-right-game-stats {
-    position: fixed;
-    display: flex;
-    flex-direction: row;
-    top: 16px;
-    right: 16px;
-    gap: 16px;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 12px 16px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 100;
-}
-
-#stats-btn, #sound-toggle {
-    font-size: 16px;
-    height: 40px;
-    width: 40px;
-    border-radius: 50%;
-    border: 1px solid transparent;
-    cursor: pointer;
-    padding: 8px;
-    background-color: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
-}
-
-#stats-btn:hover, #sound-toggle:hover {
-    background-color: #f0f0f0;
-}
-
-#sound-icon {
-    font-size: 18px;
-}
-
-#score {
-    font-weight: 500;
-    color: #1d1d1d;
-    white-space: nowrap;
-}
-
-#lives {
-    display: flex;
-    gap: 4px;
-}
-
-.heart-icon {
-    width: 24px;
-    height: 24px;
-    opacity: 1;
-    transition: opacity 0.3s;
-}
-
-.heart-lost {
-    opacity: 0.2;
 }
 
 /* Mode selection */
@@ -768,6 +655,98 @@ body {
     animation: fadein 0.5s, fadeout 0.5s 2.5s;
 }
 
+/* Animation Classes */
+.xp-gain-animation {
+    position: fixed;
+    color: #4CAF50;
+    font-weight: bold;
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 1000;
+    animation: xpGainFloat 2s ease-out forwards;
+}
+
+.level-up-animation {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    pointer-events: none;
+    animation: levelUpPulse 3s ease-out forwards;
+}
+
+.level-up-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 24px 32px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.level-up-text {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.level-up-number {
+    font-size: 32px;
+    font-weight: 900;
+}
+
+.achievement-unlock {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    pointer-events: none;
+    animation: achievementSlideIn 4s ease-out forwards;
+}
+
+.achievement-content {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 20px 24px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+}
+
+.achievement-icon {
+    font-size: 32px;
+}
+
+.achievement-title {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 4px;
+}
+
+.achievement-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.achievement-desc {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.pulse-animation {
+    animation: pulse 0.6s ease;
+}
+
+.shake-animation {
+    animation: shake 0.6s ease;
+}
+
 /* Keyframe animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -865,22 +844,21 @@ body {
         height: 210px;
     }
     
-    #xp-display,
-    #streak-display {
-        position: relative;
-        top: auto;
-        left: auto;
-        right: auto;
-        margin: 8px;
-        display: inline-block;
+    #top-bar {
+        font-size: 12px;
+        padding: 6px 12px;
+        gap: 8px;
     }
     
-    #top-right-game-stats {
-        position: relative;
-        top: auto;
-        right: auto;
-        justify-content: center;
-        margin: 16px;
+    #stats-btn, #sound-toggle {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+    
+    .heart-icon-top {
+        width: 14px;
+        height: 14px;
     }
     
     .modal-content {
@@ -929,5 +907,11 @@ body {
     
     #Welcome-module_SubHeading {
         font-size: 20px;
+    }
+    
+    #top-bar {
+        font-size: 11px;
+        padding: 4px 8px;
+        gap: 6px;
     }
 }

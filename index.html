@@ -17,20 +17,27 @@
 
     <div id="resultsToast">Copied results to clipboard</div>
 
-    <!-- XP and Level Display -->
-    <div id="xp-display" style="display: none;">
-        <div id="level-info">
-            <span id="level-text">Level 1</span>
-            <span id="xp-text">0 XP</span>
-        </div>
-        <div id="xp-bar">
-            <div id="xp-progress"></div>
-        </div>
+    <!-- Top Progress Bar -->
+    <div id="top-progress-bar" style="display: none;">
+        <div id="xp-progress-top"></div>
     </div>
 
-    <!-- Streak Display -->
-    <div id="streak-display" style="display: none;">
-        <span id="streak-text">🔥 0 Streak</span>
+    <!-- Consolidated Top Bar -->
+    <div id="top-bar" style="display: none;">
+        <div id="level-display">Level 1</div>
+        <div id="streak-display-top">0 Streak</div>
+        <div id="lives-display">
+            ❤️ <span id="lives-count">3</span>
+        </div>
+        <div id="control-buttons">
+            <button id="stats-btn" title="Statistics">
+                📊
+            </button>
+            <button id="sound-toggle" title="Toggle Sound">
+                <span id="sound-icon">🔊</span>
+            </button>
+        </div>
+        <div id="score-display">Score: 0/0</div>
     </div>
 
     <!-- Daily Challenge Complete Screen -->
@@ -99,21 +106,6 @@
             <!-- Country facts will be displayed here -->
         </div>
         <button id="next" hidden>Next country</button>
-    </div>
-
-    <div id="top-right-game-stats" style="display: none;">
-        <div id="lives">
-            <img src="images/heart.svg" class="heart-icon" alt="Life">
-            <img src="images/heart.svg" class="heart-icon" alt="Life">
-            <img src="images/heart.svg" class="heart-icon" alt="Life">
-        </div>
-        <button id="stats-btn">
-            <img src="images/chart-bar.svg">
-        </button>
-        <button id="sound-toggle" title="Toggle Sound">
-            <span id="sound-icon">🔊</span>
-        </button>
-        <p id="score">Score: 0/0</p>
     </div>
 
     <div id="stats-modal" class="modal">
