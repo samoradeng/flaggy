@@ -275,6 +275,9 @@ class MultiplayerGame {
     }
 
     startGameplay(gameState) {
+        // Set multiplayer mode flag in main script
+        window.isMultiplayerMode = true;
+        
         // Hide lobby
         document.getElementById('multiplayer-lobby').style.display = 'none';
         
@@ -385,11 +388,16 @@ class MultiplayerGame {
             button.classList.add('disabled');
         });
         
-        // Visual feedback
+        // Visual feedback with confetti and sound
         if (isCorrect) {
             event.target.classList.add('correct-answer');
             this.soundEffects.playCorrect();
             document.getElementById('message').textContent = "🎉 Correct!";
+            
+            // Show confetti for correct answers in multiplayer
+            if (typeof AnimationEffects !== 'undefined') {
+                AnimationEffects.showConfetti();
+            }
         } else {
             event.target.classList.add('wrong-answer');
             this.soundEffects.playWrong();
@@ -418,13 +426,12 @@ class MultiplayerGame {
             timeSpent
         };
         
-        // Show flag facts
+        // Show facts (no trivia)
         this.showMultiplayerFacts();
     }
 
     showMultiplayerFacts() {
         const facts = document.getElementById('facts');
-        const flagTrivia = document.getElementById('flag-trivia');
         
         facts.innerHTML = `
             <p class="fact-text"><strong>Capital:</strong> ${this.currentFlag.capital}</p>
@@ -432,9 +439,8 @@ class MultiplayerGame {
         `;
         facts.hidden = false;
         
-        const trivia = this.flagFacts.getFact(this.currentFlag.alpha2Code);
-        flagTrivia.innerHTML = `<p class="trivia-text">${trivia}</p>`;
-        flagTrivia.hidden = false;
+        // Hide trivia section
+        document.getElementById('flag-trivia').hidden = true;
     }
 
     updateTimerDisplay(timeRemaining) {
@@ -460,6 +466,9 @@ class MultiplayerGame {
     }
 
     endMultiplayerGame() {
+        // Reset multiplayer mode flag
+        window.isMultiplayerMode = false;
+        
         // Stop syncing
         this.multiplayerSync.stopSync();
         
@@ -565,6 +574,9 @@ class MultiplayerGame {
         this.playerAnswers = [];
         this.gameStartTime = null;
         this.roundStartTime = null;
+        
+        // Reset multiplayer mode flag
+        window.isMultiplayerMode = false;
     }
 
     showToast(message) {

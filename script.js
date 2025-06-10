@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let isChallengeMode = false;
     let isZenMode = false;
     let isDailyMode = false;
+    let isMultiplayerMode = false;
     let dailyAttempts = 0;
     let currentGameStreak = 0; // Track streak for current game session
     let bestStreak = parseInt(localStorage.getItem('bestStreak') || '0');
@@ -241,6 +242,7 @@ document.addEventListener("DOMContentLoaded", function () {
         isDailyMode = true;
         isChallengeMode = false;
         isZenMode = false;
+        isMultiplayerMode = false;
         dailyAttempts = 0;
         lives = 3;
         score = 0;
@@ -279,6 +281,7 @@ document.addEventListener("DOMContentLoaded", function () {
         isDailyMode = false;
         isChallengeMode = true;
         isZenMode = false;
+        isMultiplayerMode = false;
         lives = 3;
         score = 0;
         total = 0;
@@ -306,6 +309,7 @@ document.addEventListener("DOMContentLoaded", function () {
         isDailyMode = false;
         isChallengeMode = false;
         isZenMode = true;
+        isMultiplayerMode = false;
         lives = Infinity; // No lives in zen mode
         score = 0;
         total = 0;
@@ -475,11 +479,10 @@ document.addEventListener("DOMContentLoaded", function () {
         
         updateTopBar();
         showFacts(currentCountry);
-        showFlagTrivia(currentCountry);
         headingText.style.display = 'none';
         subHeadingText.style.display = 'none';
         
-        if (!isDailyMode) {
+        if (!isDailyMode && !isMultiplayerMode) {
             nextBtn.hidden = false;
         }
 
@@ -508,7 +511,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Sound effect
         soundEffects.playCorrect();
         
-        if (isChallengeMode) {
+        if (isChallengeMode || isMultiplayerMode) {
             updateTopBar();
             
             // Check for streak milestones
@@ -519,12 +522,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 AnimationEffects.showConfetti();
             }
             
-            // Unlock country and check achievements
-            achievementSystem.unlockCountry(currentCountry.alpha2Code, currentCountry);
-            const newAchievements = achievementSystem.checkAchievements();
-            newAchievements.forEach(achievement => {
-                AnimationEffects.showAchievementUnlock(achievement);
-            });
+            // Unlock country and check achievements (only in single player modes)
+            if (!isMultiplayerMode) {
+                achievementSystem.unlockCountry(currentCountry.alpha2Code, currentCountry);
+                const newAchievements = achievementSystem.checkAchievements();
+                newAchievements.forEach(achievement => {
+                    AnimationEffects.showAchievementUnlock(achievement);
+                });
+            }
         } else if (isZenMode) {
             // Update zen stats
             zenStats.totalCorrect++;
@@ -551,7 +556,7 @@ document.addEventListener("DOMContentLoaded", function () {
         currentGameStreak = 0;
         updateTopBar();
         
-        if (!isZenMode) {
+        if (!isZenMode && !isMultiplayerMode) {
             loseLife();
         }
     }
@@ -666,12 +671,6 @@ document.addEventListener("DOMContentLoaded", function () {
             <p class="fact-text"><strong>Location:</strong> ${country.subregion}</p>
         `;
         facts.hidden = false;
-    }
-
-    function showFlagTrivia(country) {
-        const trivia = flagFacts.getFact(country.alpha2Code);
-        flagTrivia.innerHTML = `<p class="trivia-text">${trivia}</p>`;
-        flagTrivia.hidden = false;
     }
 
     function returnToMainMenu() {
@@ -885,6 +884,7 @@ document.addEventListener("DOMContentLoaded", function () {
             isChallengeMode: isChallengeMode,
             isZenMode: isZenMode,
             isDailyMode: isDailyMode,
+            isMultiplayerMode: isMultiplayerMode,
             currentGameStreak: currentGameStreak
         };
         localStorage.setItem('countryGame', JSON.stringify(gameStateData));
