@@ -478,10 +478,35 @@ body {
 }
 
 .leaderboard-note p {
-    margin: 0;
+    margin: 4px 0;
     font-size: 14px;
     color: #666;
     font-style: italic;
+}
+
+.leaderboard-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.copy-leaderboard-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.copy-leaderboard-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
 }
 
 .close-leaderboard-btn {
@@ -1666,6 +1691,11 @@ body {
     
     .leaderboard-item .player-time {
         font-size: 14px;
+    }
+    
+    .leaderboard-actions {
+        flex-direction: column;
+        gap: 8px;
     }
 }
 
