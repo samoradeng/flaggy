@@ -633,12 +633,30 @@ class MultiplayerGame {
             navigator.share({
                 title: 'Flagtriv Challenge Results',
                 text: shareText
+            }).then(() => {
+                // Share was successful
+            }).catch((error) => {
+                // Share failed or was cancelled, fall back to clipboard
+                console.log('Share failed:', error);
+                this.fallbackToClipboard(shareText);
             });
         } else {
-            // Fallback to clipboard
+            // Web Share API not supported, use clipboard fallback
+            this.fallbackToClipboard(shareText);
+        }
+    }
+
+    fallbackToClipboard(shareText) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(shareText).then(() => {
                 this.showToast('📋 Results copied to clipboard!');
+            }).catch((error) => {
+                console.error('Clipboard write failed:', error);
+                this.showToast('❌ Unable to copy results');
             });
+        } else {
+            // Final fallback for older browsers
+            this.showToast('❌ Sharing not supported on this device');
         }
     }
 
