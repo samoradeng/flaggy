@@ -51,7 +51,7 @@ function initializeGame() {
 
 function setupEventListeners() {
     // Mode selection buttons
-    document.getElementById('daily-challenge-btn').addEventListener('click', startDailyChallenge);
+    document.getElementById('daily-challenge-btn').addEventListener('click', handleDailyChallengeClick);
     document.getElementById('challenge-mode-btn').addEventListener('click', startChallengeMode);
     document.getElementById('zen-mode-btn').addEventListener('click', startZenMode);
 
@@ -108,6 +108,16 @@ function setupEventListeners() {
             e.target.style.display = 'none';
         }
     });
+}
+
+function handleDailyChallengeClick() {
+    if (dailyChallenge.hasPlayedToday()) {
+        // If already played today, show leaderboard
+        showDailyLeaderboard();
+    } else {
+        // If not played today, start the challenge
+        startDailyChallenge();
+    }
 }
 
 function updateContinentFilterUI() {
@@ -185,8 +195,8 @@ function checkDailyStatus() {
     const dailyBtn = document.getElementById('daily-challenge-btn');
     
     if (dailyChallenge.hasPlayedToday()) {
-        dailyBtn.textContent = '✅ Daily Complete';
-        dailyBtn.disabled = true;
+        dailyBtn.textContent = '🏆 View Leaderboard';
+        dailyBtn.disabled = false; // Keep button enabled so users can view leaderboard
     } else {
         dailyBtn.textContent = '📅 Daily Challenge';
         dailyBtn.disabled = false;
