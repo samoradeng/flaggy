@@ -29,6 +29,10 @@ fetch('countries.json')
     });
 
 function initializeGame() {
+    // Reset daily challenge data for testing
+    localStorage.removeItem('dailyStats');
+    localStorage.removeItem('dailyUsedCountries');
+    
     // Initialize all systems
     continentFilter = new ContinentFilter();
     flagFacts = new FlagFacts();
