@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
         nextBtn.addEventListener('click', nextCountry);
         challengeModeBtn.addEventListener('click', startChallengeMode);
         zenModeBtn.addEventListener('click', startZenMode);
-        dailyChallengeBtn.addEventListener('click', handleDailyChallengeClick);
+        dailyChallengeBtn.addEventListener('click', startDailyChallenge);
         playEndlessFromGameOver.addEventListener('click', startChallengeMode);
         tryAgainBtn.addEventListener('click', startChallengeMode);
         seeStatsFromGameOver.addEventListener('click', showStatsModal);
@@ -183,83 +183,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateDailyChallengeButton() {
         if (dailyChallenge.hasPlayedToday()) {
-            dailyChallengeBtn.textContent = '📊 View Today\'s Challenge';
-            dailyChallengeBtn.disabled = false; // Keep it enabled!
-            dailyChallengeBtn.style.backgroundColor = '#4CAF50';
-            dailyChallengeBtn.style.color = 'white';
+            dailyChallengeBtn.textContent = '✅ Completed Today';
+            dailyChallengeBtn.disabled = true;
         } else {
             dailyChallengeBtn.textContent = '📅 Daily Challenge';
             dailyChallengeBtn.disabled = false;
-            dailyChallengeBtn.style.backgroundColor = '#ff6b35';
-            dailyChallengeBtn.style.color = 'white';
         }
-    }
-
-    function handleDailyChallengeClick() {
-        if (dailyChallenge.hasPlayedToday()) {
-            // Show today's challenge info and leaderboard
-            showTodaysChallengeInfo();
-        } else {
-            // Start new daily challenge
-            startDailyChallenge();
-        }
-    }
-
-    function showTodaysChallengeInfo() {
-        // Get today's country and result
-        const todaysCountry = dailyChallenge.getTodaysCountry();
-        const result = dailyChallenge.dailyStats.results[dailyChallenge.today];
-        
-        // Show the daily complete screen with today's info
-        dailyCompleteScreen.style.display = 'block';
-        
-        // Update the screen with today's information
-        document.getElementById('daily-result-heading').textContent = result.correct ? 'Today\'s Challenge - Completed!' : 'Today\'s Challenge - Attempted';
-        document.getElementById('daily-result-flag').src = todaysCountry.flag.large;
-        document.getElementById('daily-result-country').textContent = todaysCountry.name;
-        document.getElementById('daily-attempts-display').textContent = `Your attempts: ${result.attempts}/2`;
-        document.getElementById('daily-streak-display').textContent = `Daily Streak: ${dailyChallenge.dailyStats.streak}`;
-        
-        // Hide the fake global stat
-        document.getElementById('daily-global-stat').style.display = 'none';
-        
-        // Add country facts
-        const factsContainer = document.createElement('div');
-        factsContainer.className = 'daily-country-facts';
-        factsContainer.innerHTML = `
-            <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 16px; border-radius: 12px; margin: 16px 0; border-left: 4px solid #4CAF50;">
-                <h4 style="margin: 0 0 12px 0; color: #333;">🌍 Country Facts</h4>
-                <p style="margin: 4px 0;"><strong>Capital:</strong> ${todaysCountry.capital}</p>
-                <p style="margin: 4px 0;"><strong>Region:</strong> ${todaysCountry.subregion}</p>
-                <p style="margin: 4px 0;"><strong>Population:</strong> ${todaysCountry.population?.toLocaleString() || 'Unknown'}</p>
-            </div>
-        `;
-        
-        // Insert facts before buttons
-        const existingButtons = dailyCompleteScreen.querySelector('.daily-complete-content');
-        const shareButton = document.getElementById('share-daily-result');
-        
-        // Remove any existing facts
-        const existingFacts = existingButtons.querySelector('.daily-country-facts');
-        if (existingFacts) {
-            existingFacts.remove();
-        }
-        
-        existingButtons.insertBefore(factsContainer, shareButton);
-        
-        // Add leaderboard button
-        let leaderboardBtn = existingButtons.querySelector('.view-leaderboard-btn');
-        if (!leaderboardBtn) {
-            leaderboardBtn = document.createElement('button');
-            leaderboardBtn.textContent = '🏆 View Leaderboard';
-            leaderboardBtn.className = 'create-challenge-btn view-leaderboard-btn';
-            leaderboardBtn.style.marginTop = '16px';
-            leaderboardBtn.onclick = showDailyLeaderboardModal;
-            existingButtons.insertBefore(leaderboardBtn, shareButton);
-        }
-        
-        // Start countdown timer
-        startCountdownTimer();
     }
 
     function updateMainMenuStats() {
@@ -781,20 +710,16 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Add leaderboard button if completed successfully
         if (correct) {
-            const existingButtons = dailyCompleteScreen.querySelector('.daily-complete-content');
-            let leaderboardBtn = existingButtons.querySelector('.view-leaderboard-btn');
+            const leaderboardBtn = document.createElement('button');
+            leaderboardBtn.textContent = '🏆 View Leaderboard';
+            leaderboardBtn.className = 'create-challenge-btn';
+            leaderboardBtn.style.marginTop = '16px';
+            leaderboardBtn.onclick = showDailyLeaderboardModal;
             
-            if (!leaderboardBtn) {
-                leaderboardBtn = document.createElement('button');
-                leaderboardBtn.textContent = '🏆 View Leaderboard';
-                leaderboardBtn.className = 'create-challenge-btn view-leaderboard-btn';
-                leaderboardBtn.style.marginTop = '16px';
-                leaderboardBtn.onclick = showDailyLeaderboardModal;
-                
-                // Insert before existing buttons
-                const shareButton = document.getElementById('share-daily-result');
-                existingButtons.insertBefore(leaderboardBtn, shareButton);
-            }
+            // Insert before existing buttons
+            const existingButtons = dailyCompleteScreen.querySelector('.daily-complete-content');
+            const shareButton = document.getElementById('share-daily-result');
+            existingButtons.insertBefore(leaderboardBtn, shareButton);
         }
         
         // Start countdown timer
