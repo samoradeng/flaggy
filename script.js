@@ -146,6 +146,9 @@ document.addEventListener("DOMContentLoaded", function () {
             startChallengeMode();
         });
         document.getElementById('share-endless-result')?.addEventListener('click', shareEndlessResult);
+
+        // DEBUG: Add button to clear daily challenge data
+        console.log('🔧 DEBUG: To reset daily challenge, run: localStorage.removeItem("dailyStats")');
     }
 
     function attachOptionListeners() {
@@ -181,12 +184,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateDailyChallengeButton() {
+        console.log('🔍 Checking daily challenge status...');
+        console.log('🔍 Has played today:', dailyChallenge.hasPlayedToday());
+        
         if (dailyChallenge.hasPlayedToday()) {
             dailyChallengeBtn.textContent = '📅 View Today\'s Flag';
             dailyChallengeBtn.disabled = false;
+            console.log('✅ Daily challenge already completed - showing view option');
         } else {
             dailyChallengeBtn.textContent = '📅 Daily Challenge';
             dailyChallengeBtn.disabled = false;
+            console.log('✅ Daily challenge available - showing play option');
         }
     }
 
@@ -273,13 +281,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function startDailyChallenge() {
         console.log('🚀 Starting daily challenge...');
+        console.log('🔍 Has played today:', dailyChallenge.hasPlayedToday());
         
         if (dailyChallenge.hasPlayedToday()) {
+            console.log('📅 Already played today - showing results');
             // Show today's flag and leaderboard
             showDailyResults();
             return;
         }
 
+        console.log('🎮 Starting new daily challenge game');
         isDailyMode = true;
         isChallengeMode = false;
         isZenMode = false;
@@ -1076,4 +1087,10 @@ document.addEventListener("DOMContentLoaded", function () {
             hideSettingsModal();
         }
     });
+
+    // DEBUG: Add a way to reset daily challenge for testing
+    window.resetDailyChallenge = function() {
+        localStorage.removeItem('dailyStats');
+        console.log('🔧 Daily challenge reset! Refresh the page.');
+    };
 });
