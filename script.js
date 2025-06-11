@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const soundIcon = document.getElementById('sound-icon-setting');
 
     // Home button
-    const homeBtn = document.getElementById('home-btn');
+    const homeLogoBtn = document.getElementById('home-logo-btn');
 
     // Continent filter elements
     const continentFilterBtn = document.getElementById('continent-filter-btn');
@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
         settingsBtn.addEventListener('click', showSettingsModal);
         settingsClose.addEventListener('click', hideSettingsModal);
         soundToggle.addEventListener('click', toggleSound);
-        homeBtn.addEventListener('click', goHome);
+        homeLogoBtn.addEventListener('click', goHome);
         continentFilterBtn.addEventListener('click', showContinentFilterModal);
         continentFilterClose.addEventListener('click', hideContinentFilterModal);
         applyContinentFilter.addEventListener('click', applyContinentFilterSelection);

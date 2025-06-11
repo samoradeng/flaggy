@@ -30,6 +30,38 @@ body {
     background-color: white;
 }
 
+/* Home Logo Button (Top Left) */
+#home-logo-btn {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+#home-logo-btn:hover {
+    background-color: rgba(255, 255, 255, 1);
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.home-logo-main {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
 #game-container {
     position: relative;
     top: 80px;
@@ -214,8 +246,7 @@ body {
     gap: 4px;
 }
 
-#settings-btn,
-#home-btn {
+#settings-btn {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -229,15 +260,8 @@ body {
     font-size: 16px;
 }
 
-#settings-btn:hover,
-#home-btn:hover {
+#settings-btn:hover {
     background-color: rgba(0, 0, 0, 0.1);
-}
-
-.home-logo {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
 }
 
 #score-display {
@@ -1532,6 +1556,18 @@ body {
 
 /* Mobile responsiveness */
 @media only screen and (max-width: 600px) {
+    #home-logo-btn {
+        top: 12px;
+        left: 12px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .home-logo-main {
+        width: 28px;
+        height: 28px;
+    }
+    
     #flag {
         width: 280px;
         height: 210px;
@@ -1547,16 +1583,10 @@ body {
         gap: 8px;
     }
     
-    #settings-btn,
-    #home-btn {
+    #settings-btn {
         width: 28px;
         height: 28px;
         font-size: 14px;
-    }
-    
-    .home-logo {
-        width: 20px;
-        height: 20px;
     }
     
     .modal-content {
@@ -1640,6 +1670,18 @@ body {
 }
 
 @media only screen and (max-width: 400px) {
+    #home-logo-btn {
+        top: 8px;
+        left: 8px;
+        width: 36px;
+        height: 36px;
+    }
+    
+    .home-logo-main {
+        width: 24px;
+        height: 24px;
+    }
+    
     #flag {
         width: 240px;
         height: 180px;
