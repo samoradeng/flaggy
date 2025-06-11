@@ -1,9 +1,20 @@
 class DailyChallenge {
     constructor(countries) {
         this.countries = countries;
-        this.today = new Date().toDateString();
+        // Use a standardized date format that's consistent worldwide
+        this.today = this.getStandardizedDate();
         this.dailyStats = this.loadDailyStats();
         this.usedCountries = this.loadUsedCountries();
+    }
+
+    getStandardizedDate() {
+        // Get current date in UTC and format as YYYY-MM-DD
+        // This ensures everyone worldwide gets the same date
+        const now = new Date();
+        const year = now.getUTCFullYear();
+        const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(now.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     loadDailyStats() {
@@ -42,45 +53,36 @@ class DailyChallenge {
     }
 
     getTodaysCountry() {
-        // Use date as seed for consistent daily country
+        // Use a deterministic seed based on the standardized date
         const seed = this.dateToSeed(this.today);
         const countryCodes = Object.keys(this.countries);
         
-        // Filter out already used countries if we haven't used all countries yet
-        let availableCountries = countryCodes;
-        if (this.usedCountries.length < countryCodes.length) {
-            availableCountries = countryCodes.filter(code => !this.usedCountries.includes(code));
-        } else {
-            // If all countries have been used, reset the used list
-            console.log('🔄 All countries used, resetting daily rotation');
-            this.usedCountries = [];
-            this.saveUsedCountries();
-        }
+        // Create a deterministic sequence using the date seed
+        // This ensures the same country for everyone on the same date
+        const index = seed % countryCodes.length;
+        const selectedCountryCode = countryCodes[index];
         
-        // Use the seed to pick from available countries
-        const index = seed % availableCountries.length;
-        const selectedCountryCode = availableCountries[index];
-        
-        // Add to used countries list if not already there
-        if (!this.usedCountries.includes(selectedCountryCode)) {
-            this.usedCountries.push(selectedCountryCode);
-            this.saveUsedCountries();
-        }
-        
-        console.log(`📅 Daily country: ${selectedCountryCode} (${this.countries[selectedCountryCode].name})`);
-        console.log(`📊 Used countries: ${this.usedCountries.length}/${countryCodes.length}`);
+        console.log(`📅 Daily country for ${this.today}: ${selectedCountryCode} (${this.countries[selectedCountryCode].name})`);
+        console.log(`🔢 Seed: ${seed}, Index: ${index}, Total countries: ${countryCodes.length}`);
         
         return this.countries[selectedCountryCode];
     }
 
     dateToSeed(dateString) {
+        // Create a simple, consistent hash from the date string
+        // This will always produce the same number for the same date
         let hash = 0;
         for (let i = 0; i < dateString.length; i++) {
             const char = dateString.charCodeAt(i);
             hash = ((hash << 5) - hash) + char;
             hash = hash & hash; // Convert to 32-bit integer
         }
-        return Math.abs(hash);
+        
+        // Ensure we get a positive number
+        const positiveHash = Math.abs(hash);
+        console.log(`🔢 Date "${dateString}" -> Hash: ${hash} -> Positive: ${positiveHash}`);
+        
+        return positiveHash;
     }
 
     submitResult(correct, attempts, timeSpent = 0) {
@@ -101,8 +103,8 @@ class DailyChallenge {
             this.dailyStats.totalCorrect++;
             // Update streak
             const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toDateString();
+            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+            const yesterdayStr = this.getStandardizedDateFromDate(yesterday);
             
             if (this.dailyStats.lastPlayedDate === yesterdayStr) {
                 this.dailyStats.streak++;
@@ -116,6 +118,13 @@ class DailyChallenge {
         this.dailyStats.lastPlayedDate = this.today;
         this.saveDailyStats();
         return true;
+    }
+
+    getStandardizedDateFromDate(date) {
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     getShareText(result) {
@@ -144,8 +153,8 @@ class DailyChallenge {
     getTimeUntilNext() {
         const now = new Date();
         const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        tomorrow.setUTCHours(0, 0, 0, 0);
         
         const diff = tomorrow - now;
         const hours = Math.floor(diff / (1000 * 60 * 60));
