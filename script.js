@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('share-endless-result')?.addEventListener('click', shareEndlessResult);
 
         // DEBUG: Add button to clear daily challenge data
-        console.log('🔧 DEBUG: To reset daily challenge, run: localStorage.removeItem("dailyStats")');
+        console.log('🔧 DEBUG: To reset daily challenge, run: resetDailyChallenge()');
     }
 
     function attachOptionListeners() {
@@ -526,7 +526,12 @@ document.addEventListener("DOMContentLoaded", function () {
         updateOptions();
         console.log('🔄 updateOptions() completed');
         
-        attachOptionListeners(); // ✅ ATTACH LISTENERS AFTER OPTIONS ARE CREATED
+        // Reset UI first to ensure buttons are enabled
+        resetQuestionUI();
+        console.log('🔄 resetQuestionUI() completed');
+        
+        // Then attach listeners
+        attachOptionListeners();
         console.log('🔗 attachOptionListeners() completed');
         
         localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
