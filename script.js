@@ -1102,13 +1102,23 @@ document.addEventListener("DOMContentLoaded", function () {
     function shareToClipboard(text) {
         // Skip navigator.share on localhost to avoid permission errors
         if (!isLocalhost() && navigator.share) {
-            navigator.share({
-                title: 'Check out my Flagtriv score!',
-                text: text,
-                url: document.URL
-            }).then(() => {
-                console.log('Thanks for sharing!');
-            }).catch(console.error);
+            try {
+                navigator.share({
+                    title: 'Check out my Flagtriv score!',
+                    text: text,
+                    url: document.URL
+                }).then(() => {
+                    console.log('Thanks for sharing!');
+                }).catch((error) => {
+                    console.error('Share failed:', error);
+                    // Fallback to clipboard if share fails
+                    copyToClipboard(text);
+                });
+            } catch (error) {
+                console.error('Share API error:', error);
+                // Fallback to clipboard if share API throws synchronous error
+                copyToClipboard(text);
+            }
         } else {
             // Use clipboard fallback
             copyToClipboard(text);
