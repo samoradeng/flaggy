@@ -37,7 +37,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // DOM elements
     const flagImg = document.getElementById('flag');
-    const options = document.querySelectorAll('.option');
     const message = document.getElementById('message');
     const facts = document.getElementById('facts');
     const flagTrivia = document.getElementById('flag-trivia');
@@ -151,17 +150,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function attachOptionListeners() {
-        // Remove existing listeners and attach new ones
-        options.forEach(button => {
+        // Query for current option elements in the DOM
+        const currentOptions = document.querySelectorAll('.option');
+        
+        currentOptions.forEach(button => {
             // Clone the button to remove all event listeners
             const newButton = button.cloneNode(true);
             button.parentNode.replaceChild(newButton, button);
-        });
-        
-        // Get the new buttons and attach listeners
-        const newOptions = document.querySelectorAll('.option');
-        newOptions.forEach(button => {
-            button.addEventListener('click', checkAnswer);
+            
+            // Attach the event listener to the new button
+            newButton.addEventListener('click', checkAnswer);
         });
     }
 
@@ -501,15 +499,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function resetQuestionUI() {
+        // Get current option elements
+        const currentOptions = document.querySelectorAll('.option');
+        
         // Only enable options if we have a valid current country
         if (currentCountry) {
-            options.forEach(button => {
+            currentOptions.forEach(button => {
                 button.disabled = false;
                 button.classList.remove('disabled', 'correct-answer', 'wrong-answer');
             });
         } else {
             // Disable options if no valid country
-            options.forEach(button => {
+            currentOptions.forEach(button => {
                 button.disabled = true;
                 button.classList.add('disabled');
             });
@@ -534,7 +535,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedCountryName = event.target.textContent;
         const isCorrect = selectedCountryName === currentCountry.name;
         
-        options.forEach(button => {
+        // Get current option elements
+        const currentOptions = document.querySelectorAll('.option');
+        currentOptions.forEach(button => {
             button.disabled = true;
             button.classList.add('disabled');
         });
@@ -548,7 +551,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Show correct answer
-        options.forEach(button => {
+        currentOptions.forEach(button => {
             if (button.textContent === currentCountry.name) {
                 button.classList.add('correct-answer');
             }
@@ -777,7 +780,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const allAnswers = [...incorrectAnswers, currentCountry.name];
-        options.forEach(button => {
+        const currentOptions = document.querySelectorAll('.option');
+        currentOptions.forEach(button => {
             const randomIndex = Math.floor(Math.random() * allAnswers.length);
             button.textContent = allAnswers[randomIndex];
             allAnswers.splice(randomIndex, 1);
