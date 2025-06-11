@@ -823,9 +823,8 @@ document.addEventListener("DOMContentLoaded", function () {
         
         document.getElementById('daily-streak-display').textContent = `Daily Streak: ${dailyChallenge.dailyStats.streak}`;
         
-        // Show fake global stat
-        const globalStat = flagFacts.getRandomGlobalStat();
-        document.getElementById('daily-global-stat').textContent = globalStat;
+        // Remove fake global stat - just show real facts
+        document.getElementById('daily-global-stat').style.display = 'none';
         
         // Start countdown timer
         startCountdownTimer();
