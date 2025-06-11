@@ -149,25 +149,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function attachOptionListeners() {
+        console.log('🔍 attachOptionListeners() called');
+        
         // Query for current option elements in the DOM
         const currentOptions = document.querySelectorAll('.option');
+        console.log('🔍 Found option elements:', currentOptions.length);
         
         // Add defensive check
         if (!currentOptions.length) {
-            console.warn('No option buttons found to attach listeners to.');
+            console.warn('❌ No option buttons found to attach listeners to.');
             return;
         }
         
-        console.log('Attached listeners!'); // Debug log
+        console.log('✅ Attaching listeners to', currentOptions.length, 'buttons');
         
-        currentOptions.forEach(button => {
+        currentOptions.forEach((button, index) => {
+            console.log(`🔍 Button ${index}:`, button.textContent, 'disabled:', button.disabled);
+            
             // Clone the button to remove all event listeners
             const newButton = button.cloneNode(true);
             button.parentNode.replaceChild(newButton, button);
             
             // Attach the event listener to the new button
-            newButton.addEventListener('click', checkAnswer);
+            newButton.addEventListener('click', (event) => {
+                console.log('🎯 Button clicked!', event.target.textContent);
+                checkAnswer(event);
+            });
         });
+        
+        console.log('✅ All listeners attached successfully!');
     }
 
     function updateDailyChallengeButton() {
@@ -262,6 +272,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function startDailyChallenge() {
+        console.log('🚀 Starting daily challenge...');
+        
         if (dailyChallenge.hasPlayedToday()) {
             // Show today's flag and leaderboard
             showDailyResults();
@@ -287,6 +299,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Set today's country
         currentCountry = dailyChallenge.getTodaysCountry();
+        console.log('🏳️ Today\'s country:', currentCountry);
         
         // Only display country and enable UI if we have a valid country
         if (currentCountry) {
@@ -488,6 +501,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function displayCountry() {
+        console.log('🏳️ displayCountry() called with:', currentCountry?.name);
+        
         if (!currentCountry || !currentCountry.flag || !currentCountry.flag.large) {
             console.error('Invalid country data:', currentCountry);
             currentCountry = null;
@@ -495,8 +510,14 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         flagImg.src = currentCountry.flag.large;
+        console.log('🏳️ Flag image set to:', currentCountry.flag.large);
+        
         updateOptions();
+        console.log('🔄 updateOptions() completed');
+        
         attachOptionListeners(); // ✅ ATTACH LISTENERS AFTER OPTIONS ARE CREATED
+        console.log('🔗 attachOptionListeners() completed');
+        
         localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
     }
 
@@ -527,15 +548,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function checkAnswer(event) {
+        console.log('🎯 checkAnswer() called!', event.target.textContent);
+        
         // Safety check: ensure we have a valid current country
         if (!currentCountry || !currentCountry.name) {
-            console.error('No valid current country available');
+            console.error('❌ No valid current country available');
             message.textContent = "Error: No country loaded. Please try again.";
             return;
         }
 
         const selectedCountryName = event.target.textContent;
         const isCorrect = selectedCountryName === currentCountry.name;
+        
+        console.log('🔍 Selected:', selectedCountryName, 'Correct:', currentCountry.name, 'Match:', isCorrect);
         
         // Get current option elements
         const currentOptions = document.querySelectorAll('.option');
@@ -765,6 +790,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function updateOptions() {
+        console.log('🔄 updateOptions() called');
+        
         if (!currentCountry) {
             console.error('Cannot update options: no current country');
             return;
@@ -783,11 +810,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const allAnswers = [...incorrectAnswers, currentCountry.name];
         const currentOptions = document.querySelectorAll('.option');
-        currentOptions.forEach(button => {
+        
+        console.log('🔄 Found', currentOptions.length, 'option buttons');
+        console.log('🔄 All answers:', allAnswers);
+        
+        currentOptions.forEach((button, index) => {
             const randomIndex = Math.floor(Math.random() * allAnswers.length);
-            button.textContent = allAnswers[randomIndex];
+            const answer = allAnswers[randomIndex];
+            button.textContent = answer;
             allAnswers.splice(randomIndex, 1);
+            
+            console.log(`🔄 Button ${index} set to: "${answer}"`);
         });
+        
+        console.log('🔄 updateOptions() completed');
     }
 
     function showFacts(country) {
