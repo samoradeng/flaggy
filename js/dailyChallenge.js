@@ -46,12 +46,13 @@ class DailyChallenge {
         return Math.abs(hash);
     }
 
-    submitResult(correct, attempts) {
+    submitResult(correct, attempts, timeSpent = 0) {
         if (this.hasPlayedToday()) return false;
 
         const result = {
             correct,
             attempts,
+            timeSpent,
             date: this.today,
             country: this.getTodaysCountry().name
         };
@@ -92,14 +93,15 @@ class DailyChallenge {
             }
         }
         
-        // Add empty squares for remaining attempts (max 3)
-        while (squares.length < 3) {
+        // Add empty squares for remaining attempts (max 2 for new daily challenge)
+        while (squares.length < 2) {
             squares.push('⬜');
         }
 
         const flag = this.getTodaysCountry().flag?.emoji || '🏳️';
+        const timeStr = result.timeSpent ? ` in ${Math.floor(result.timeSpent / 60)}:${(result.timeSpent % 60).toString().padStart(2, '0')}` : '';
         
-        return `Flagtriv Daily ${flag}\n${squares.join('')}\nflagtriv.com`;
+        return `Flagtriv Daily ${flag}\n${squares.join('')}${timeStr}\nflagtriv.com`;
     }
 
     getTimeUntilNext() {

@@ -23,7 +23,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let isMultiplayerMode = false;
     let dailyAttempts = 0;
     let currentGameStreak = 0; // Track streak for current game session
+    let maxGameStreak = 0; // Track the highest streak achieved in this game session
     let bestStreak = parseInt(localStorage.getItem('bestStreak') || '0');
+    let dailyStartTime = null; // Track when daily challenge started
     
     // Initialize game systems
     let dailyChallenge;
@@ -150,8 +152,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateDailyChallengeButton() {
         if (dailyChallenge.hasPlayedToday()) {
-            dailyChallengeBtn.textContent = '✅ Completed Today';
-            dailyChallengeBtn.disabled = true;
+            dailyChallengeBtn.textContent = '📅 View Today\'s Flag';
+            dailyChallengeBtn.disabled = false;
         } else {
             dailyChallengeBtn.textContent = '📅 Daily Challenge';
             dailyChallengeBtn.disabled = false;
@@ -240,18 +242,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function startDailyChallenge() {
-        if (dailyChallenge.hasPlayedToday()) return;
+        if (dailyChallenge.hasPlayedToday()) {
+            // Show today's flag and leaderboard
+            showDailyResults();
+            return;
+        }
 
         isDailyMode = true;
         isChallengeMode = false;
         isZenMode = false;
         isMultiplayerMode = false;
         dailyAttempts = 0;
-        lives = 3;
+        lives = 2; // Two lives for daily challenge
         score = 0;
         total = 0;
         gameState = "playing";
         currentGameStreak = 0; // Reset game streak
+        maxGameStreak = 0; // Reset max game streak
+        dailyStartTime = Date.now(); // Start timer
         
         modeSelection.style.display = 'none';
         gameContainer.style.display = 'flex';
@@ -271,9 +279,58 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         
         headingText.textContent = "Daily Challenge";
-        subHeadingText.textContent = "One flag per day - make it count!";
+        subHeadingText.textContent = "One flag per day - you have 2 lives!";
         
         updateTopBar();
+        startDailyTimer();
+    }
+
+    function startDailyTimer() {
+        const timerInterval = setInterval(() => {
+            if (!isDailyMode || gameState !== "playing") {
+                clearInterval(timerInterval);
+                return;
+            }
+            
+            const elapsed = Math.floor((Date.now() - dailyStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update timer in top bar
+            streakDisplayTop.textContent = `⏱️ ${timeStr}`;
+        }, 1000);
+    }
+
+    function showDailyResults() {
+        // Show today's flag and facts with leaderboard option
+        modeSelection.style.display = 'none';
+        dailyCompleteScreen.style.display = 'block';
+        
+        const todaysCountry = dailyChallenge.getTodaysCountry();
+        document.getElementById('daily-result-heading').textContent = 'Today\'s Flag';
+        document.getElementById('daily-result-flag').src = todaysCountry.flag.large;
+        document.getElementById('daily-result-country').textContent = todaysCountry.name;
+        
+        // Show facts
+        document.getElementById('daily-attempts-display').innerHTML = `
+            <p><strong>Capital:</strong> ${todaysCountry.capital}</p>
+            <p><strong>Location:</strong> ${todaysCountry.subregion}</p>
+        `;
+        
+        // Hide streak display and show leaderboard button
+        document.getElementById('daily-streak-display').style.display = 'none';
+        document.getElementById('daily-global-stat').style.display = 'none';
+        document.getElementById('daily-next-challenge').style.display = 'none';
+        
+        // Update buttons
+        document.getElementById('share-daily-result').textContent = 'View Leaderboard';
+        document.getElementById('share-daily-result').onclick = showDailyLeaderboard;
+    }
+
+    function showDailyLeaderboard() {
+        // For now, show a placeholder leaderboard
+        alert('Daily Leaderboard\n\n🥇 Player1 (USA) - 0:15\n🥈 Player2 (UK) - 0:23\n🥉 Player3 (CAN) - 0:31\n\nYour best: Already completed today!');
     }
 
     function startChallengeMode() {
@@ -291,6 +348,7 @@ document.addEventListener("DOMContentLoaded", function () {
         gameState = "playing";
         usedCountries = [];
         currentGameStreak = 0; // Reset game streak
+        maxGameStreak = 0; // Reset max game streak
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
@@ -319,6 +377,7 @@ document.addEventListener("DOMContentLoaded", function () {
         gameState = "playing";
         usedCountries = [];
         currentGameStreak = 0; // Reset game streak
+        maxGameStreak = 0; // Reset max game streak
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
@@ -334,8 +393,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateTopBar() {
         // Update streak - use current game streak
-        const streakEmoji = getStreakEmoji(currentGameStreak);
-        streakDisplayTop.textContent = `${streakEmoji} ${currentGameStreak} Streak`.trim();
+        if (isDailyMode && dailyStartTime) {
+            // Timer is handled by startDailyTimer()
+        } else {
+            const streakEmoji = getStreakEmoji(currentGameStreak);
+            streakDisplayTop.textContent = `${streakEmoji} ${currentGameStreak} Streak`.trim();
+        }
         
         // Update lives (hide in zen mode)
         if (isZenMode) {
@@ -503,6 +566,12 @@ document.addEventListener("DOMContentLoaded", function () {
         message.textContent = "🎉 Correct! Well done!";
         score++;
         currentGameStreak++; // Increment game streak
+        
+        // Update max streak for this game session
+        if (currentGameStreak > maxGameStreak) {
+            maxGameStreak = currentGameStreak;
+        }
+        
         button.classList.add('correct-answer');
         
         // Update best streak
@@ -569,7 +638,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function completeDailyChallenge(correct) {
-        dailyChallenge.submitResult(correct, dailyAttempts);
+        const timeSpent = Math.floor((Date.now() - dailyStartTime) / 1000);
+        dailyChallenge.submitResult(correct, dailyAttempts, timeSpent);
         
         gameContainer.style.display = 'none';
         topBar.style.display = 'none';
@@ -579,7 +649,14 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('daily-result-heading').textContent = correct ? 'Well Done!' : 'Better Luck Tomorrow!';
         document.getElementById('daily-result-flag').src = currentCountry.flag.large;
         document.getElementById('daily-result-country').textContent = currentCountry.name;
-        document.getElementById('daily-attempts-display').textContent = `Attempts: ${dailyAttempts}/3`;
+        
+        // Show facts instead of attempts
+        document.getElementById('daily-attempts-display').innerHTML = `
+            <p><strong>Capital:</strong> ${currentCountry.capital}</p>
+            <p><strong>Location:</strong> ${currentCountry.subregion}</p>
+            <p><strong>Your Time:</strong> ${Math.floor(timeSpent / 60)}:${(timeSpent % 60).toString().padStart(2, '0')}</p>
+        `;
+        
         document.getElementById('daily-streak-display').textContent = `Daily Streak: ${dailyChallenge.dailyStats.streak}`;
         
         // Show fake global stat
@@ -591,6 +668,24 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Update main menu for tomorrow
         updateDailyChallengeButton();
+        
+        // Show name input for leaderboard if correct
+        if (correct) {
+            showNameInputForLeaderboard(timeSpent);
+        }
+    }
+
+    function showNameInputForLeaderboard(timeSpent) {
+        const nameInput = prompt('Great job! Enter your name for the leaderboard (max 20 characters):');
+        if (nameInput && nameInput.trim()) {
+            const playerName = nameInput.trim().substring(0, 20);
+            // Here you would normally save to a real leaderboard
+            console.log(`Player ${playerName} completed in ${timeSpent} seconds`);
+            
+            // Update share button to show leaderboard
+            document.getElementById('share-daily-result').textContent = 'View Leaderboard';
+            document.getElementById('share-daily-result').onclick = showDailyLeaderboard;
+        }
     }
 
     function startCountdownTimer() {
@@ -640,7 +735,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.getElementById('endless-score-display').textContent = "Your Score: " + score;
         document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + challengeStats.highestScore;
-        document.getElementById('final-streak-display').textContent = `Best Streak This Game: ${currentGameStreak}`;
+        document.getElementById('final-streak-display').textContent = `Best Streak This Game: ${maxGameStreak}`;
     }
 
     function updateOptions() {
@@ -828,7 +923,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function shareEndlessResult() {
         const mode = isChallengeMode ? 'Challenge Mode' : 'Zen Mode';
-        const shareText = `🌍 Flagtriv ${mode}\nScore: ${score}/${total}\nBest Streak: ${currentGameStreak}\nflagtriv.com`;
+        const shareText = `🌍 Flagtriv ${mode}\nScore: ${score}/${total}\nBest Streak: ${maxGameStreak}\nflagtriv.com`;
         shareToClipboard(shareText);
     }
 
@@ -888,7 +983,8 @@ document.addEventListener("DOMContentLoaded", function () {
             isZenMode: isZenMode,
             isDailyMode: isDailyMode,
             isMultiplayerMode: isMultiplayerMode,
-            currentGameStreak: currentGameStreak
+            currentGameStreak: currentGameStreak,
+            maxGameStreak: maxGameStreak
         };
         localStorage.setItem('countryGame', JSON.stringify(gameStateData));
         
