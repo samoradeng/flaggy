@@ -23,8 +23,10 @@ document.addEventListener("DOMContentLoaded", function () {
     let isMultiplayerMode = false;
     let dailyAttempts = 0;
     let currentGameStreak = 0; // Track streak for current game session
+    let maxGameStreak = 0; // Track the highest streak achieved in this game session
     let bestStreak = parseInt(localStorage.getItem('bestStreak') || '0');
-    let dailyStartTime = null;
+    let dailyStartTime = null; // Track when daily challenge started
+    let playerCountry = null; // Store player's country from IP
     
     // Initialize game systems
     let dailyChallenge;
@@ -36,7 +38,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // DOM elements
     const flagImg = document.getElementById('flag');
-    const options = document.querySelectorAll('.option');
     const message = document.getElementById('message');
     const facts = document.getElementById('facts');
     const flagTrivia = document.getElementById('flag-trivia');
@@ -70,16 +71,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const soundToggle = document.getElementById('sound-toggle-setting');
     const soundIcon = document.getElementById('sound-icon-setting');
 
+    // Home button
+    const homeLogoBtn = document.getElementById('home-logo-btn');
+
     // Continent filter elements
     const continentFilterBtn = document.getElementById('continent-filter-btn');
     const continentFilterModal = document.getElementById('continent-filter-modal');
     const continentFilterClose = document.querySelector('.continent-filter-close');
     const applyContinentFilter = document.getElementById('apply-continent-filter');
 
-    // Home logo button
-    const homeLogoBtn = document.getElementById('home-logo-btn');
-
-    // Daily name modal elements
+    // Daily name input modal elements
     const dailyNameModal = document.getElementById('daily-name-modal');
     const dailyNameClose = document.querySelector('.daily-name-close');
     const submitDailyName = document.getElementById('submit-daily-name');
@@ -89,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Daily leaderboard modal elements
     const dailyLeaderboardModal = document.getElementById('daily-leaderboard-modal');
     const dailyLeaderboardClose = document.querySelector('.daily-leaderboard-close');
-    const closeLeaderboard = document.getElementById('close-leaderboard');
+    const closeDailyLeaderboard = document.getElementById('close-leaderboard');
 
     // Load stats from localStorage
     const savedChallengeStats = JSON.parse(localStorage.getItem('challengeStats'));
@@ -120,6 +121,9 @@ document.addEventListener("DOMContentLoaded", function () {
         flagFacts = new FlagFacts();
         multiplayerGame = new MultiplayerGame(countries, continentFilter, flagFacts, soundEffects);
 
+        // Get player's country from IP
+        detectPlayerCountry();
+
         // Update UI
         updateTopBar();
         updateMainMenuStats();
@@ -129,8 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Check if daily challenge is available
         updateDailyChallengeButton();
 
-        // Attach event listeners
-        options.forEach(button => button.addEventListener('click', checkAnswer));
+        // Attach event listeners (but NOT option listeners yet - they'll be attached when options are created)
         nextBtn.addEventListener('click', nextCountry);
         challengeModeBtn.addEventListener('click', startChallengeMode);
         zenModeBtn.addEventListener('click', startZenMode);
@@ -141,19 +144,19 @@ document.addEventListener("DOMContentLoaded", function () {
         settingsBtn.addEventListener('click', showSettingsModal);
         settingsClose.addEventListener('click', hideSettingsModal);
         soundToggle.addEventListener('click', toggleSound);
+        homeLogoBtn.addEventListener('click', goHome);
         continentFilterBtn.addEventListener('click', showContinentFilterModal);
         continentFilterClose.addEventListener('click', hideContinentFilterModal);
         applyContinentFilter.addEventListener('click', applyContinentFilterSelection);
-        homeLogoBtn.addEventListener('click', returnToMainMenu);
 
         // Daily name modal listeners
         dailyNameClose.addEventListener('click', hideDailyNameModal);
-        submitDailyName.addEventListener('click', submitDailyNameToLeaderboard);
-        skipDailyName.addEventListener('click', skipDailyNameSubmission);
+        submitDailyName.addEventListener('click', handleSubmitDailyName);
+        skipDailyName.addEventListener('click', hideDailyNameModal);
 
         // Daily leaderboard modal listeners
         dailyLeaderboardClose.addEventListener('click', hideDailyLeaderboardModal);
-        closeLeaderboard.addEventListener('click', hideDailyLeaderboardModal);
+        closeDailyLeaderboard.addEventListener('click', hideDailyLeaderboardModal);
 
         // Stats modal tabs
         document.querySelectorAll('.tab-button').forEach(button => {
@@ -173,21 +176,107 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         document.getElementById('share-endless-result')?.addEventListener('click', shareEndlessResult);
 
-        // Enter key support for daily name input
-        dailyPlayerName.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                submitDailyNameToLeaderboard();
+        // DEBUG: Add button to clear daily challenge data
+        console.log('🔧 DEBUG: To reset daily challenge, run: resetDailyChallenge()');
+    }
+
+    async function detectPlayerCountry() {
+        try {
+            // Use a free IP geolocation service
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            
+            if (data.country_code) {
+                // Find the country in our countries data
+                const countryData = Object.values(countries).find(
+                    country => country.alpha2Code === data.country_code.toUpperCase()
+                );
+                
+                if (countryData) {
+                    playerCountry = {
+                        code: data.country_code.toUpperCase(),
+                        name: countryData.name
+                    };
+                    console.log('🌍 Player location detected:', playerCountry.name);
+                } else {
+                    console.log('🌍 Country code found but not in our database:', data.country_code);
+                }
             }
+        } catch (error) {
+            console.log('🌍 Could not detect player location:', error);
+            // Fallback to a default or leave as null
+            playerCountry = null;
+        }
+    }
+
+    function goHome() {
+        // Hide all game screens
+        gameContainer.style.display = 'none';
+        topBar.style.display = 'none';
+        endlessGameOverScreen.style.display = 'none';
+        dailyCompleteScreen.style.display = 'none';
+        document.getElementById('multiplayer-lobby').style.display = 'none';
+        document.getElementById('multiplayer-results').style.display = 'none';
+        
+        // Show main menu
+        modeSelection.style.display = 'flex';
+        
+        // Reset game state
+        isDailyMode = false;
+        isChallengeMode = false;
+        isZenMode = false;
+        isMultiplayerMode = false;
+        currentCountry = null;
+        
+        // Update main menu stats
+        updateMainMenuStats();
+        updateDailyChallengeButton();
+    }
+
+    function attachOptionListeners() {
+        console.log('🔍 attachOptionListeners() called');
+        
+        // Query for current option elements in the DOM
+        const currentOptions = document.querySelectorAll('.option');
+        console.log('🔍 Found option elements:', currentOptions.length);
+        
+        // Add defensive check
+        if (!currentOptions.length) {
+            console.warn('❌ No option buttons found to attach listeners to.');
+            return;
+        }
+        
+        console.log('✅ Attaching listeners to', currentOptions.length, 'buttons');
+        
+        currentOptions.forEach((button, index) => {
+            console.log(`🔍 Button ${index}:`, button.textContent, 'disabled:', button.disabled);
+            
+            // Remove any existing event listeners by cloning
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            // Attach the event listener to the new button
+            newButton.addEventListener('click', (event) => {
+                console.log('🎯 Button clicked!', event.target.textContent);
+                checkAnswer(event);
+            });
         });
+        
+        console.log('✅ All listeners attached successfully!');
     }
 
     function updateDailyChallengeButton() {
+        console.log('🔍 Checking daily challenge status...');
+        console.log('🔍 Has played today:', dailyChallenge.hasPlayedToday());
+        
         if (dailyChallenge.hasPlayedToday()) {
-            dailyChallengeBtn.textContent = '✅ Completed Today';
-            dailyChallengeBtn.disabled = true;
+            dailyChallengeBtn.textContent = '📅 View Today\'s Flag';
+            dailyChallengeBtn.disabled = false;
+            console.log('✅ Daily challenge already completed - showing view option');
         } else {
             dailyChallengeBtn.textContent = '📅 Daily Challenge';
             dailyChallengeBtn.disabled = false;
+            console.log('✅ Daily challenge available - showing play option');
         }
     }
 
@@ -272,20 +361,164 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function startDailyChallenge() {
-        if (dailyChallenge.hasPlayedToday()) return;
+    function showDailyNameModal(timeSpent) {
+        dailyNameModal.style.display = 'block';
+        dailyPlayerName.value = '';
+        dailyPlayerName.focus();
+        
+        // Store time for later use
+        dailyNameModal.dataset.timeSpent = timeSpent;
+    }
 
+    function hideDailyNameModal() {
+        dailyNameModal.style.display = 'none';
+        
+        // Update share button to show leaderboard regardless
+        document.getElementById('share-daily-result').textContent = 'View Leaderboard';
+        document.getElementById('share-daily-result').onclick = showDailyLeaderboardModal;
+    }
+
+    function handleSubmitDailyName() {
+        const playerName = dailyPlayerName.value.trim();
+        const timeSpent = parseInt(dailyNameModal.dataset.timeSpent);
+        
+        if (playerName) {
+            // Save to daily leaderboard
+            saveDailyLeaderboardEntry(playerName, timeSpent);
+            console.log(`Player ${playerName} completed in ${timeSpent} seconds`);
+        }
+        
+        hideDailyNameModal();
+    }
+
+    function saveDailyLeaderboardEntry(playerName, timeSpent) {
+        // Get today's leaderboard
+        const today = dailyChallenge.today;
+        const leaderboardKey = `dailyLeaderboard_${today}`;
+        let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || '[]');
+        
+        // Add player entry with country
+        const playerEntry = {
+            name: playerName,
+            time: timeSpent,
+            country: playerCountry ? playerCountry.name : 'Unknown',
+            countryCode: playerCountry ? playerCountry.code : null,
+            timestamp: Date.now()
+        };
+        
+        leaderboard.push(playerEntry);
+        
+        // Sort by time (fastest first)
+        leaderboard.sort((a, b) => a.time - b.time);
+        
+        // Keep only top 100 entries
+        leaderboard = leaderboard.slice(0, 100);
+        
+        // Save back to localStorage
+        localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
+        
+        console.log('💾 Saved to leaderboard:', playerEntry);
+        console.log('🏆 Current leaderboard:', leaderboard);
+    }
+
+    function getDailyLeaderboard() {
+        const today = dailyChallenge.today;
+        const leaderboardKey = `dailyLeaderboard_${today}`;
+        return JSON.parse(localStorage.getItem(leaderboardKey) || '[]');
+    }
+
+    function showDailyLeaderboardModal() {
+        // Get real leaderboard data
+        const leaderboard = getDailyLeaderboard();
+        const leaderboardList = document.getElementById('daily-leaderboard-list');
+        
+        // Clear existing content
+        leaderboardList.innerHTML = '';
+        
+        if (leaderboard.length === 0) {
+            // Show placeholder if no real data
+            leaderboardList.innerHTML = `
+                <div class="leaderboard-item">
+                    <span class="rank">🥇</span>
+                    <span class="player-name">SpeedRunner (USA)</span>
+                    <span class="player-time">0:12</span>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">🥈</span>
+                    <span class="player-name">GeoMaster (UK)</span>
+                    <span class="player-time">0:18</span>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">🥉</span>
+                    <span class="player-name">FlagExpert (CAN)</span>
+                    <span class="player-time">0:25</span>
+                </div>
+            `;
+        } else {
+            // Show real leaderboard data (sorted by time)
+            leaderboard.forEach((entry, index) => {
+                const rank = index + 1;
+                let rankDisplay;
+                
+                if (rank === 1) rankDisplay = '🥇';
+                else if (rank === 2) rankDisplay = '🥈';
+                else if (rank === 3) rankDisplay = '🥉';
+                else rankDisplay = `${rank}.`;
+                
+                const minutes = Math.floor(entry.time / 60);
+                const seconds = entry.time % 60;
+                const timeDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                const leaderboardItem = document.createElement('div');
+                leaderboardItem.className = 'leaderboard-item';
+                
+                // Check if this is the current player's entry
+                const playerName = dailyPlayerName.value.trim();
+                if (playerName && entry.name === playerName) {
+                    leaderboardItem.classList.add('your-entry');
+                }
+                
+                leaderboardItem.innerHTML = `
+                    <span class="rank">${rankDisplay}</span>
+                    <span class="player-name">${entry.name} (${entry.country})</span>
+                    <span class="player-time">${timeDisplay}</span>
+                `;
+                
+                leaderboardList.appendChild(leaderboardItem);
+            });
+        }
+        
+        dailyLeaderboardModal.style.display = 'block';
+    }
+
+    function hideDailyLeaderboardModal() {
+        dailyLeaderboardModal.style.display = 'none';
+    }
+
+    function startDailyChallenge() {
+        console.log('🚀 Starting daily challenge...');
+        console.log('🔍 Has played today:', dailyChallenge.hasPlayedToday());
+        
+        if (dailyChallenge.hasPlayedToday()) {
+            console.log('📅 Already played today - showing results');
+            // Show today's flag and leaderboard
+            showDailyResults();
+            return;
+        }
+
+        console.log('🎮 Starting new daily challenge game');
         isDailyMode = true;
         isChallengeMode = false;
         isZenMode = false;
         isMultiplayerMode = false;
         dailyAttempts = 0;
-        lives = 2; // Changed to 2 attempts for daily challenge
+        lives = 2; // Two lives for daily challenge
         score = 0;
         total = 0;
         gameState = "playing";
         currentGameStreak = 0; // Reset game streak
-        dailyStartTime = Date.now(); // Track start time for leaderboard
+        maxGameStreak = 0; // Reset max game streak
+        dailyStartTime = Date.now(); // Start timer
         
         modeSelection.style.display = 'none';
         gameContainer.style.display = 'flex';
@@ -293,6 +526,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Set today's country
         currentCountry = dailyChallenge.getTodaysCountry();
+        console.log('🏳️ Today\'s country:', currentCountry);
         
         // Only display country and enable UI if we have a valid country
         if (currentCountry) {
@@ -305,9 +539,53 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         
         headingText.textContent = "Daily Challenge";
-        subHeadingText.textContent = "Two guesses to get it right!";
+        subHeadingText.textContent = "One flag per day - you have 2 lives!";
         
         updateTopBar();
+        startDailyTimer();
+    }
+
+    function startDailyTimer() {
+        const timerInterval = setInterval(() => {
+            if (!isDailyMode || gameState !== "playing") {
+                clearInterval(timerInterval);
+                return;
+            }
+            
+            const elapsed = Math.floor((Date.now() - dailyStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update timer in top bar
+            streakDisplayTop.textContent = `⏱️ ${timeStr}`;
+        }, 1000);
+    }
+
+    function showDailyResults() {
+        // Show today's flag and facts with leaderboard option
+        modeSelection.style.display = 'none';
+        dailyCompleteScreen.style.display = 'block';
+        
+        const todaysCountry = dailyChallenge.getTodaysCountry();
+        document.getElementById('daily-result-heading').textContent = 'Today\'s Flag';
+        document.getElementById('daily-result-flag').src = todaysCountry.flag.large;
+        document.getElementById('daily-result-country').textContent = todaysCountry.name;
+        
+        // Show facts
+        document.getElementById('daily-attempts-display').innerHTML = `
+            <p><strong>Capital:</strong> ${todaysCountry.capital}</p>
+            <p><strong>Location:</strong> ${todaysCountry.subregion}</p>
+        `;
+        
+        // Hide streak display and show leaderboard button
+        document.getElementById('daily-streak-display').style.display = 'none';
+        document.getElementById('daily-global-stat').style.display = 'none';
+        document.getElementById('daily-next-challenge').style.display = 'none';
+        
+        // Update buttons
+        document.getElementById('share-daily-result').textContent = 'View Leaderboard';
+        document.getElementById('share-daily-result').onclick = showDailyLeaderboardModal;
     }
 
     function startChallengeMode() {
@@ -325,6 +603,7 @@ document.addEventListener("DOMContentLoaded", function () {
         gameState = "playing";
         usedCountries = [];
         currentGameStreak = 0; // Reset game streak
+        maxGameStreak = 0; // Reset max game streak
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
@@ -353,6 +632,7 @@ document.addEventListener("DOMContentLoaded", function () {
         gameState = "playing";
         usedCountries = [];
         currentGameStreak = 0; // Reset game streak
+        maxGameStreak = 0; // Reset max game streak
         
         gameContainer.style.display = 'flex';
         topBar.style.display = 'flex';
@@ -368,8 +648,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateTopBar() {
         // Update streak - use current game streak
-        const streakEmoji = getStreakEmoji(currentGameStreak);
-        streakDisplayTop.textContent = `${streakEmoji} ${currentGameStreak} Streak`.trim();
+        if (isDailyMode && dailyStartTime) {
+            // Timer is handled by startDailyTimer()
+        } else {
+            const streakEmoji = getStreakEmoji(currentGameStreak);
+            streakDisplayTop.textContent = `${streakEmoji} ${currentGameStreak} Streak`.trim();
+        }
         
         // Update lives (hide in zen mode)
         if (isZenMode) {
@@ -439,6 +723,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function displayCountry() {
+        console.log('🏳️ displayCountry() called with:', currentCountry?.name);
+        
         if (!currentCountry || !currentCountry.flag || !currentCountry.flag.large) {
             console.error('Invalid country data:', currentCountry);
             currentCountry = null;
@@ -446,20 +732,35 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         flagImg.src = currentCountry.flag.large;
+        console.log('🏳️ Flag image set to:', currentCountry.flag.large);
+        
         updateOptions();
+        console.log('🔄 updateOptions() completed');
+        
+        // Reset UI first to ensure buttons are enabled
+        resetQuestionUI();
+        console.log('🔄 resetQuestionUI() completed');
+        
+        // Then attach listeners
+        attachOptionListeners();
+        console.log('🔗 attachOptionListeners() completed');
+        
         localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
     }
 
     function resetQuestionUI() {
+        // Get current option elements
+        const currentOptions = document.querySelectorAll('.option');
+        
         // Only enable options if we have a valid current country
         if (currentCountry) {
-            options.forEach(button => {
+            currentOptions.forEach(button => {
                 button.disabled = false;
                 button.classList.remove('disabled', 'correct-answer', 'wrong-answer');
             });
         } else {
             // Disable options if no valid country
-            options.forEach(button => {
+            currentOptions.forEach(button => {
                 button.disabled = true;
                 button.classList.add('disabled');
             });
@@ -474,9 +775,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function checkAnswer(event) {
+        console.log('🎯 checkAnswer() called!', event.target.textContent);
+        
         // Safety check: ensure we have a valid current country
         if (!currentCountry || !currentCountry.name) {
-            console.error('No valid current country available');
+            console.error('❌ No valid current country available');
             message.textContent = "Error: No country loaded. Please try again.";
             return;
         }
@@ -484,7 +787,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedCountryName = event.target.textContent;
         const isCorrect = selectedCountryName === currentCountry.name;
         
-        options.forEach(button => {
+        console.log('🔍 Selected:', selectedCountryName, 'Correct:', currentCountry.name, 'Match:', isCorrect);
+        
+        // Get current option elements
+        const currentOptions = document.querySelectorAll('.option');
+        currentOptions.forEach(button => {
             button.disabled = true;
             button.classList.add('disabled');
         });
@@ -498,7 +805,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Show correct answer
-        options.forEach(button => {
+        currentOptions.forEach(button => {
             if (button.textContent === currentCountry.name) {
                 button.classList.add('correct-answer');
             }
@@ -537,6 +844,12 @@ document.addEventListener("DOMContentLoaded", function () {
         message.textContent = "🎉 Correct! Well done!";
         score++;
         currentGameStreak++; // Increment game streak
+        
+        // Update max streak for this game session
+        if (currentGameStreak > maxGameStreak) {
+            maxGameStreak = currentGameStreak;
+        }
+        
         button.classList.add('correct-answer');
         
         // Update best streak
@@ -603,215 +916,46 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function completeDailyChallenge(correct) {
-        const timeSpent = Math.floor((Date.now() - dailyStartTime) / 1000); // Time in seconds
+        const timeSpent = Math.floor((Date.now() - dailyStartTime) / 1000);
         dailyChallenge.submitResult(correct, dailyAttempts, timeSpent);
         
         gameContainer.style.display = 'none';
         topBar.style.display = 'none';
-        
-        if (correct) {
-            // Show name input modal for successful completion
-            showDailyNameModal(timeSpent);
-        } else {
-            // Show completion screen for failed attempt
-            showDailyCompleteScreen(correct, timeSpent);
-        }
-    }
-
-    function showDailyNameModal(timeSpent) {
-        dailyNameModal.style.display = 'block';
-        dailyPlayerName.focus();
-        
-        // Store time for later use
-        window.dailyCompletionTime = timeSpent;
-    }
-
-    function hideDailyNameModal() {
-        dailyNameModal.style.display = 'none';
-        dailyPlayerName.value = '';
-    }
-
-    function submitDailyNameToLeaderboard() {
-        const playerName = dailyPlayerName.value.trim();
-        if (!playerName) {
-            alert('Please enter your name');
-            return;
-        }
-
-        const timeSpent = window.dailyCompletionTime;
-        
-        // Get player's country (simplified for demo)
-        getUserCountry().then(country => {
-            addToLeaderboard(playerName, timeSpent, country);
-            hideDailyNameModal();
-            showDailyCompleteScreen(true, timeSpent, playerName);
-        });
-    }
-
-    function skipDailyNameSubmission() {
-        const timeSpent = window.dailyCompletionTime;
-        hideDailyNameModal();
-        showDailyCompleteScreen(true, timeSpent);
-    }
-
-    async function getUserCountry() {
-        try {
-            const response = await fetch('https://ipapi.co/json/');
-            const data = await response.json();
-            return data.country_name || 'Unknown';
-        } catch (error) {
-            console.error('Failed to get user country:', error);
-            return 'Unknown';
-        }
-    }
-
-    function addToLeaderboard(playerName, timeSpent, country) {
-        const today = dailyChallenge.today;
-        const leaderboardKey = `dailyLeaderboard_${today}`;
-        
-        // Get existing leaderboard
-        let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || '[]');
-        
-        // Add new entry
-        const newEntry = {
-            name: playerName,
-            time: timeSpent,
-            country: country,
-            timestamp: Date.now()
-        };
-        
-        leaderboard.push(newEntry);
-        
-        // Sort by time (fastest first)
-        leaderboard.sort((a, b) => a.time - b.time);
-        
-        // Keep only top 100
-        leaderboard = leaderboard.slice(0, 100);
-        
-        // Save updated leaderboard
-        localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
-        
-        console.log('Added to leaderboard:', newEntry);
-        console.log('Updated leaderboard:', leaderboard);
-    }
-
-    function showDailyCompleteScreen(correct, timeSpent, playerName = null) {
         dailyCompleteScreen.style.display = 'block';
         
         // Update daily complete screen
         document.getElementById('daily-result-heading').textContent = correct ? 'Well Done!' : 'Better Luck Tomorrow!';
         document.getElementById('daily-result-flag').src = currentCountry.flag.large;
         document.getElementById('daily-result-country').textContent = currentCountry.name;
-        document.getElementById('daily-attempts-display').textContent = `Attempts: ${dailyAttempts}/2`;
+        
+        // Show facts instead of attempts
+        document.getElementById('daily-attempts-display').innerHTML = `
+            <p><strong>Capital:</strong> ${currentCountry.capital}</p>
+            <p><strong>Location:</strong> ${currentCountry.subregion}</p>
+            <p><strong>Your Time:</strong> ${Math.floor(timeSpent / 60)}:${(timeSpent % 60).toString().padStart(2, '0')}</p>
+        `;
+        
         document.getElementById('daily-streak-display').textContent = `Daily Streak: ${dailyChallenge.dailyStats.streak}`;
         
-        // Remove the fake global stat
+        // Remove fake global stat - just show real facts
         document.getElementById('daily-global-stat').style.display = 'none';
-        
-        // Add leaderboard button if completed successfully
-        if (correct) {
-            const leaderboardBtn = document.createElement('button');
-            leaderboardBtn.textContent = '🏆 View Leaderboard';
-            leaderboardBtn.className = 'create-challenge-btn';
-            leaderboardBtn.style.marginTop = '16px';
-            leaderboardBtn.onclick = showDailyLeaderboardModal;
-            
-            // Insert before existing buttons
-            const existingButtons = dailyCompleteScreen.querySelector('.daily-complete-content');
-            const shareButton = document.getElementById('share-daily-result');
-            existingButtons.insertBefore(leaderboardBtn, shareButton);
-        }
         
         // Start countdown timer
         startCountdownTimer();
         
         // Update main menu for tomorrow
         updateDailyChallengeButton();
-    }
-
-    function showDailyLeaderboardModal() {
-        const today = dailyChallenge.today;
-        const leaderboardKey = `dailyLeaderboard_${today}`;
-        const leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || '[]');
         
-        // Update leaderboard display
-        updateDailyLeaderboardDisplay(leaderboard);
-        
-        dailyLeaderboardModal.style.display = 'block';
-    }
-
-    function hideDailyLeaderboardModal() {
-        dailyLeaderboardModal.style.display = 'none';
-    }
-
-    function updateDailyLeaderboardDisplay(leaderboard) {
-        const leaderboardList = document.getElementById('daily-leaderboard-list');
-        leaderboardList.innerHTML = '';
-        
-        if (leaderboard.length === 0) {
-            leaderboardList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No entries yet today. Be the first!</p>';
-            return;
+        // Show name input for leaderboard if correct
+        if (correct) {
+            setTimeout(() => {
+                showDailyNameModal(timeSpent);
+            }, 1000);
+        } else {
+            // Update share button to show leaderboard
+            document.getElementById('share-daily-result').textContent = 'View Leaderboard';
+            document.getElementById('share-daily-result').onclick = showDailyLeaderboardModal;
         }
-        
-        leaderboard.forEach((entry, index) => {
-            const rank = index + 1;
-            const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
-            
-            const timeStr = formatTime(entry.time);
-            
-            const leaderboardItem = document.createElement('div');
-            leaderboardItem.className = 'leaderboard-item';
-            leaderboardItem.innerHTML = `
-                <span class="rank">${rankEmoji}</span>
-                <span class="player-name">${entry.name} (${entry.country})</span>
-                <span class="player-time">${timeStr}</span>
-            `;
-            
-            leaderboardList.appendChild(leaderboardItem);
-        });
-        
-        // Add copy button
-        const copyButton = document.createElement('button');
-        copyButton.textContent = '📋 Copy Leaderboard';
-        copyButton.className = 'create-challenge-btn';
-        copyButton.style.marginTop = '16px';
-        copyButton.onclick = copyLeaderboardToClipboard;
-        
-        leaderboardList.appendChild(copyButton);
-    }
-
-    function copyLeaderboardToClipboard() {
-        const today = dailyChallenge.today;
-        const leaderboardKey = `dailyLeaderboard_${today}`;
-        const leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || '[]');
-        
-        if (leaderboard.length === 0) {
-            showToast('No leaderboard data to copy');
-            return;
-        }
-        
-        let shareText = `🏆 Flagtriv Daily Leaderboard - ${today}\n\n`;
-        
-        leaderboard.slice(0, 10).forEach((entry, index) => {
-            const rank = index + 1;
-            const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
-            const timeStr = formatTime(entry.time);
-            shareText += `${rankEmoji} ${entry.name} (${entry.country}) - ${timeStr}\n`;
-        });
-        
-        shareText += '\nPlay at flagtriv.com';
-        
-        navigator.clipboard.writeText(shareText).then(() => {
-            showToast('📋 Leaderboard copied to clipboard!');
-        }).catch(() => {
-            showToast('Failed to copy leaderboard');
-        });
-    }
-
-    function formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
 
     function startCountdownTimer() {
@@ -861,10 +1005,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.getElementById('endless-score-display').textContent = "Your Score: " + score;
         document.getElementById('endless-highest-score-display').textContent = "Highest Score: " + challengeStats.highestScore;
-        document.getElementById('final-streak-display').textContent = `Best Streak This Game: ${currentGameStreak}`;
+        document.getElementById('final-streak-display').textContent = `Best Streak This Game: ${maxGameStreak}`;
     }
 
     function updateOptions() {
+        console.log('🔄 updateOptions() called');
+        
         if (!currentCountry) {
             console.error('Cannot update options: no current country');
             return;
@@ -882,11 +1028,21 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const allAnswers = [...incorrectAnswers, currentCountry.name];
-        options.forEach(button => {
+        const currentOptions = document.querySelectorAll('.option');
+        
+        console.log('🔄 Found', currentOptions.length, 'option buttons');
+        console.log('🔄 All answers:', allAnswers);
+        
+        currentOptions.forEach((button, index) => {
             const randomIndex = Math.floor(Math.random() * allAnswers.length);
-            button.textContent = allAnswers[randomIndex];
+            const answer = allAnswers[randomIndex];
+            button.textContent = answer;
             allAnswers.splice(randomIndex, 1);
+            
+            console.log(`🔄 Button ${index} set to: "${answer}"`);
         });
+        
+        console.log('🔄 updateOptions() completed');
     }
 
     function showFacts(country) {
@@ -900,18 +1056,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function returnToMainMenu() {
         gameContainer.style.display = 'none';
         topBar.style.display = 'none';
-        endlessGameOverScreen.style.display = 'none';
-        dailyCompleteScreen.style.display = 'none';
-        dailyNameModal.style.display = 'none';
-        dailyLeaderboardModal.style.display = 'none';
         modeSelection.style.display = 'block';
         currentCountry = null;
-        
-        // Reset game state
-        isDailyMode = false;
-        isChallengeMode = false;
-        isZenMode = false;
-        isMultiplayerMode = false;
     }
 
     function switchTab(tabName) {
@@ -1059,7 +1205,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function shareEndlessResult() {
         const mode = isChallengeMode ? 'Challenge Mode' : 'Zen Mode';
-        const shareText = `🌍 Flagtriv ${mode}\nScore: ${score}/${total}\nBest Streak: ${currentGameStreak}\nflagtriv.com`;
+        const shareText = `🌍 Flagtriv ${mode}\nScore: ${score}/${total}\nBest Streak: ${maxGameStreak}\nflagtriv.com`;
         shareToClipboard(shareText);
     }
 
@@ -1069,41 +1215,60 @@ document.addEventListener("DOMContentLoaded", function () {
         shareToClipboard(shareText);
     }
 
-    function shareToClipboard(text) {
-        if (navigator.share) {
-            navigator.share({
-                title: 'Check out my Flagtriv score!',
-                text: text,
-                url: document.URL
-            }).then(() => {
-                console.log('Thanks for sharing!');
-            }).catch(console.error);
-        } else {
-            // Fallback to clipboard
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showCopiedToast();
-                }
-            } catch (err) {
-                console.error('Unable to copy', err);
+    // Helper function to copy text to clipboard
+    function copyToClipboard(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                showCopiedToast();
             }
-            document.body.removeChild(textArea);
+        } catch (err) {
+            console.error('Unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    // Check if running on localhost
+    function isLocalhost() {
+        return window.location.hostname === 'localhost' || 
+               window.location.hostname === '127.0.0.1' || 
+               window.location.hostname === '';
+    }
+
+    function shareToClipboard(text) {
+        // Skip navigator.share on localhost to avoid permission errors
+        if (!isLocalhost() && navigator.share) {
+            try {
+                navigator.share({
+                    title: 'Check out my Flagtriv score!',
+                    text: text,
+                    url: document.URL
+                }).then(() => {
+                    console.log('Thanks for sharing!');
+                }).catch((error) => {
+                    console.error('Share failed:', error);
+                    // Fallback to clipboard if share fails
+                    copyToClipboard(text);
+                });
+            } catch (error) {
+                console.error('Share API error:', error);
+                // Fallback to clipboard if share API throws synchronous error
+                copyToClipboard(text);
+            }
+        } else {
+            // Use clipboard fallback
+            copyToClipboard(text);
         }
     }
 
     function showCopiedToast() {
-        showToast("🔥 Copied! Now challenge a friend.");
-    }
-
-    function showToast(message) {
         const resultsToast = document.getElementById("resultsToast");
-        resultsToast.textContent = message;
+        resultsToast.textContent = "🔥 Copied! Now challenge a friend.";
         resultsToast.className = "show";
         setTimeout(() => {
             resultsToast.className = resultsToast.className.replace("show", "");
@@ -1124,7 +1289,8 @@ document.addEventListener("DOMContentLoaded", function () {
             isZenMode: isZenMode,
             isDailyMode: isDailyMode,
             isMultiplayerMode: isMultiplayerMode,
-            currentGameStreak: currentGameStreak
+            currentGameStreak: currentGameStreak,
+            maxGameStreak: maxGameStreak
         };
         localStorage.setItem('countryGame', JSON.stringify(gameStateData));
         
@@ -1159,4 +1325,10 @@ document.addEventListener("DOMContentLoaded", function () {
             hideDailyLeaderboardModal();
         }
     });
+
+    // DEBUG: Add a way to reset daily challenge for testing
+    window.resetDailyChallenge = function() {
+        localStorage.removeItem('dailyStats');
+        console.log('🔧 Daily challenge reset! Refresh the page.');
+    };
 });
