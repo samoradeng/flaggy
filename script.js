@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function () {
         currentOptions.forEach((button, index) => {
             console.log(`🔍 Button ${index}:`, button.textContent, 'disabled:', button.disabled);
             
-            // Clone the button to remove all event listeners
+            // Remove any existing event listeners by cloning
             const newButton = button.cloneNode(true);
             button.parentNode.replaceChild(newButton, button);
             
