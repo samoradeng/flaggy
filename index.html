@@ -133,16 +133,16 @@
                 <img src="images/x-mark.svg">
             </span>
             <h2>🎉 Great Job!</h2>
-            <p class="daily-name-description">Enter your name for the daily leaderboard</p>
+            <p class="daily-name-description">Enter your name for the global leaderboard</p>
             
             <div class="name-input-section">
                 <label for="daily-player-name">Your Name:</label>
                 <input type="text" id="daily-player-name" placeholder="Enter your name" maxlength="20">
-                <div class="name-input-hint">Maximum 20 characters</div>
+                <div class="name-input-hint">Maximum 20 characters - will be visible to players worldwide</div>
             </div>
             
             <div class="daily-name-actions">
-                <button id="submit-daily-name" class="submit-name-btn">Submit to Leaderboard</button>
+                <button id="submit-daily-name" class="submit-name-btn">Submit to Global Leaderboard</button>
                 <button id="skip-daily-name" class="skip-name-btn">Skip</button>
             </div>
         </div>
@@ -154,16 +154,16 @@
             <span class="close-btn daily-leaderboard-close">
                 <img src="images/x-mark.svg">
             </span>
-            <h2>🏆 Daily Leaderboard</h2>
-            <p class="leaderboard-description">Today's fastest players</p>
+            <h2 id="leaderboard-title">🏆 Daily Leaderboard</h2>
+            <p class="leaderboard-description">Today's fastest players worldwide</p>
             
             <div id="daily-leaderboard-list">
                 <!-- Leaderboard entries will be populated here -->
             </div>
             
             <div class="leaderboard-note">
-                <p>🌟 Leaderboard resets daily at midnight</p>
-                <p>⚡ Currently showing local players only</p>
+                <p>🌟 Leaderboard resets daily at midnight UTC</p>
+                <p id="leaderboard-scope">🌍 Global leaderboard - compete with players worldwide!</p>
             </div>
             
             <div class="leaderboard-actions">
@@ -470,6 +470,7 @@
     </div>
 
     <!-- Load JavaScript modules -->
+    <script src="js/globalLeaderboard.js"></script>
     <script src="js/continentFilter.js"></script>
     <script src="js/flagFacts.js"></script>
     <script src="js/dailyChallenge.js"></script>

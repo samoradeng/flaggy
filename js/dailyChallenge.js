@@ -5,6 +5,7 @@ class DailyChallenge {
         this.today = this.getStandardizedDate();
         this.dailyStats = this.loadDailyStats();
         this.usedCountries = this.loadUsedCountries();
+        this.globalLeaderboard = new GlobalLeaderboard();
     }
 
     getStandardizedDate() {
@@ -85,7 +86,7 @@ class DailyChallenge {
         return positiveHash;
     }
 
-    submitResult(correct, attempts, timeSpent = 0) {
+    async submitResult(correct, attempts, timeSpent = 0) {
         if (this.hasPlayedToday()) return false;
 
         const result = {
@@ -118,6 +119,22 @@ class DailyChallenge {
         this.dailyStats.lastPlayedDate = this.today;
         this.saveDailyStats();
         return true;
+    }
+
+    // Submit to global leaderboard
+    async submitToLeaderboard(playerName, timeSpent, attempts) {
+        return await this.globalLeaderboard.submitScore(playerName, timeSpent, attempts, this.today);
+    }
+
+    // Get today's leaderboard
+    async getLeaderboard() {
+        return await this.globalLeaderboard.getLeaderboard(this.today);
+    }
+
+    // Generate share text for leaderboard
+    async generateLeaderboardShareText() {
+        const leaderboardData = await this.getLeaderboard();
+        return this.globalLeaderboard.generateShareText(leaderboardData.entries, leaderboardData.isGlobal);
     }
 
     getStandardizedDateFromDate(date) {

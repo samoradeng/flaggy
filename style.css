@@ -428,6 +428,7 @@ body {
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 24px;
+    min-height: 100px;
 }
 
 .leaderboard-item {
@@ -467,6 +468,13 @@ body {
 .leaderboard-item .player-time {
     font-weight: 600;
     color: #4CAF50;
+}
+
+.leaderboard-empty {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 40px 20px;
 }
 
 .leaderboard-note {
@@ -523,6 +531,28 @@ body {
 
 .close-leaderboard-btn:hover {
     background-color: #014cec;
+}
+
+/* Global Leaderboard Status */
+.global-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.global-status.global {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.global-status.local {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: white;
 }
 
 /* Modal styles */
