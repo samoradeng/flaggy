@@ -114,8 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Check if daily challenge is available
         updateDailyChallengeButton();
 
-        // Attach event listeners
-        attachOptionListeners(); // Separate function for option listeners
+        // Attach event listeners (but NOT option listeners yet - they'll be attached when options are created)
         nextBtn.addEventListener('click', nextCountry);
         challengeModeBtn.addEventListener('click', startChallengeMode);
         zenModeBtn.addEventListener('click', startZenMode);
@@ -152,6 +151,14 @@ document.addEventListener("DOMContentLoaded", function () {
     function attachOptionListeners() {
         // Query for current option elements in the DOM
         const currentOptions = document.querySelectorAll('.option');
+        
+        // Add defensive check
+        if (!currentOptions.length) {
+            console.warn('No option buttons found to attach listeners to.');
+            return;
+        }
+        
+        console.log('Attached listeners!'); // Debug log
         
         currentOptions.forEach(button => {
             // Clone the button to remove all event listeners
@@ -284,8 +291,6 @@ document.addEventListener("DOMContentLoaded", function () {
         // Only display country and enable UI if we have a valid country
         if (currentCountry) {
             displayCountry();
-            // Re-attach option listeners for daily mode
-            attachOptionListeners();
         } else {
             console.error('Failed to get daily country');
             // Return to main menu if no valid country
@@ -374,8 +379,6 @@ document.addEventListener("DOMContentLoaded", function () {
         headingText.textContent = "Challenge Mode";
         subHeadingText.textContent = "Test your geography knowledge!";
         
-        // Re-attach option listeners
-        attachOptionListeners();
         nextCountry();
     }
 
@@ -405,8 +408,6 @@ document.addEventListener("DOMContentLoaded", function () {
         headingText.textContent = "Zen Mode";
         subHeadingText.textContent = "Relax and explore flags at your own pace";
         
-        // Re-attach option listeners
-        attachOptionListeners();
         nextCountry();
     }
 
@@ -495,6 +496,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         flagImg.src = currentCountry.flag.large;
         updateOptions();
+        attachOptionListeners(); // ✅ ATTACH LISTENERS AFTER OPTIONS ARE CREATED
         localStorage.setItem('currentFlag', JSON.stringify(currentCountry));
     }
 
