@@ -76,6 +76,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const continentFilterClose = document.querySelector('.continent-filter-close');
     const applyContinentFilter = document.getElementById('apply-continent-filter');
 
+    // Daily name input modal elements
+    const dailyNameModal = document.getElementById('daily-name-modal');
+    const dailyNameClose = document.querySelector('.daily-name-close');
+    const submitDailyName = document.getElementById('submit-daily-name');
+    const skipDailyName = document.getElementById('skip-daily-name');
+    const dailyPlayerName = document.getElementById('daily-player-name');
+
+    // Daily leaderboard modal elements
+    const dailyLeaderboardModal = document.getElementById('daily-leaderboard-modal');
+    const dailyLeaderboardClose = document.querySelector('.daily-leaderboard-close');
+    const closeDailyLeaderboard = document.getElementById('close-leaderboard');
+
     // Load stats from localStorage
     const savedChallengeStats = JSON.parse(localStorage.getItem('challengeStats'));
     if (savedChallengeStats) {
@@ -128,6 +140,15 @@ document.addEventListener("DOMContentLoaded", function () {
         continentFilterBtn.addEventListener('click', showContinentFilterModal);
         continentFilterClose.addEventListener('click', hideContinentFilterModal);
         applyContinentFilter.addEventListener('click', applyContinentFilterSelection);
+
+        // Daily name modal listeners
+        dailyNameClose.addEventListener('click', hideDailyNameModal);
+        submitDailyName.addEventListener('click', handleSubmitDailyName);
+        skipDailyName.addEventListener('click', hideDailyNameModal);
+
+        // Daily leaderboard modal listeners
+        dailyLeaderboardClose.addEventListener('click', hideDailyLeaderboardModal);
+        closeDailyLeaderboard.addEventListener('click', hideDailyLeaderboardModal);
 
         // Stats modal tabs
         document.querySelectorAll('.tab-button').forEach(button => {
@@ -279,6 +300,59 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function showDailyNameModal(timeSpent) {
+        dailyNameModal.style.display = 'block';
+        dailyPlayerName.value = '';
+        dailyPlayerName.focus();
+        
+        // Store time for later use
+        dailyNameModal.dataset.timeSpent = timeSpent;
+    }
+
+    function hideDailyNameModal() {
+        dailyNameModal.style.display = 'none';
+        
+        // Update share button to show leaderboard regardless
+        document.getElementById('share-daily-result').textContent = 'View Leaderboard';
+        document.getElementById('share-daily-result').onclick = showDailyLeaderboardModal;
+    }
+
+    function handleSubmitDailyName() {
+        const playerName = dailyPlayerName.value.trim();
+        const timeSpent = parseInt(dailyNameModal.dataset.timeSpent);
+        
+        if (playerName) {
+            // Here you would normally save to a real leaderboard
+            console.log(`Player ${playerName} completed in ${timeSpent} seconds`);
+            
+            // Add to mock leaderboard
+            addToMockLeaderboard(playerName, timeSpent);
+        }
+        
+        hideDailyNameModal();
+    }
+
+    function addToMockLeaderboard(playerName, timeSpent) {
+        // Add player to the leaderboard display
+        const yourEntry = document.querySelector('.your-entry');
+        const yourRank = document.getElementById('your-rank');
+        const yourNameDisplay = document.getElementById('your-name-display');
+        const yourTimeDisplay = document.getElementById('your-time-display');
+        
+        yourRank.textContent = '4.';
+        yourNameDisplay.textContent = playerName;
+        yourTimeDisplay.textContent = `${Math.floor(timeSpent / 60)}:${(timeSpent % 60).toString().padStart(2, '0')}`;
+        yourEntry.style.display = 'flex';
+    }
+
+    function showDailyLeaderboardModal() {
+        dailyLeaderboardModal.style.display = 'block';
+    }
+
+    function hideDailyLeaderboardModal() {
+        dailyLeaderboardModal.style.display = 'none';
+    }
+
     function startDailyChallenge() {
         console.log('🚀 Starting daily challenge...');
         console.log('🔍 Has played today:', dailyChallenge.hasPlayedToday());
@@ -369,12 +443,7 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Update buttons
         document.getElementById('share-daily-result').textContent = 'View Leaderboard';
-        document.getElementById('share-daily-result').onclick = showDailyLeaderboard;
-    }
-
-    function showDailyLeaderboard() {
-        // For now, show a placeholder leaderboard
-        alert('Daily Leaderboard\n\n🥇 Player1 (USA) - 0:15\n🥈 Player2 (UK) - 0:23\n🥉 Player3 (CAN) - 0:31\n\nYour best: Already completed today!');
+        document.getElementById('share-daily-result').onclick = showDailyLeaderboardModal;
     }
 
     function startChallengeMode() {
@@ -738,20 +807,13 @@ document.addEventListener("DOMContentLoaded", function () {
         
         // Show name input for leaderboard if correct
         if (correct) {
-            showNameInputForLeaderboard(timeSpent);
-        }
-    }
-
-    function showNameInputForLeaderboard(timeSpent) {
-        const nameInput = prompt('Great job! Enter your name for the leaderboard (max 20 characters):');
-        if (nameInput && nameInput.trim()) {
-            const playerName = nameInput.trim().substring(0, 20);
-            // Here you would normally save to a real leaderboard
-            console.log(`Player ${playerName} completed in ${timeSpent} seconds`);
-            
+            setTimeout(() => {
+                showDailyNameModal(timeSpent);
+            }, 1000);
+        } else {
             // Update share button to show leaderboard
             document.getElementById('share-daily-result').textContent = 'View Leaderboard';
-            document.getElementById('share-daily-result').onclick = showDailyLeaderboard;
+            document.getElementById('share-daily-result').onclick = showDailyLeaderboardModal;
         }
     }
 
@@ -1090,6 +1152,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (event.target === settingsModal) {
             hideSettingsModal();
+        }
+        if (event.target === dailyNameModal) {
+            hideDailyNameModal();
+        }
+        if (event.target === dailyLeaderboardModal) {
+            hideDailyLeaderboardModal();
         }
     });
 

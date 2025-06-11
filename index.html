@@ -121,6 +121,68 @@
         </div>
     </div>
 
+    <!-- Daily Name Input Modal -->
+    <div id="daily-name-modal" class="modal">
+        <div class="modal-content daily-name-content">
+            <span class="close-btn daily-name-close">
+                <img src="images/x-mark.svg">
+            </span>
+            <h2>🎉 Great Job!</h2>
+            <p class="daily-name-description">Enter your name for the daily leaderboard</p>
+            
+            <div class="name-input-section">
+                <label for="daily-player-name">Your Name:</label>
+                <input type="text" id="daily-player-name" placeholder="Enter your name" maxlength="20">
+                <div class="name-input-hint">Maximum 20 characters</div>
+            </div>
+            
+            <div class="daily-name-actions">
+                <button id="submit-daily-name" class="submit-name-btn">Submit to Leaderboard</button>
+                <button id="skip-daily-name" class="skip-name-btn">Skip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Leaderboard Modal -->
+    <div id="daily-leaderboard-modal" class="modal">
+        <div class="modal-content daily-leaderboard-content">
+            <span class="close-btn daily-leaderboard-close">
+                <img src="images/x-mark.svg">
+            </span>
+            <h2>🏆 Daily Leaderboard</h2>
+            <p class="leaderboard-description">Today's top performers</p>
+            
+            <div id="daily-leaderboard-list">
+                <div class="leaderboard-item">
+                    <span class="rank">🥇</span>
+                    <span class="player-name">Player1 (USA)</span>
+                    <span class="player-time">0:15</span>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">🥈</span>
+                    <span class="player-name">Player2 (UK)</span>
+                    <span class="player-time">0:23</span>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">🥉</span>
+                    <span class="player-name">Player3 (CAN)</span>
+                    <span class="player-time">0:31</span>
+                </div>
+                <div class="leaderboard-item your-entry" style="display: none;">
+                    <span class="rank" id="your-rank">4.</span>
+                    <span class="player-name" id="your-name-display">You</span>
+                    <span class="player-time" id="your-time-display">0:45</span>
+                </div>
+            </div>
+            
+            <div class="leaderboard-note">
+                <p>🌟 Leaderboard resets daily at midnight</p>
+            </div>
+            
+            <button id="close-leaderboard" class="close-leaderboard-btn">Close</button>
+        </div>
+    </div>
+
     <!-- Create Challenge Modal -->
     <div id="create-challenge-modal" class="modal">
         <div class="modal-content challenge-modal-content">
