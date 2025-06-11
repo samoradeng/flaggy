@@ -1074,8 +1074,34 @@ document.addEventListener("DOMContentLoaded", function () {
         shareToClipboard(shareText);
     }
 
+    // Helper function to copy text to clipboard
+    function copyToClipboard(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                showCopiedToast();
+            }
+        } catch (err) {
+            console.error('Unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    // Check if running on localhost
+    function isLocalhost() {
+        return window.location.hostname === 'localhost' || 
+               window.location.hostname === '127.0.0.1' || 
+               window.location.hostname === '';
+    }
+
     function shareToClipboard(text) {
-        if (navigator.share) {
+        // Skip navigator.share on localhost to avoid permission errors
+        if (!isLocalhost() && navigator.share) {
             navigator.share({
                 title: 'Check out my Flagtriv score!',
                 text: text,
@@ -1084,20 +1110,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log('Thanks for sharing!');
             }).catch(console.error);
         } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showCopiedToast();
-                }
-            } catch (err) {
-                console.error('Unable to copy', err);
-            }
-            document.body.removeChild(textArea);
+            // Use clipboard fallback
+            copyToClipboard(text);
         }
     }
 
