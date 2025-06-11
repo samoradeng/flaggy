@@ -3,6 +3,7 @@ class DailyChallenge {
         this.countries = countries;
         this.today = new Date().toDateString();
         this.dailyStats = this.loadDailyStats();
+        this.usedCountries = this.loadUsedCountries();
     }
 
     loadDailyStats() {
@@ -20,6 +21,18 @@ class DailyChallenge {
         };
     }
 
+    loadUsedCountries() {
+        const saved = localStorage.getItem('dailyUsedCountries');
+        if (saved) {
+            return JSON.parse(saved);
+        }
+        return [];
+    }
+
+    saveUsedCountries() {
+        localStorage.setItem('dailyUsedCountries', JSON.stringify(this.usedCountries));
+    }
+
     saveDailyStats() {
         localStorage.setItem('dailyStats', JSON.stringify(this.dailyStats));
     }
@@ -32,8 +45,32 @@ class DailyChallenge {
         // Use date as seed for consistent daily country
         const seed = this.dateToSeed(this.today);
         const countryCodes = Object.keys(this.countries);
-        const index = seed % countryCodes.length;
-        return this.countries[countryCodes[index]];
+        
+        // Filter out already used countries if we haven't used all countries yet
+        let availableCountries = countryCodes;
+        if (this.usedCountries.length < countryCodes.length) {
+            availableCountries = countryCodes.filter(code => !this.usedCountries.includes(code));
+        } else {
+            // If all countries have been used, reset the used list
+            console.log('🔄 All countries used, resetting daily rotation');
+            this.usedCountries = [];
+            this.saveUsedCountries();
+        }
+        
+        // Use the seed to pick from available countries
+        const index = seed % availableCountries.length;
+        const selectedCountryCode = availableCountries[index];
+        
+        // Add to used countries list if not already there
+        if (!this.usedCountries.includes(selectedCountryCode)) {
+            this.usedCountries.push(selectedCountryCode);
+            this.saveUsedCountries();
+        }
+        
+        console.log(`📅 Daily country: ${selectedCountryCode} (${this.countries[selectedCountryCode].name})`);
+        console.log(`📊 Used countries: ${this.usedCountries.length}/${countryCodes.length}`);
+        
+        return this.countries[selectedCountryCode];
     }
 
     dateToSeed(dateString) {

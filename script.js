@@ -70,6 +70,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const soundToggle = document.getElementById('sound-toggle-setting');
     const soundIcon = document.getElementById('sound-icon-setting');
 
+    // Home button
+    const homeBtn = document.getElementById('home-btn');
+
     // Continent filter elements
     const continentFilterBtn = document.getElementById('continent-filter-btn');
     const continentFilterModal = document.getElementById('continent-filter-modal');
@@ -137,6 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
         settingsBtn.addEventListener('click', showSettingsModal);
         settingsClose.addEventListener('click', hideSettingsModal);
         soundToggle.addEventListener('click', toggleSound);
+        homeBtn.addEventListener('click', goHome);
         continentFilterBtn.addEventListener('click', showContinentFilterModal);
         continentFilterClose.addEventListener('click', hideContinentFilterModal);
         applyContinentFilter.addEventListener('click', applyContinentFilterSelection);
@@ -170,6 +174,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // DEBUG: Add button to clear daily challenge data
         console.log('🔧 DEBUG: To reset daily challenge, run: resetDailyChallenge()');
+    }
+
+    function goHome() {
+        // Hide all game screens
+        gameContainer.style.display = 'none';
+        topBar.style.display = 'none';
+        endlessGameOverScreen.style.display = 'none';
+        dailyCompleteScreen.style.display = 'none';
+        document.getElementById('multiplayer-lobby').style.display = 'none';
+        document.getElementById('multiplayer-results').style.display = 'none';
+        
+        // Show main menu
+        modeSelection.style.display = 'flex';
+        
+        // Reset game state
+        isDailyMode = false;
+        isChallengeMode = false;
+        isZenMode = false;
+        isMultiplayerMode = false;
+        currentCountry = null;
+        
+        // Update main menu stats
+        updateMainMenuStats();
+        updateDailyChallengeButton();
     }
 
     function attachOptionListeners() {

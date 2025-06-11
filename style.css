@@ -214,7 +214,8 @@ body {
     gap: 4px;
 }
 
-#settings-btn {
+#settings-btn,
+#home-btn {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -228,8 +229,15 @@ body {
     font-size: 16px;
 }
 
-#settings-btn:hover {
+#settings-btn:hover,
+#home-btn:hover {
     background-color: rgba(0, 0, 0, 0.1);
+}
+
+.home-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
 }
 
 #score-display {
@@ -1539,10 +1547,16 @@ body {
         gap: 8px;
     }
     
-    #settings-btn {
+    #settings-btn,
+    #home-btn {
         width: 28px;
         height: 28px;
         font-size: 14px;
+    }
+    
+    .home-logo {
+        width: 20px;
+        height: 20px;
     }
     
     .modal-content {
