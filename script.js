@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let maxGameStreak = 0; // Track the highest streak achieved in this game session
     let bestStreak = parseInt(localStorage.getItem('bestStreak') || '0');
     let dailyStartTime = null; // Track when daily challenge started
+    let playerCountry = null; // Store player's country from IP
     
     // Initialize game systems
     let dailyChallenge;
@@ -120,6 +121,9 @@ document.addEventListener("DOMContentLoaded", function () {
         flagFacts = new FlagFacts();
         multiplayerGame = new MultiplayerGame(countries, continentFilter, flagFacts, soundEffects);
 
+        // Get player's country from IP
+        detectPlayerCountry();
+
         // Update UI
         updateTopBar();
         updateMainMenuStats();
@@ -174,6 +178,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // DEBUG: Add button to clear daily challenge data
         console.log('🔧 DEBUG: To reset daily challenge, run: resetDailyChallenge()');
+    }
+
+    async function detectPlayerCountry() {
+        try {
+            // Use a free IP geolocation service
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            
+            if (data.country_code) {
+                // Find the country in our countries data
+                const countryData = Object.values(countries).find(
+                    country => country.alpha2Code === data.country_code.toUpperCase()
+                );
+                
+                if (countryData) {
+                    playerCountry = {
+                        code: data.country_code.toUpperCase(),
+                        name: countryData.name
+                    };
+                    console.log('🌍 Player location detected:', playerCountry.name);
+                } else {
+                    console.log('🌍 Country code found but not in our database:', data.country_code);
+                }
+            }
+        } catch (error) {
+            console.log('🌍 Could not detect player location:', error);
+            // Fallback to a default or leave as null
+            playerCountry = null;
+        }
     }
 
     function goHome() {
@@ -350,30 +383,111 @@ document.addEventListener("DOMContentLoaded", function () {
         const timeSpent = parseInt(dailyNameModal.dataset.timeSpent);
         
         if (playerName) {
-            // Here you would normally save to a real leaderboard
+            // Save to daily leaderboard
+            saveDailyLeaderboardEntry(playerName, timeSpent);
             console.log(`Player ${playerName} completed in ${timeSpent} seconds`);
-            
-            // Add to mock leaderboard
-            addToMockLeaderboard(playerName, timeSpent);
         }
         
         hideDailyNameModal();
     }
 
-    function addToMockLeaderboard(playerName, timeSpent) {
-        // Add player to the leaderboard display
-        const yourEntry = document.querySelector('.your-entry');
-        const yourRank = document.getElementById('your-rank');
-        const yourNameDisplay = document.getElementById('your-name-display');
-        const yourTimeDisplay = document.getElementById('your-time-display');
+    function saveDailyLeaderboardEntry(playerName, timeSpent) {
+        // Get today's leaderboard
+        const today = dailyChallenge.today;
+        const leaderboardKey = `dailyLeaderboard_${today}`;
+        let leaderboard = JSON.parse(localStorage.getItem(leaderboardKey) || '[]');
         
-        yourRank.textContent = '4.';
-        yourNameDisplay.textContent = playerName;
-        yourTimeDisplay.textContent = `${Math.floor(timeSpent / 60)}:${(timeSpent % 60).toString().padStart(2, '0')}`;
-        yourEntry.style.display = 'flex';
+        // Add player entry with country
+        const playerEntry = {
+            name: playerName,
+            time: timeSpent,
+            country: playerCountry ? playerCountry.name : 'Unknown',
+            countryCode: playerCountry ? playerCountry.code : null,
+            timestamp: Date.now()
+        };
+        
+        leaderboard.push(playerEntry);
+        
+        // Sort by time (fastest first)
+        leaderboard.sort((a, b) => a.time - b.time);
+        
+        // Keep only top 100 entries
+        leaderboard = leaderboard.slice(0, 100);
+        
+        // Save back to localStorage
+        localStorage.setItem(leaderboardKey, JSON.stringify(leaderboard));
+        
+        console.log('💾 Saved to leaderboard:', playerEntry);
+        console.log('🏆 Current leaderboard:', leaderboard);
+    }
+
+    function getDailyLeaderboard() {
+        const today = dailyChallenge.today;
+        const leaderboardKey = `dailyLeaderboard_${today}`;
+        return JSON.parse(localStorage.getItem(leaderboardKey) || '[]');
     }
 
     function showDailyLeaderboardModal() {
+        // Get real leaderboard data
+        const leaderboard = getDailyLeaderboard();
+        const leaderboardList = document.getElementById('daily-leaderboard-list');
+        
+        // Clear existing content
+        leaderboardList.innerHTML = '';
+        
+        if (leaderboard.length === 0) {
+            // Show placeholder if no real data
+            leaderboardList.innerHTML = `
+                <div class="leaderboard-item">
+                    <span class="rank">🥇</span>
+                    <span class="player-name">SpeedRunner (USA)</span>
+                    <span class="player-time">0:12</span>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">🥈</span>
+                    <span class="player-name">GeoMaster (UK)</span>
+                    <span class="player-time">0:18</span>
+                </div>
+                <div class="leaderboard-item">
+                    <span class="rank">🥉</span>
+                    <span class="player-name">FlagExpert (CAN)</span>
+                    <span class="player-time">0:25</span>
+                </div>
+            `;
+        } else {
+            // Show real leaderboard data (sorted by time)
+            leaderboard.forEach((entry, index) => {
+                const rank = index + 1;
+                let rankDisplay;
+                
+                if (rank === 1) rankDisplay = '🥇';
+                else if (rank === 2) rankDisplay = '🥈';
+                else if (rank === 3) rankDisplay = '🥉';
+                else rankDisplay = `${rank}.`;
+                
+                const minutes = Math.floor(entry.time / 60);
+                const seconds = entry.time % 60;
+                const timeDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                const leaderboardItem = document.createElement('div');
+                leaderboardItem.className = 'leaderboard-item';
+                
+                // Check if this is the current player's entry
+                const playerName = dailyPlayerName.value.trim();
+                if (playerName && entry.name === playerName) {
+                    leaderboardItem.classList.add('your-entry');
+                }
+                
+                leaderboardItem.innerHTML = `
+                    <span class="rank">${rankDisplay}</span>
+                    <span class="player-name">${entry.name} (${entry.country})</span>
+                    <span class="player-time">${timeDisplay}</span>
+                `;
+                
+                leaderboardList.appendChild(leaderboardItem);
+            });
+        }
+        
         dailyLeaderboardModal.style.display = 'block';
     }
 
