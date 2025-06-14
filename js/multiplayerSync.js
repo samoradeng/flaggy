@@ -571,14 +571,9 @@ class MultiplayerSync {
         }
     }
 
-    // Get current game state (synchronous for UI updates)
-    getCurrentGameState() {
-        return this.useRealBackend ? this.gameState : this.localGameState;
-    }
-
     // Calculate time remaining for current round
     getTimeRemaining() {
-        const gameState = this.getCurrentGameState();
+        const gameState = this.useRealBackend ? this.gameState : this.localGameState;
         if (!gameState || !gameState.roundStartTime || gameState.status !== 'playing') {
             return 0;
         }
@@ -590,7 +585,7 @@ class MultiplayerSync {
 
     // Check if we should advance to next flag
     shouldAdvanceFlag() {
-        const gameState = this.getCurrentGameState();
+        const gameState = this.useRealBackend ? this.gameState : this.localGameState;
         if (!gameState || gameState.status !== 'playing') return false;
         
         const timeRemaining = this.getTimeRemaining();
@@ -747,7 +742,7 @@ class MultiplayerSync {
 
     // Get final results
     getFinalResults() {
-        const gameState = this.getCurrentGameState();
+        const gameState = this.useRealBackend ? this.gameState : this.localGameState;
         const players = Object.values(gameState.players);
         
         players.sort((a, b) => {
@@ -768,7 +763,7 @@ class MultiplayerSync {
         const myResult = playerResults.find(p => p.id === this.playerId);
         const myRank = playerResults.indexOf(myResult) + 1;
         const totalPlayers = playerResults.length;
-        const gameState = this.getCurrentGameState();
+        const gameState = this.useRealBackend ? this.gameState : this.localGameState;
         
         let shareText = `🌍 Flagtriv Challenge Results!\n`;
         shareText += `🏆 Ranked ${myRank}/${totalPlayers}\n`;

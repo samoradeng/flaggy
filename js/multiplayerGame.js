@@ -14,7 +14,6 @@ class MultiplayerGame {
         this.roundStartTime = null;
         this.timerElement = null;
         this.gameEnded = false; // Track if game has ended
-        this.flagsGenerated = false; // Track if flags have been generated
         
         this.initializeEventListeners();
     }
@@ -260,11 +259,8 @@ class MultiplayerGame {
     async startMultiplayerGame() {
         if (!this.multiplayerSync.isHost) return;
         
-        // Generate flags for the game only once
-        if (!this.flagsGenerated) {
-            this.generateGameFlags();
-            this.flagsGenerated = true;
-        }
+        // Generate flags for the game
+        this.generateGameFlags();
         
         const result = await this.multiplayerSync.startGame(this.gameFlags);
         
@@ -276,7 +272,7 @@ class MultiplayerGame {
     }
 
     generateGameFlags() {
-        const gameState = this.multiplayerSync.getCurrentGameState();
+        const gameState = this.multiplayerSync.localGameState;
         const filteredCountries = this.filterCountriesByContinent(gameState.continent);
         const countryCodes = Object.keys(filteredCountries);
         
@@ -308,8 +304,6 @@ class MultiplayerGame {
         if (this.gameFlags.length < gameState.totalFlags) {
             console.warn(`Could only generate ${this.gameFlags.length} unique flags out of ${gameState.totalFlags} requested`);
         }
-        
-        console.log('Generated flags for game:', this.gameFlags.length, 'flags');
     }
 
     filterCountriesByContinent(continent) {
@@ -347,8 +341,8 @@ class MultiplayerGame {
         document.getElementById('heading').textContent = 'Challenge Friends';
         document.getElementById('subHeading').textContent = 'Compete with friends in real-time!';
         
-        // Initialize game state - use flags from server if available, otherwise use generated ones
-        this.gameFlags = gameState.flags && gameState.flags.length > 0 ? gameState.flags : this.gameFlags;
+        // Initialize game state
+        this.gameFlags = gameState.flags;
         this.currentFlagIndex = gameState.currentFlag;
         this.gameStartTime = Date.now();
         this.playerAnswers = [];
@@ -441,7 +435,7 @@ class MultiplayerGame {
         this.resetQuestionUI();
         
         // Update progress in streak display
-        const gameState = this.multiplayerSync.getCurrentGameState();
+        const gameState = this.multiplayerSync.useRealBackend ? this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
         const progress = `Flag ${this.currentFlagIndex + 1}/${gameState.totalFlags}`;
         document.getElementById('streak-display-top').textContent = progress;
     }
@@ -664,7 +658,7 @@ class MultiplayerGame {
         
         // Update final stats
         const correctAnswers = this.playerAnswers.filter(a => a && a.isCorrect).length;
-        const gameState = this.multiplayerSync.getCurrentGameState();
+        const gameState = this.multiplayerSync.useRealBackend ? this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
         const totalFlags = gameState.totalFlags;
         const accuracy = Math.round((correctAnswers / totalFlags) * 100);
         
@@ -699,7 +693,7 @@ class MultiplayerGame {
             
             // Calculate total time for display
             const totalTime = player.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
-            const gameState = this.multiplayerSync.getCurrentGameState();
+            const gameState = this.multiplayerSync.useRealBackend ? this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
             const avgTime = Math.round(totalTime / gameState.totalFlags / 1000);
             
             playerDiv.innerHTML = `
@@ -781,7 +775,6 @@ class MultiplayerGame {
         this.gameStartTime = null;
         this.roundStartTime = null;
         this.gameEnded = false;
-        this.flagsGenerated = false;
         
         // Reset multiplayer mode flag
         window.isMultiplayerMode = false;
