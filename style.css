@@ -76,8 +76,6 @@ body {
     padding: 0 16px;
     width: 90%;
     max-width: 500px;
-    opacity: 0;
-    animation: fadeInCenter 0.6s ease-out forwards;
 }
 
 #flag {
@@ -264,11 +262,17 @@ body {
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
-    font-size: 16px;
+    padding: 0;
 }
 
 #settings-btn:hover {
     background-color: rgba(0, 0, 0, 0.1);
+}
+
+#settings-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: #666;
 }
 
 #score-display {
@@ -594,14 +598,25 @@ body {
     top: 16px;
     right: 16px;
     cursor: pointer;
-    font-size: 32px;
-    padding: 8px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
 }
 
 .close-btn:hover {
     background-color: #F0F0F0;
+}
+
+.close-btn img {
+    width: 16px;
+    height: 16px;
 }
 
 /* Challenge Modal Styles */
@@ -1304,8 +1319,6 @@ body {
     text-align: center;
     width: 90%;
     max-width: 400px;
-    opacity: 0;
-    animation: fadeInCenter 0.6s ease-out forwards;
 }
 
 #mode-buttons {
@@ -1327,6 +1340,10 @@ body {
     font-weight: 500;
     transition: all 0.3s ease;
     min-width: 200px;
+    height: 56px; /* Fixed height for consistency */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #daily-challenge-btn {
@@ -1399,8 +1416,6 @@ body {
     max-width: 400px;
     flex-direction: column;
     text-align: center;
-    opacity: 0;
-    animation: fadeInCenter 0.6s ease-out forwards;
 }
 
 .game-over-content,
@@ -1604,17 +1619,6 @@ body {
 }
 
 /* Keyframe animations */
-@keyframes fadeInCenter {
-    from { 
-        opacity: 0; 
-        transform: translate(-50%, -50%) scale(0.9);
-    }
-    to { 
-        opacity: 1; 
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
 @keyframes bounce {
     0%, 20%, 50%, 80%, 100% {
         transform: translateY(0);
@@ -1714,13 +1718,18 @@ body {
     #settings-btn {
         width: 28px;
         height: 28px;
-        font-size: 14px;
+    }
+    
+    #settings-btn svg {
+        width: 16px;
+        height: 16px;
     }
     
     .modal-content {
-        width: 95%;
+        width: calc(100% - 32px);
         padding: 24px;
         max-height: 90vh;
+        margin: 16px;
     }
     
     .continent-filter-content,
@@ -1742,6 +1751,7 @@ body {
         width: 100%;
         font-size: 16px;
         padding: 14px 24px;
+        height: 52px;
     }
     
     #flagtriv-logo-long {
