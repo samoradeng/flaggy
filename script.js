@@ -540,7 +540,6 @@ function showFacts() {
     const facts = document.getElementById('facts');
     facts.innerHTML = `
         <p class="fact-text"><strong>Capital:</strong> ${currentFlag.capital}</p>
-        <p class="fact-text"><strong>Population:</strong> ${currentFlag.population?.toLocaleString() || 'Unknown'}</p>
         <p class="fact-text"><strong>Region:</strong> ${currentFlag.subregion}</p>
     `;
     facts.hidden = false;
