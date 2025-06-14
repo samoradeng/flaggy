@@ -14,17 +14,46 @@
     
     <!-- Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script type="module">
-        // Initialize Supabase client
-        const SUPABASE_URL = import.meta.env?.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = import.meta.env?.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
-        
-        if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
-            window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Supabase initialized for multiplayer');
-        } else {
-            console.warn('⚠️ Supabase not configured - multiplayer will use localStorage fallback');
+    <script>
+        // Function to load environment variables
+        async function loadEnvVars() {
+            try {
+                const response = await fetch('/.env');
+                const text = await response.text();
+                const env = {};
+                
+                text.split('\n').forEach(line => {
+                    const [key, value] = line.split('=');
+                    if (key && value) {
+                        env[key.trim()] = value.trim().replace(/^["']|["']$/g, '');
+                    }
+                });
+                
+                return env;
+            } catch (error) {
+                console.warn('Could not load .env file:', error);
+                return {};
+            }
         }
+
+        // Initialize Supabase client
+        async function initializeSupabase() {
+            const env = await loadEnvVars();
+            const SUPABASE_URL = env.VITE_SUPABASE_URL;
+            const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY;
+            
+            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+                window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase initialized for multiplayer');
+            } else {
+                console.warn('⚠️ Supabase not configured - multiplayer will use localStorage fallback');
+                // Create a mock supabase object to prevent errors
+                window.supabase = null;
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeSupabase);
     </script>
     
     <title>Flagtriv - Guess the Country</title>
