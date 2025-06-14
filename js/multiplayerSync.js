@@ -85,7 +85,7 @@ class MultiplayerSync {
 
             // Validate Supabase connection before using
             if (this.validateSupabaseConnection()) {
-                console.log('🔄 Creating game with Supabase...');
+                console.log('🔄 Creating game with Supabase...', this.gameId);
                 
                 // Create game in Supabase
                 const { data: gameData, error: gameError } = await this.supabase
@@ -187,48 +187,76 @@ class MultiplayerSync {
     // Join an existing game
     async joinGame(gameId, nickname = '') {
         try {
-            this.gameId = gameId;
+            this.gameId = gameId.toUpperCase(); // Ensure uppercase for consistency
             this.playerId = this.generatePlayerId();
             this.isHost = false;
+
+            console.log('🔄 Attempting to join game:', this.gameId);
 
             // Validate Supabase connection before using
             if (this.validateSupabaseConnection()) {
                 console.log('🔄 Joining game with Supabase...');
                 
-                // Check if game exists
+                // Check if game exists and get its data
                 const { data: gameData, error: gameError } = await this.supabase
                     .from('multiplayer_games')
                     .select('*')
-                    .eq('game_id', gameId)
+                    .eq('game_id', this.gameId)
                     .single();
 
-                if (gameError || !gameData) {
-                    console.error('Game not found in Supabase:', gameError);
-                    // Try local fallback
-                    return this.joinGameLocal(gameId, nickname);
+                if (gameError) {
+                    console.error('Game lookup error:', gameError);
+                    
+                    // If game not found in Supabase, try local fallback
+                    if (gameError.code === 'PGRST116') { // No rows returned
+                        console.log('🔄 Game not found in Supabase, trying localStorage...');
+                        return this.joinGameLocal(this.gameId, nickname);
+                    }
+                    
+                    throw new Error(`Database error: ${gameError.message}`);
+                }
+
+                if (!gameData) {
+                    console.log('🔄 Game not found in Supabase, trying localStorage...');
+                    return this.joinGameLocal(this.gameId, nickname);
+                }
+
+                console.log('✅ Game found in Supabase:', gameData);
+
+                // Check if game is still joinable
+                if (gameData.status === 'finished') {
+                    // Get final game state for late joiners
+                    const gameState = await this.fetchGameState();
+                    return {
+                        success: true,
+                        gameId: this.gameId,
+                        playerId: this.playerId,
+                        gameState: gameState
+                    };
                 }
 
                 // Add player to the game
+                const playerNickname = nickname || `Player ${Date.now().toString().slice(-4)}`;
                 const { error: playerError } = await this.supabase
                     .from('multiplayer_players')
                     .insert({
-                        game_id: gameId,
+                        game_id: this.gameId,
                         player_id: this.playerId,
-                        nickname: nickname || `Player ${Date.now().toString().slice(-4)}`,
+                        nickname: playerNickname,
                         is_host: false,
                         score: 0,
                         answers: []
                     });
 
                 if (playerError) {
-                    console.error('Failed to join game:', playerError);
-                    throw new Error(playerError.message);
+                    console.error('Failed to add player:', playerError);
+                    throw new Error(`Failed to join: ${playerError.message}`);
                 }
 
                 // Get current game state
                 const gameState = await this.fetchGameState();
 
-                console.log('✅ Joined game successfully with Supabase:', gameId);
+                console.log('✅ Joined game successfully with Supabase:', this.gameId);
                 
                 return {
                     success: true,
@@ -239,13 +267,14 @@ class MultiplayerSync {
             } else {
                 // Use local fallback
                 console.log('🔄 Joining game with localStorage fallback...');
-                return this.joinGameLocal(gameId, nickname);
+                return this.joinGameLocal(this.gameId, nickname);
             }
         } catch (error) {
             console.error('Failed to join game:', error);
-            // Try local fallback on error
-            console.log('🔄 Falling back to localStorage...');
-            return this.joinGameLocal(gameId, nickname);
+            
+            // Try local fallback on any error
+            console.log('🔄 Error occurred, falling back to localStorage...');
+            return this.joinGameLocal(this.gameId, nickname);
         }
     }
 
@@ -255,30 +284,43 @@ class MultiplayerSync {
             const storageKey = 'multiplayerGame_' + gameId;
             const gameData = localStorage.getItem(storageKey);
             
+            console.log('🔍 Looking for local game:', gameId, gameData ? 'found' : 'not found');
+            
             if (!gameData) {
+                // Check in allMultiplayerGames registry
                 const allGames = JSON.parse(localStorage.getItem('allMultiplayerGames') || '{}');
+                console.log('🔍 All local games:', Object.keys(allGames));
+                
                 if (!allGames[gameId]) {
-                    console.error('Game not found in localStorage:', gameId);
-                    return { success: false, error: 'Game not found' };
+                    console.error('❌ Game not found in localStorage:', gameId);
+                    return { 
+                        success: false, 
+                        error: 'Game not found. Make sure the game ID is correct and the game was created recently.' 
+                    };
                 }
+                
+                // Game exists in registry but no data - create minimal state
+                this.localGameState = {
+                    gameId: gameId,
+                    status: 'waiting',
+                    currentFlag: 0,
+                    totalFlags: 10,
+                    roundStartTime: null,
+                    roundDuration: 10000,
+                    players: {},
+                    flags: [],
+                    continent: 'all',
+                    hostId: allGames[gameId].hostId
+                };
+            } else {
+                this.localGameState = JSON.parse(gameData);
             }
 
-            this.localGameState = gameData ? JSON.parse(gameData) : {
-                gameId: gameId,
-                status: 'waiting',
-                currentFlag: 0,
-                totalFlags: 10,
-                roundStartTime: null,
-                roundDuration: 10000,
-                players: {},
-                flags: [],
-                continent: 'all',
-                hostId: null
-            };
-
+            // Add this player to the game
+            const playerNickname = nickname || `Player ${Object.keys(this.localGameState.players).length + 1}`;
             this.localGameState.players[this.playerId] = {
                 id: this.playerId,
-                nickname: nickname || `Player ${Object.keys(this.localGameState.players).length + 1}`,
+                nickname: playerNickname,
                 isHost: false,
                 score: 0,
                 answers: [],
@@ -286,6 +328,7 @@ class MultiplayerSync {
                 joinedAt: Date.now()
             };
 
+            // Save updated game state
             localStorage.setItem(storageKey, JSON.stringify(this.localGameState));
             
             console.log('✅ Joined game successfully with localStorage:', gameId);
@@ -298,7 +341,10 @@ class MultiplayerSync {
             };
         } catch (error) {
             console.error('Failed to join game locally:', error);
-            return { success: false, error: error.message };
+            return { 
+                success: false, 
+                error: `Local join failed: ${error.message}` 
+            };
         }
     }
 
