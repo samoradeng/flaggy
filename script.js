@@ -488,14 +488,6 @@ function handleWrongAnswer(selectedButton, timeSpent) {
     selectedButton.classList.add('wrong-answer');
     soundEffects.playWrong();
     
-    // Show correct answer
-    const options = document.querySelectorAll('.option');
-    options.forEach(button => {
-        if (button.textContent === currentFlag.name) {
-            button.classList.add('correct-answer');
-        }
-    });
-    
     // Update stats
     totalQuestions++;
     streak = 0;
@@ -503,17 +495,33 @@ function handleWrongAnswer(selectedButton, timeSpent) {
     if (gameMode === 'daily') {
         lives--;
         if (lives <= 0) {
+            // Only show correct answer when all attempts are exhausted
+            const options = document.querySelectorAll('.option');
+            options.forEach(button => {
+                if (button.textContent === currentFlag.name) {
+                    button.classList.add('correct-answer');
+                }
+            });
             document.getElementById('message').textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
             setTimeout(() => {
                 completeDailyChallenge(false, 2, timeSpent);
             }, 3000);
         } else {
+            // Don't show correct answer yet - they still have attempts left
             document.getElementById('message').textContent = `❌ Wrong! You have ${lives} chance${lives === 1 ? '' : 's'} left.`;
             setTimeout(() => {
                 nextQuestion();
             }, 3000);
         }
     } else if (gameMode === 'challenge') {
+        // Show correct answer for challenge mode
+        const options = document.querySelectorAll('.option');
+        options.forEach(button => {
+            if (button.textContent === currentFlag.name) {
+                button.classList.add('correct-answer');
+            }
+        });
+        
         lives--;
         if (lives <= 0) {
             document.getElementById('message').textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
@@ -527,6 +535,13 @@ function handleWrongAnswer(selectedButton, timeSpent) {
             }, 2000);
         }
     } else { // zen mode
+        // Show correct answer for zen mode
+        const options = document.querySelectorAll('.option');
+        options.forEach(button => {
+            if (button.textContent === currentFlag.name) {
+                button.classList.add('correct-answer');
+            }
+        });
         document.getElementById('message').textContent = "❌ Not quite! The correct answer was " + currentFlag.name;
         setTimeout(() => {
             document.getElementById('next').hidden = false;
