@@ -529,9 +529,14 @@ function saveCorrectlyAnsweredCountry(country) {
         region: country.region,
         subregion: country.subregion,
         flag: country.flag,
-        capital: country.capital
+        capital: country.capital,
+        alpha2Code: country.alpha2Code
     };
     localStorage.setItem('countryDetails', JSON.stringify(countryDetails));
+    
+    // Debug logging
+    console.log('Saved country:', country.alpha2Code, country.name);
+    console.log('Total correctly answered:', correctlyAnswered.length);
 }
 
 function handleWrongAnswer(selectedButton, timeSpent) {
@@ -909,6 +914,9 @@ function updatePassportDisplay() {
     const correctlyAnsweredCountries = JSON.parse(localStorage.getItem('correctlyAnsweredCountries') || '[]');
     const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
     
+    console.log('Correctly answered countries:', correctlyAnsweredCountries);
+    console.log('Country details:', countryDetails);
+    
     document.getElementById('countries-unlocked').textContent = `${correctlyAnsweredCountries.length} Countries Discovered`;
     
     // Update continent progress
@@ -919,10 +927,13 @@ function updatePassportDisplay() {
     
     continents.forEach(continent => {
         const continentCountries = Object.values(countries).filter(c => c.region === continent);
+        
+        // Count correctly answered countries in this continent
         const unlockedInContinent = correctlyAnsweredCountries.filter(countryCode => {
-            const country = countries[countryCode];
-            return country && country.region === continent;
+            const countryData = countryDetails[countryCode];
+            return countryData && countryData.region === continent;
         }).length;
+        
         const percentage = Math.round((unlockedInContinent / continentCountries.length) * 100);
         
         const progressDiv = document.createElement('div');
@@ -947,14 +958,13 @@ function updatePassportDisplay() {
     // Show correctly answered countries
     correctlyAnsweredCountries.forEach(countryCode => {
         const countryData = countryDetails[countryCode];
-        const country = countries[countryCode];
         
-        if (countryData && country && country.flag) {
+        if (countryData && countryData.flag && countryData.flag.large) {
             const countryDiv = document.createElement('div');
             countryDiv.className = 'passport-country';
             countryDiv.innerHTML = `
-                <img src="${country.flag.large}" alt="${country.name}" loading="lazy">
-                <span>${country.name}</span>
+                <img src="${countryData.flag.large}" alt="${countryData.name}" loading="lazy">
+                <span>${countryData.name}</span>
             `;
             passportGrid.appendChild(countryDiv);
         }
