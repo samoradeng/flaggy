@@ -342,13 +342,15 @@
     </div>
 
     <div id="mode-selection" style="display: flex;">
-        <h1 id="title" class="Welcome-module_title">Flagtriv</h1>
+        <div id="logo-container">
+            <img id="flagtriv-logo-long" src="images/FLAGTRIV_LOGO_LONG.svg" alt="Flagtriv">
+            <img id="flagtriv-logo-short" src="images/FLAGTRIV LOGO.svg" alt="Flagtriv">
+        </div>
         <span id="Welcome-module_SubHeading">Guess the world flags!</span>
         <div id="mode-buttons">
-            <button id="daily-challenge-btn">📅 Daily Challenge</button>
-            <button id="challenge-mode-btn">🧠 Challenge Mode</button>
-            <button id="zen-mode-btn">🌿 Zen Mode</button>
-            <button id="challenge-friends-btn">🧑‍🤝‍🧑 Challenge Friends</button>
+            <button id="daily-challenge-btn">Daily Streak</button>
+            <button id="challenge-mode-btn">🧠 Flag Master</button>
+            <button id="challenge-friends-btn">⚔️ Flag Duel</button>
         </div>
         <div id="main-menu-stats">
             <div id="daily-streak-info" style="display: none;">
@@ -386,7 +388,6 @@
             
             <div class="tabs">
                 <button class="tab-button active" data-tab="challenge">Challenge</button>
-                <button class="tab-button" data-tab="zen">Zen</button>
                 <button class="tab-button" data-tab="daily">Daily</button>
                 <button class="tab-button" data-tab="achievements">Achievements</button>
                 <button class="tab-button" data-tab="passport">Passport</button>
@@ -408,25 +409,6 @@
                 <div class="stat-row">
                     <span>Total Score:</span>
                     <span id="challenge-total-score-value">0</span>
-                </div>
-            </div>
-
-            <div id="zen-stats" class="tab-content">
-                <div class="stat-row">
-                    <span>Sessions Played:</span>
-                    <span id="zen-sessions-played">0</span>
-                </div>
-                <div class="stat-row">
-                    <span>Highest Streak:</span>
-                    <span id="zen-highest-streak">0</span>
-                </div>
-                <div class="stat-row">
-                    <span>Total Flags Guessed:</span>
-                    <span id="zen-total-flags">0</span>
-                </div>
-                <div class="stat-row">
-                    <span>Accuracy:</span>
-                    <span id="zen-accuracy">0%</span>
                 </div>
             </div>
 

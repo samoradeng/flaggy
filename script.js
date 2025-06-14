@@ -6,7 +6,7 @@ let totalQuestions = 0;
 let streak = 0;
 let bestStreak = parseInt(localStorage.getItem('bestStreak') || '0');
 let lives = 3;
-let gameMode = 'challenge'; // 'challenge', 'zen', 'daily'
+let gameMode = 'challenge'; // 'challenge', 'daily'
 let usedCountries = [];
 let gameStartTime = null;
 let questionStartTime = null;
@@ -51,13 +51,30 @@ function initializeGame() {
 
     // Check if daily challenge was already completed
     checkDailyStatus();
+
+    // Start logo animation
+    startLogoAnimation();
+}
+
+function startLogoAnimation() {
+    const logoLong = document.getElementById('flagtriv-logo-long');
+    const logoShort = document.getElementById('flagtriv-logo-short');
+    
+    // Initially show long logo and hide short logo
+    logoLong.style.opacity = '1';
+    logoShort.style.opacity = '0';
+    
+    // After 2 seconds, transition to short logo
+    setTimeout(() => {
+        logoLong.style.opacity = '0';
+        logoShort.style.opacity = '1';
+    }, 2000);
 }
 
 function setupEventListeners() {
     // Mode selection buttons
     document.getElementById('daily-challenge-btn').addEventListener('click', handleDailyChallengeClick);
     document.getElementById('challenge-mode-btn').addEventListener('click', startChallengeMode);
-    document.getElementById('zen-mode-btn').addEventListener('click', startZenMode);
 
     // Game controls
     document.getElementById('next').addEventListener('click', nextQuestion);
@@ -202,7 +219,7 @@ function checkDailyStatus() {
         dailyBtn.textContent = '🏆 View Leaderboard';
         dailyBtn.disabled = false; // Keep button enabled so users can view leaderboard
     } else {
-        dailyBtn.textContent = '📅 Daily Challenge';
+        dailyBtn.textContent = 'Daily Streak';
         dailyBtn.disabled = false;
     }
 }
@@ -299,24 +316,6 @@ function startChallengeMode() {
     // Update UI for challenge mode
     document.getElementById('heading').textContent = 'Challenge Mode';
     document.getElementById('subHeading').textContent = 'How many can you get right?';
-    
-    gameStartTime = Date.now();
-    nextQuestion();
-}
-
-function startZenMode() {
-    gameMode = 'zen';
-    resetGame();
-    lives = Infinity; // Unlimited lives in zen mode
-    
-    // Hide mode selection and show game
-    document.getElementById('mode-selection').style.display = 'none';
-    document.getElementById('game-container').style.display = 'flex';
-    document.getElementById('top-bar').style.display = 'flex';
-    
-    // Update UI for zen mode
-    document.getElementById('heading').textContent = 'Zen Mode';
-    document.getElementById('subHeading').textContent = 'Relax and learn at your own pace';
     
     gameStartTime = Date.now();
     nextQuestion();
@@ -534,18 +533,6 @@ function handleWrongAnswer(selectedButton, timeSpent) {
                 document.getElementById('next').hidden = false;
             }, 2000);
         }
-    } else { // zen mode
-        // Show correct answer for zen mode
-        const options = document.querySelectorAll('.option');
-        options.forEach(button => {
-            if (button.textContent === currentFlag.name) {
-                button.classList.add('correct-answer');
-            }
-        });
-        document.getElementById('message').textContent = "❌ Not quite! The correct answer was " + currentFlag.name;
-        setTimeout(() => {
-            document.getElementById('next').hidden = false;
-        }, 2000);
     }
     
     showFacts();
@@ -589,18 +576,10 @@ function updateTopBar() {
         document.getElementById('streak-display-top').textContent = `${streak} Streak`;
         document.getElementById('lives-count').textContent = lives;
         document.getElementById('score-display').textContent = `Score: ${score}/${totalQuestions}`;
-    } else { // zen mode
-        document.getElementById('streak-display-top').textContent = `${streak} Streak`;
-        document.getElementById('lives-display').style.display = 'none';
-        document.getElementById('score-display').textContent = `Score: ${score}/${totalQuestions}`;
     }
     
-    // Show/hide lives display for zen mode
-    if (gameMode === 'zen') {
-        document.getElementById('lives-display').style.display = 'none';
-    } else {
-        document.getElementById('lives-display').style.display = 'flex';
-    }
+    // Show lives display for both modes
+    document.getElementById('lives-display').style.display = 'flex';
 }
 
 async function completeDailyChallenge(success, attempts, timeSpent) {
@@ -803,22 +782,6 @@ function updateStats() {
             localStorage.setItem('challengeHighestScore', score.toString());
         }
     }
-    
-    // Zen mode stats
-    const zenSessionsPlayed = parseInt(localStorage.getItem('zenSessionsPlayed') || '0');
-    const zenHighestStreak = parseInt(localStorage.getItem('zenHighestStreak') || '0');
-    const zenTotalFlags = parseInt(localStorage.getItem('zenTotalFlags') || '0');
-    const zenCorrectFlags = parseInt(localStorage.getItem('zenCorrectFlags') || '0');
-    
-    if (gameMode === 'zen') {
-        localStorage.setItem('zenTotalFlags', (zenTotalFlags + 1).toString());
-        if (streak > 0) {
-            localStorage.setItem('zenCorrectFlags', (zenCorrectFlags + 1).toString());
-        }
-        if (streak > zenHighestStreak) {
-            localStorage.setItem('zenHighestStreak', streak.toString());
-        }
-    }
 }
 
 function openSettings() {
@@ -844,16 +807,6 @@ function updateStatsDisplay() {
     document.getElementById('challenge-times-played-value').textContent = localStorage.getItem('challengeTimesPlayed') || '0';
     document.getElementById('challenge-highest-score-value').textContent = localStorage.getItem('challengeHighestScore') || '0';
     document.getElementById('challenge-total-score-value').textContent = localStorage.getItem('challengeTotalScore') || '0';
-    
-    // Zen stats
-    document.getElementById('zen-sessions-played').textContent = localStorage.getItem('zenSessionsPlayed') || '0';
-    document.getElementById('zen-highest-streak').textContent = localStorage.getItem('zenHighestStreak') || '0';
-    document.getElementById('zen-total-flags').textContent = localStorage.getItem('zenTotalFlags') || '0';
-    
-    const zenTotal = parseInt(localStorage.getItem('zenTotalFlags') || '0');
-    const zenCorrect = parseInt(localStorage.getItem('zenCorrectFlags') || '0');
-    const zenAccuracy = zenTotal > 0 ? Math.round((zenCorrect / zenTotal) * 100) : 0;
-    document.getElementById('zen-accuracy').textContent = zenAccuracy + '%';
     
     // Daily stats
     document.getElementById('daily-current-streak').textContent = dailyChallenge.dailyStats.streak;

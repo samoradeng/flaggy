@@ -15,7 +15,7 @@
 #Welcome-module_SubHeading {
     font-size: 24px;
     margin-top: 0px;
-    margin-bottom: 16px;
+    margin-bottom: 32px;
     font-weight: normal;
     color: #3c4043;
 }
@@ -27,7 +27,8 @@ body {
     justify-content: center;
     margin: 0;
     font-family: 'Roboto', arial, sans-serif;
-    background-color: white;
+    background: linear-gradient(135deg, #F7F6F9 0%, #FEF2F3 50%, #DFD5FF 100%);
+    min-height: 100vh;
 }
 
 /* Home Logo Button (Top Left) */
@@ -1232,6 +1233,31 @@ body {
     animation: fadeIn 1s;
 }
 
+/* Logo Container and Animation */
+#logo-container {
+    position: relative;
+    height: 120px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#flagtriv-logo-long,
+#flagtriv-logo-short {
+    position: absolute;
+    height: 80px;
+    transition: opacity 1s ease-in-out;
+}
+
+#flagtriv-logo-long {
+    opacity: 1;
+}
+
+#flagtriv-logo-short {
+    opacity: 0;
+}
+
 #mode-buttons {
     display: flex;
     flex-direction: column;
@@ -1241,7 +1267,6 @@ body {
 
 #daily-challenge-btn,
 #challenge-mode-btn,
-#zen-mode-btn,
 #challenge-friends-btn {
     padding: 16px 32px;
     font-size: 18px;
@@ -1255,52 +1280,42 @@ body {
 }
 
 #daily-challenge-btn {
-    background-color: #ff6b35;
+    background: #000000;
     color: white;
 }
 
 #challenge-mode-btn {
-    background-color: #0052FF;
-    color: white;
-}
-
-#zen-mode-btn {
-    background-color: #4CAF50;
-    color: white;
+    background: white;
+    color: #000000;
+    border: 2px solid #000000;
 }
 
 #challenge-friends-btn {
-    background: linear-gradient(135deg, #9b59b6, #8e44ad);
-    color: white;
+    background: white;
+    color: #000000;
+    border: 2px solid #000000;
 }
 
 #daily-challenge-btn:hover {
-    background-color: #e55a2b;
+    background-color: #333333;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 #challenge-mode-btn:hover {
-    background-color: #014cec;
+    background-color: #f8f9fa;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
-}
-
-#zen-mode-btn:hover {
-    background-color: #45a049;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 #challenge-friends-btn:hover {
-    background: linear-gradient(135deg, #8e44ad, #7d3c98);
+    background-color: #f8f9fa;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 #daily-challenge-btn:disabled,
 #challenge-mode-btn:disabled,
-#zen-mode-btn:disabled,
 #challenge-friends-btn:disabled {
     background-color: #e0e0e0;
     color: #999;
@@ -1314,7 +1329,7 @@ body {
 }
 
 #daily-streak-info {
-    background-color: #f8f9fa;
+    background-color: rgba(255, 255, 255, 0.8);
     padding: 12px 16px;
     border-radius: 8px;
     font-weight: 500;
@@ -1664,10 +1679,14 @@ body {
     
     #daily-challenge-btn,
     #challenge-mode-btn,
-    #zen-mode-btn,
     #challenge-friends-btn {
         min-width: auto;
         width: 100%;
+    }
+    
+    #flagtriv-logo-long,
+    #flagtriv-logo-short {
+        height: 60px;
     }
     
     .tabs {
@@ -1760,5 +1779,10 @@ body {
         font-size: 11px;
         padding: 4px 8px;
         gap: 6px;
+    }
+    
+    #flagtriv-logo-long,
+    #flagtriv-logo-short {
+        height: 50px;
     }
 }
