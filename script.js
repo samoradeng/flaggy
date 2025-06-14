@@ -87,8 +87,8 @@ function setupEventListeners() {
     document.getElementById('close-leaderboard').addEventListener('click', closeDailyLeaderboard);
     document.getElementById('copy-leaderboard').addEventListener('click', copyLeaderboard);
 
-    // Stats modal
-    document.querySelector('.close-btn').addEventListener('click', closeStats);
+    // Stats modal - Fixed close button event listener
+    document.querySelector('#stats-modal .close-btn').addEventListener('click', closeStats);
     document.getElementById('share-button').addEventListener('click', shareStats);
 
     // Share buttons
