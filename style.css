@@ -29,6 +29,7 @@ body {
     font-family: 'Roboto', arial, sans-serif;
     background: linear-gradient(135deg, #F7F6F9 0%, #FEF2F3 50%, #DFD5FF 100%);
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* Home Logo Button (Top Left) */
@@ -72,10 +73,11 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    animation: fadeIn 1s;
     padding: 0 16px;
     width: 90%;
     max-width: 500px;
+    opacity: 0;
+    animation: fadeInCenter 0.6s ease-out forwards;
 }
 
 #flag {
@@ -1250,9 +1252,10 @@ body {
     display: flex;
     flex-direction: column;
     text-align: center;
-    animation: fadeIn 1s;
     width: 90%;
     max-width: 400px;
+    opacity: 0;
+    animation: fadeInCenter 0.6s ease-out forwards;
 }
 
 #mode-buttons {
@@ -1346,7 +1349,8 @@ body {
     max-width: 400px;
     flex-direction: column;
     text-align: center;
-    animation: fadeIn 1s;
+    opacity: 0;
+    animation: fadeInCenter 0.6s ease-out forwards;
 }
 
 .game-over-content,
@@ -1550,9 +1554,15 @@ body {
 }
 
 /* Keyframe animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes fadeInCenter {
+    from { 
+        opacity: 0; 
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to { 
+        opacity: 1; 
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 @keyframes bounce {
