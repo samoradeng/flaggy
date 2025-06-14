@@ -2,6 +2,7 @@ class AchievementSystem {
     constructor() {
         this.achievements = this.loadAchievements();
         this.unlockedCountries = new Set(JSON.parse(localStorage.getItem('unlockedCountries') || '[]'));
+        this.correctlyAnsweredCountries = new Set(JSON.parse(localStorage.getItem('correctlyAnsweredCountries') || '[]'));
         this.initializeAchievements();
     }
 
@@ -12,7 +13,7 @@ class AchievementSystem {
                 name: 'First Steps',
                 description: 'Get your first flag correct',
                 icon: '🎯',
-                condition: () => this.unlockedCountries.size >= 1
+                condition: () => this.correctlyAnsweredCountries.size >= 1
             },
             {
                 id: 'streak_5',
@@ -64,7 +65,7 @@ class AchievementSystem {
                 name: 'World Traveler',
                 description: 'Unlock 100 countries',
                 icon: '🌎',
-                condition: () => this.unlockedCountries.size >= 100
+                condition: () => this.correctlyAnsweredCountries.size >= 100
             }
         ];
     }
@@ -78,15 +79,20 @@ class AchievementSystem {
     }
 
     unlockCountry(countryCode, countryData) {
+        // Add to both sets for backward compatibility
         this.unlockedCountries.add(countryCode);
+        this.correctlyAnsweredCountries.add(countryCode);
+        
         localStorage.setItem('unlockedCountries', JSON.stringify([...this.unlockedCountries]));
+        localStorage.setItem('correctlyAnsweredCountries', JSON.stringify([...this.correctlyAnsweredCountries]));
         
         // Store country data for region tracking
         const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
         countryDetails[countryCode] = {
             name: countryData.name,
             region: countryData.region,
-            subregion: countryData.subregion
+            subregion: countryData.subregion,
+            flag: countryData.flag
         };
         localStorage.setItem('countryDetails', JSON.stringify(countryDetails));
     }
@@ -124,6 +130,10 @@ class AchievementSystem {
         const total = this.achievementsList.length;
         const unlocked = Object.keys(this.achievements).length;
         return { unlocked, total, percentage: Math.round((unlocked / total) * 100) };
+    }
+
+    getCorrectlyAnsweredCountries() {
+        return this.correctlyAnsweredCountries;
     }
 }
 

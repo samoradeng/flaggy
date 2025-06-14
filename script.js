@@ -880,17 +880,19 @@ function updateAchievementsDisplay() {
 }
 
 function updatePassportDisplay() {
-    const unlockedCountries = achievementSystem.unlockedCountries;
-    document.getElementById('countries-unlocked').textContent = `${unlockedCountries.size} Countries Discovered`;
+    const correctlyAnsweredCountries = achievementSystem.getCorrectlyAnsweredCountries();
+    document.getElementById('countries-unlocked').textContent = `${correctlyAnsweredCountries.size} Countries Discovered`;
     
     // Update continent progress
     const continentProgress = document.getElementById('continent-progress');
     continentProgress.innerHTML = '';
     
     const continents = ['Africa', 'Asia', 'Europe', 'Americas', 'Oceania'];
+    const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
+    
     continents.forEach(continent => {
         const continentCountries = Object.values(countries).filter(c => c.region === continent);
-        const unlockedInContinent = continentCountries.filter(c => unlockedCountries.has(c.alpha2Code)).length;
+        const unlockedInContinent = Object.values(countryDetails).filter(c => c.region === continent).length;
         const percentage = Math.round((unlockedInContinent / continentCountries.length) * 100);
         
         const progressDiv = document.createElement('div');
@@ -908,22 +910,36 @@ function updatePassportDisplay() {
         continentProgress.appendChild(progressDiv);
     });
     
-    // Update passport grid
+    // Update passport grid - show correctly answered countries with flags and names
     const passportGrid = document.getElementById('passport-grid');
     passportGrid.innerHTML = '';
     
-    [...unlockedCountries].forEach(countryCode => {
-        const country = countries[countryCode];
-        if (country && country.flag) {
+    // Get country details for correctly answered countries
+    Object.entries(countryDetails).forEach(([countryCode, countryData]) => {
+        if (correctlyAnsweredCountries.has(countryCode) && countryData.flag) {
             const countryDiv = document.createElement('div');
             countryDiv.className = 'passport-country';
             countryDiv.innerHTML = `
-                <img src="${country.flag.large}" alt="${country.name}">
-                <span>${country.name}</span>
+                <img src="${countryData.flag.large}" alt="${countryData.name}" loading="lazy">
+                <span>${countryData.name}</span>
             `;
             passportGrid.appendChild(countryDiv);
         }
     });
+    
+    // If no countries in passport yet, show a message
+    if (passportGrid.children.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'passport-empty';
+        emptyMessage.innerHTML = `
+            <div class="passport-empty-content">
+                <span class="passport-empty-icon">🗺️</span>
+                <p>Start playing to discover countries!</p>
+                <p class="passport-empty-hint">Correctly answered flags will appear here</p>
+            </div>
+        `;
+        passportGrid.appendChild(emptyMessage);
+    }
 }
 
 function switchTab(tabName) {
@@ -983,7 +999,7 @@ function shareEndlessResult() {
 function shareStats() {
     const challengeHighest = localStorage.getItem('challengeHighestScore') || '0';
     const dailyStreak = dailyChallenge.dailyStats.streak;
-    const countriesUnlocked = achievementSystem.unlockedCountries.size;
+    const countriesUnlocked = achievementSystem.getCorrectlyAnsweredCountries().size;
     
     const shareText = `🌍 My Flagtriv Stats\n🏆 Highest Score: ${challengeHighest}\n🔥 Daily Streak: ${dailyStreak}\n🗺️ Countries Unlocked: ${countriesUnlocked}\n\nPlay at flagtriv.com`;
     
