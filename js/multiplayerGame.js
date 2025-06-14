@@ -13,6 +13,7 @@ class MultiplayerGame {
         this.gameStartTime = null;
         this.roundStartTime = null;
         this.timerElement = null;
+        this.gameEnded = false; // Track if game has ended
         
         this.initializeEventListeners();
     }
@@ -324,6 +325,7 @@ class MultiplayerGame {
     startGameplay(gameState) {
         // Set multiplayer mode flag in main script
         window.isMultiplayerMode = true;
+        this.gameEnded = false; // Reset game ended flag
         
         // Hide lobby
         document.getElementById('multiplayer-lobby').style.display = 'none';
@@ -371,9 +373,21 @@ class MultiplayerGame {
     }
 
     handleGameStateUpdate(gameState) {
+        // Don't process updates if game has already ended
+        if (this.gameEnded) return;
+        
+        console.log('Game state update:', gameState);
+        
         // Update timer display
         const timeRemaining = this.multiplayerSync.getTimeRemaining();
         this.updateTimerDisplay(timeRemaining);
+        
+        // Check if game finished
+        if (gameState.status === 'finished') {
+            console.log('Game finished detected!');
+            this.endMultiplayerGame();
+            return;
+        }
         
         // Check if we need to advance to next flag
         if (gameState.currentFlag !== this.currentFlagIndex) {
@@ -381,6 +395,7 @@ class MultiplayerGame {
             
             if (this.currentFlagIndex >= gameState.totalFlags) {
                 // Game finished
+                console.log('All flags completed!');
                 this.endMultiplayerGame();
             } else {
                 // Next flag
@@ -394,7 +409,11 @@ class MultiplayerGame {
     }
 
     displayCurrentFlag() {
-        if (this.currentFlagIndex >= this.gameFlags.length) return;
+        if (this.currentFlagIndex >= this.gameFlags.length) {
+            console.log('No more flags to display, ending game');
+            this.endMultiplayerGame();
+            return;
+        }
         
         this.currentFlag = this.gameFlags[this.currentFlagIndex];
         this.roundStartTime = Date.now();
@@ -569,6 +588,12 @@ class MultiplayerGame {
     }
 
     endMultiplayerGame() {
+        // Prevent multiple calls
+        if (this.gameEnded) return;
+        this.gameEnded = true;
+        
+        console.log('Ending multiplayer game...');
+        
         // Reset multiplayer mode flag
         window.isMultiplayerMode = false;
         
@@ -585,13 +610,32 @@ class MultiplayerGame {
         document.getElementById('game-container').style.display = 'none';
         document.getElementById('top-bar').style.display = 'none';
         
-        // Show results
-        this.showMultiplayerResults();
+        // Small delay to ensure all data is synced
+        setTimeout(() => {
+            this.showMultiplayerResults();
+        }, 1000);
     }
 
     showMultiplayerResults() {
+        console.log('Showing multiplayer results...');
+        
         const results = this.multiplayerSync.getFinalResults();
+        console.log('Final results:', results);
+        
+        if (!results || results.length === 0) {
+            console.error('No results available');
+            // Fallback - go back to main menu
+            this.playAgain();
+            return;
+        }
+        
         const myPlayer = results.find(p => p.id === this.multiplayerSync.playerId);
+        if (!myPlayer) {
+            console.error('Could not find current player in results');
+            this.playAgain();
+            return;
+        }
+        
         const myRank = results.indexOf(myPlayer) + 1;
         
         // Show results screen
@@ -725,6 +769,7 @@ class MultiplayerGame {
         this.playerAnswers = [];
         this.gameStartTime = null;
         this.roundStartTime = null;
+        this.gameEnded = false;
         
         // Reset multiplayer mode flag
         window.isMultiplayerMode = false;
