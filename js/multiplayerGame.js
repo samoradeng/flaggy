@@ -403,9 +403,10 @@ class MultiplayerGame {
             }
         }
         
-        // Update player count in top bar
+        // Update player count and progress in top bar
         const playerCount = Object.keys(gameState.players).length;
-        document.getElementById('score-display').textContent = `Players: ${playerCount}`;
+        const progress = `${this.currentFlagIndex + 1}/${gameState.totalFlags}`;
+        document.getElementById('score-display').textContent = `${progress} • ${playerCount} players`;
     }
 
     displayCurrentFlag() {
@@ -433,8 +434,9 @@ class MultiplayerGame {
         // Reset UI
         this.resetQuestionUI();
         
-        // Update progress
-        const progress = `Flag ${this.currentFlagIndex + 1}/${this.gameFlags.length}`;
+        // Update progress in streak display
+        const gameState = this.multiplayerSync.useRealBackend ? this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+        const progress = `Flag ${this.currentFlagIndex + 1}/${gameState.totalFlags}`;
         document.getElementById('streak-display-top').textContent = progress;
     }
 
@@ -656,9 +658,11 @@ class MultiplayerGame {
         
         // Update final stats
         const correctAnswers = this.playerAnswers.filter(a => a && a.isCorrect).length;
-        const accuracy = Math.round((correctAnswers / this.gameFlags.length) * 100);
+        const gameState = this.multiplayerSync.useRealBackend ? this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+        const totalFlags = gameState.totalFlags;
+        const accuracy = Math.round((correctAnswers / totalFlags) * 100);
         
-        document.getElementById('final-score').textContent = `${correctAnswers}/${this.gameFlags.length}`;
+        document.getElementById('final-score').textContent = `${correctAnswers}/${totalFlags}`;
         document.getElementById('final-accuracy').textContent = `${accuracy}%`;
         
         // Update leaderboard
@@ -689,13 +693,14 @@ class MultiplayerGame {
             
             // Calculate total time for display
             const totalTime = player.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
-            const avgTime = Math.round(totalTime / this.gameFlags.length / 1000);
+            const gameState = this.multiplayerSync.useRealBackend ? this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+            const avgTime = Math.round(totalTime / gameState.totalFlags / 1000);
             
             playerDiv.innerHTML = `
                 <div class="player-rank">${rankEmoji}</div>
                 <div class="player-info">
                     <div class="player-name">${player.nickname}</div>
-                    <div class="player-stats">${player.score}/${this.gameFlags.length} • ${avgTime}s avg</div>
+                    <div class="player-stats">${player.score}/${gameState.totalFlags} • ${avgTime}s avg</div>
                 </div>
                 <div class="player-score">${player.score}</div>
             `;
