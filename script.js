@@ -51,24 +51,6 @@ function initializeGame() {
 
     // Check if daily challenge was already completed
     checkDailyStatus();
-
-    // Start logo animation
-    startLogoAnimation();
-}
-
-function startLogoAnimation() {
-    const logoLong = document.getElementById('flagtriv-logo-long');
-    const logoShort = document.getElementById('flagtriv-logo-short');
-    
-    // Initially show long logo and hide short logo
-    logoLong.style.opacity = '1';
-    logoShort.style.opacity = '0';
-    
-    // After 2 seconds, transition to short logo
-    setTimeout(() => {
-        logoLong.style.opacity = '0';
-        logoShort.style.opacity = '1';
-    }, 2000);
 }
 
 function setupEventListeners() {
