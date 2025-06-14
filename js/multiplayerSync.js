@@ -58,8 +58,19 @@ class MultiplayerSync {
                     joinedAt: Date.now()
                 };
 
-                // Store in localStorage for persistence
-                localStorage.setItem('multiplayerGame_' + this.gameId, JSON.stringify(this.localGameState));
+                // Store in localStorage for persistence across tabs/devices
+                const storageKey = 'multiplayerGame_' + this.gameId;
+                localStorage.setItem(storageKey, JSON.stringify(this.localGameState));
+                
+                // Also store in a global games list for easier lookup
+                const allGames = JSON.parse(localStorage.getItem('allMultiplayerGames') || '{}');
+                allGames[this.gameId] = {
+                    gameId: this.gameId,
+                    status: this.localGameState.status,
+                    createdAt: Date.now(),
+                    hostId: this.playerId
+                };
+                localStorage.setItem('allMultiplayerGames', JSON.stringify(allGames));
                 
                 return {
                     success: true,
@@ -97,13 +108,32 @@ class MultiplayerSync {
             this.isHost = false;
 
             if (this.localFallback) {
-                // Local simulation
-                const gameData = localStorage.getItem('multiplayerGame_' + gameId);
+                // Local simulation - check if game exists
+                const storageKey = 'multiplayerGame_' + gameId;
+                const gameData = localStorage.getItem(storageKey);
+                
                 if (!gameData) {
-                    return { success: false, error: 'Game not found' };
+                    // Also check the global games list
+                    const allGames = JSON.parse(localStorage.getItem('allMultiplayerGames') || '{}');
+                    if (!allGames[gameId]) {
+                        return { success: false, error: 'Game not found' };
+                    }
                 }
 
-                this.localGameState = JSON.parse(gameData);
+                this.localGameState = gameData ? JSON.parse(gameData) : {
+                    gameId: gameId,
+                    status: 'waiting',
+                    currentFlag: 0,
+                    totalFlags: 10,
+                    roundStartTime: null,
+                    roundDuration: 10000,
+                    players: {},
+                    flags: [],
+                    continent: 'all',
+                    hostId: null
+                };
+
+                // Add the new player
                 this.localGameState.players[this.playerId] = {
                     id: this.playerId,
                     nickname: nickname || `Player ${Object.keys(this.localGameState.players).length + 1}`,
@@ -114,7 +144,8 @@ class MultiplayerSync {
                     joinedAt: Date.now()
                 };
 
-                localStorage.setItem('multiplayerGame_' + gameId, JSON.stringify(this.localGameState));
+                // Save updated game state
+                localStorage.setItem(storageKey, JSON.stringify(this.localGameState));
                 
                 return {
                     success: true,
@@ -156,7 +187,8 @@ class MultiplayerSync {
                 this.localGameState.currentFlag = 0;
                 this.localGameState.roundStartTime = Date.now();
                 
-                localStorage.setItem('multiplayerGame_' + this.gameId, JSON.stringify(this.localGameState));
+                const storageKey = 'multiplayerGame_' + this.gameId;
+                localStorage.setItem(storageKey, JSON.stringify(this.localGameState));
                 
                 return { success: true };
             }
@@ -183,7 +215,8 @@ class MultiplayerSync {
         try {
             if (this.localFallback) {
                 // Local simulation
-                const gameData = localStorage.getItem('multiplayerGame_' + this.gameId);
+                const storageKey = 'multiplayerGame_' + this.gameId;
+                const gameData = localStorage.getItem(storageKey);
                 if (gameData) {
                     const state = JSON.parse(gameData);
                     if (state.players[this.playerId]) {
@@ -198,7 +231,8 @@ class MultiplayerSync {
                             state.players[this.playerId].score++;
                         }
                         
-                        localStorage.setItem('multiplayerGame_' + this.gameId, JSON.stringify(state));
+                        localStorage.setItem(storageKey, JSON.stringify(state));
+                        this.localGameState = state;
                     }
                 }
                 
@@ -230,7 +264,8 @@ class MultiplayerSync {
         try {
             if (this.localFallback) {
                 // Local simulation
-                const gameData = localStorage.getItem('multiplayerGame_' + this.gameId);
+                const storageKey = 'multiplayerGame_' + this.gameId;
+                const gameData = localStorage.getItem(storageKey);
                 if (gameData) {
                     this.localGameState = JSON.parse(gameData);
                     return {
@@ -289,7 +324,8 @@ class MultiplayerSync {
                 this.localGameState.roundStartTime = Date.now();
             }
             
-            localStorage.setItem('multiplayerGame_' + this.gameId, JSON.stringify(this.localGameState));
+            const storageKey = 'multiplayerGame_' + this.gameId;
+            localStorage.setItem(storageKey, JSON.stringify(this.localGameState));
         }
     }
 
@@ -363,6 +399,18 @@ class MultiplayerSync {
     // Clean up
     cleanup() {
         this.stopSync();
+        
+        // Clean up localStorage if we're the host
+        if (this.isHost && this.gameId) {
+            const storageKey = 'multiplayerGame_' + this.gameId;
+            localStorage.removeItem(storageKey);
+            
+            // Also remove from global games list
+            const allGames = JSON.parse(localStorage.getItem('allMultiplayerGames') || '{}');
+            delete allGames[this.gameId];
+            localStorage.setItem('allMultiplayerGames', JSON.stringify(allGames));
+        }
+        
         this.gameId = null;
         this.playerId = null;
         this.isHost = false;

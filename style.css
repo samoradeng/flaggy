@@ -1726,15 +1726,16 @@ body {
     }
     
     .modal-content {
-        width: calc(100vw - 24px);
-        max-width: calc(100vw - 24px);
+        width: calc(100vw - 32px);
+        max-width: calc(100vw - 32px);
         padding: 20px;
-        max-height: calc(100vh - 48px);
-        margin: 12px;
+        max-height: calc(100vh - 64px);
+        margin: 16px;
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
         position: fixed;
+        box-sizing: border-box;
     }
     
     .continent-filter-content,
@@ -1944,9 +1945,9 @@ body {
     }
     
     .modal-content {
-        width: calc(100vw - 16px);
-        max-width: calc(100vw - 16px);
+        width: calc(100vw - 24px);
+        max-width: calc(100vw - 24px);
         padding: 16px;
-        margin: 8px;
+        margin: 12px;
     }
 }
