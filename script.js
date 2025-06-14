@@ -472,7 +472,10 @@ function handleCorrectAnswer(selectedButton, timeSpent) {
     const xpGained = gameMode === 'daily' ? 50 : 10;
     addXP(xpGained, selectedButton);
     
-    // Unlock country in achievement system
+    // Save the correctly answered country to passport
+    saveCorrectlyAnsweredCountry(currentFlag);
+    
+    // Unlock country in achievement system (for achievements)
     achievementSystem.unlockCountry(currentFlag.alpha2Code, currentFlag);
     
     // Check for new achievements
@@ -507,6 +510,28 @@ function handleCorrectAnswer(selectedButton, timeSpent) {
     showFacts();
     updateTopBar();
     updateStats();
+}
+
+function saveCorrectlyAnsweredCountry(country) {
+    // Get existing correctly answered countries
+    const correctlyAnswered = JSON.parse(localStorage.getItem('correctlyAnsweredCountries') || '[]');
+    
+    // Add this country if not already there
+    if (!correctlyAnswered.includes(country.alpha2Code)) {
+        correctlyAnswered.push(country.alpha2Code);
+        localStorage.setItem('correctlyAnsweredCountries', JSON.stringify(correctlyAnswered));
+    }
+    
+    // Store detailed country data for passport display
+    const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
+    countryDetails[country.alpha2Code] = {
+        name: country.name,
+        region: country.region,
+        subregion: country.subregion,
+        flag: country.flag,
+        capital: country.capital
+    };
+    localStorage.setItem('countryDetails', JSON.stringify(countryDetails));
 }
 
 function handleWrongAnswer(selectedButton, timeSpent) {
@@ -880,19 +905,24 @@ function updateAchievementsDisplay() {
 }
 
 function updatePassportDisplay() {
-    const correctlyAnsweredCountries = achievementSystem.getCorrectlyAnsweredCountries();
-    document.getElementById('countries-unlocked').textContent = `${correctlyAnsweredCountries.size} Countries Discovered`;
+    // Get correctly answered countries from localStorage
+    const correctlyAnsweredCountries = JSON.parse(localStorage.getItem('correctlyAnsweredCountries') || '[]');
+    const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
+    
+    document.getElementById('countries-unlocked').textContent = `${correctlyAnsweredCountries.length} Countries Discovered`;
     
     // Update continent progress
     const continentProgress = document.getElementById('continent-progress');
     continentProgress.innerHTML = '';
     
     const continents = ['Africa', 'Asia', 'Europe', 'Americas', 'Oceania'];
-    const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
     
     continents.forEach(continent => {
         const continentCountries = Object.values(countries).filter(c => c.region === continent);
-        const unlockedInContinent = Object.values(countryDetails).filter(c => c.region === continent).length;
+        const unlockedInContinent = correctlyAnsweredCountries.filter(countryCode => {
+            const country = countries[countryCode];
+            return country && country.region === continent;
+        }).length;
         const percentage = Math.round((unlockedInContinent / continentCountries.length) * 100);
         
         const progressDiv = document.createElement('div');
@@ -914,14 +944,17 @@ function updatePassportDisplay() {
     const passportGrid = document.getElementById('passport-grid');
     passportGrid.innerHTML = '';
     
-    // Get country details for correctly answered countries
-    Object.entries(countryDetails).forEach(([countryCode, countryData]) => {
-        if (correctlyAnsweredCountries.has(countryCode) && countryData.flag) {
+    // Show correctly answered countries
+    correctlyAnsweredCountries.forEach(countryCode => {
+        const countryData = countryDetails[countryCode];
+        const country = countries[countryCode];
+        
+        if (countryData && country && country.flag) {
             const countryDiv = document.createElement('div');
             countryDiv.className = 'passport-country';
             countryDiv.innerHTML = `
-                <img src="${countryData.flag.large}" alt="${countryData.name}" loading="lazy">
-                <span>${countryData.name}</span>
+                <img src="${country.flag.large}" alt="${country.name}" loading="lazy">
+                <span>${country.name}</span>
             `;
             passportGrid.appendChild(countryDiv);
         }
@@ -999,7 +1032,8 @@ function shareEndlessResult() {
 function shareStats() {
     const challengeHighest = localStorage.getItem('challengeHighestScore') || '0';
     const dailyStreak = dailyChallenge.dailyStats.streak;
-    const countriesUnlocked = achievementSystem.getCorrectlyAnsweredCountries().size;
+    const correctlyAnsweredCountries = JSON.parse(localStorage.getItem('correctlyAnsweredCountries') || '[]');
+    const countriesUnlocked = correctlyAnsweredCountries.length;
     
     const shareText = `🌍 My Flagtriv Stats\n🏆 Highest Score: ${challengeHighest}\n🔥 Daily Streak: ${dailyStreak}\n🗺️ Countries Unlocked: ${countriesUnlocked}\n\nPlay at flagtriv.com`;
     
