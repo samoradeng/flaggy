@@ -83,57 +83,63 @@ class MultiplayerSync {
             this.playerId = this.generatePlayerId();
             this.isHost = true;
 
-            // Validate Supabase connection before using
+            // Always try Supabase first if available
             if (this.validateSupabaseConnection()) {
                 console.log('🔄 Creating game with Supabase...', this.gameId);
                 
-                // Create game in Supabase
-                const { data: gameData, error: gameError } = await this.supabase
-                    .from('multiplayer_games')
-                    .insert({
-                        game_id: this.gameId,
-                        total_flags: flagCount,
-                        continent: continent,
-                        host_id: this.playerId,
-                        status: 'waiting'
-                    })
-                    .select()
-                    .single();
+                try {
+                    // Create game in Supabase
+                    const { data: gameData, error: gameError } = await this.supabase
+                        .from('multiplayer_games')
+                        .insert({
+                            game_id: this.gameId,
+                            total_flags: flagCount,
+                            continent: continent,
+                            host_id: this.playerId,
+                            status: 'waiting'
+                        })
+                        .select()
+                        .single();
 
-                if (gameError) {
-                    console.error('Game creation error:', gameError);
-                    throw new Error(gameError.message);
+                    if (gameError) {
+                        console.error('Game creation error:', gameError);
+                        throw new Error(gameError.message);
+                    }
+
+                    // Add host as first player
+                    const { error: playerError } = await this.supabase
+                        .from('multiplayer_players')
+                        .insert({
+                            game_id: this.gameId,
+                            player_id: this.playerId,
+                            nickname: 'Host',
+                            is_host: true,
+                            score: 0,
+                            answers: []
+                        });
+
+                    if (playerError) {
+                        console.error('Player creation error:', playerError);
+                        throw new Error(playerError.message);
+                    }
+
+                    console.log('✅ Game created successfully with Supabase:', this.gameId);
+                    
+                    return {
+                        success: true,
+                        gameId: this.gameId,
+                        playerId: this.playerId
+                    };
+                } catch (supabaseError) {
+                    console.error('Supabase creation failed, falling back to localStorage:', supabaseError);
+                    // Fall through to localStorage fallback
                 }
-
-                // Add host as first player
-                const { error: playerError } = await this.supabase
-                    .from('multiplayer_players')
-                    .insert({
-                        game_id: this.gameId,
-                        player_id: this.playerId,
-                        nickname: 'Host',
-                        is_host: true,
-                        score: 0,
-                        answers: []
-                    });
-
-                if (playerError) {
-                    console.error('Player creation error:', playerError);
-                    throw new Error(playerError.message);
-                }
-
-                console.log('✅ Game created successfully with Supabase:', this.gameId);
-                
-                return {
-                    success: true,
-                    gameId: this.gameId,
-                    playerId: this.playerId
-                };
-            } else {
-                // Use local fallback
-                console.log('🔄 Creating game with localStorage fallback...');
-                return this.createGameLocal(flagCount, continent);
             }
+            
+            // Use local fallback
+            console.log('🔄 Creating game with localStorage fallback...');
+            return this.createGameLocal(flagCount, continent);
+            
         } catch (error) {
             console.error('Failed to create game:', error);
             // Try local fallback on error
@@ -162,6 +168,7 @@ class MultiplayerSync {
             const storageKey = 'multiplayerGame_' + this.gameId;
             localStorage.setItem(storageKey, JSON.stringify(this.localGameState));
             
+            // Also store in a global registry for easier lookup
             const allGames = JSON.parse(localStorage.getItem('allMultiplayerGames') || '{}');
             allGames[this.gameId] = {
                 gameId: this.gameId,
@@ -193,88 +200,88 @@ class MultiplayerSync {
 
             console.log('🔄 Attempting to join game:', this.gameId);
 
-            // Validate Supabase connection before using
+            // Always try Supabase first if available
             if (this.validateSupabaseConnection()) {
-                console.log('🔄 Joining game with Supabase...');
+                console.log('🔄 Trying Supabase first...');
                 
-                // Check if game exists and get its data
-                const { data: gameData, error: gameError } = await this.supabase
-                    .from('multiplayer_games')
-                    .select('*')
-                    .eq('game_id', this.gameId)
-                    .single();
+                try {
+                    // Check if game exists and get its data
+                    const { data: gameData, error: gameError } = await this.supabase
+                        .from('multiplayer_games')
+                        .select('*')
+                        .eq('game_id', this.gameId)
+                        .single();
 
-                if (gameError) {
-                    console.error('Game lookup error:', gameError);
-                    
-                    // If game not found in Supabase, try local fallback
-                    if (gameError.code === 'PGRST116') { // No rows returned
-                        console.log('🔄 Game not found in Supabase, trying localStorage...');
-                        return this.joinGameLocal(this.gameId, nickname);
+                    if (gameError && gameError.code !== 'PGRST116') {
+                        // Real error, not just "no rows"
+                        console.error('Database error:', gameError);
+                        throw new Error(`Database error: ${gameError.message}`);
                     }
-                    
-                    throw new Error(`Database error: ${gameError.message}`);
+
+                    if (gameData) {
+                        console.log('✅ Game found in Supabase:', gameData);
+
+                        // Check if game is still joinable
+                        if (gameData.status === 'finished') {
+                            // Get final game state for late joiners
+                            const gameState = await this.fetchGameState();
+                            return {
+                                success: true,
+                                gameId: this.gameId,
+                                playerId: this.playerId,
+                                gameState: gameState
+                            };
+                        }
+
+                        // Add player to the game
+                        const playerNickname = nickname || `Player ${Date.now().toString().slice(-4)}`;
+                        const { error: playerError } = await this.supabase
+                            .from('multiplayer_players')
+                            .insert({
+                                game_id: this.gameId,
+                                player_id: this.playerId,
+                                nickname: playerNickname,
+                                is_host: false,
+                                score: 0,
+                                answers: []
+                            });
+
+                        if (playerError) {
+                            console.error('Failed to add player:', playerError);
+                            throw new Error(`Failed to join: ${playerError.message}`);
+                        }
+
+                        // Get current game state
+                        const gameState = await this.fetchGameState();
+
+                        console.log('✅ Joined game successfully with Supabase:', this.gameId);
+                        
+                        return {
+                            success: true,
+                            gameId: this.gameId,
+                            playerId: this.playerId,
+                            gameState: gameState
+                        };
+                    } else {
+                        console.log('🔄 Game not found in Supabase, trying localStorage...');
+                        // Fall through to localStorage
+                    }
+                } catch (supabaseError) {
+                    console.error('Supabase join failed, trying localStorage:', supabaseError);
+                    // Fall through to localStorage
                 }
-
-                if (!gameData) {
-                    console.log('🔄 Game not found in Supabase, trying localStorage...');
-                    return this.joinGameLocal(this.gameId, nickname);
-                }
-
-                console.log('✅ Game found in Supabase:', gameData);
-
-                // Check if game is still joinable
-                if (gameData.status === 'finished') {
-                    // Get final game state for late joiners
-                    const gameState = await this.fetchGameState();
-                    return {
-                        success: true,
-                        gameId: this.gameId,
-                        playerId: this.playerId,
-                        gameState: gameState
-                    };
-                }
-
-                // Add player to the game
-                const playerNickname = nickname || `Player ${Date.now().toString().slice(-4)}`;
-                const { error: playerError } = await this.supabase
-                    .from('multiplayer_players')
-                    .insert({
-                        game_id: this.gameId,
-                        player_id: this.playerId,
-                        nickname: playerNickname,
-                        is_host: false,
-                        score: 0,
-                        answers: []
-                    });
-
-                if (playerError) {
-                    console.error('Failed to add player:', playerError);
-                    throw new Error(`Failed to join: ${playerError.message}`);
-                }
-
-                // Get current game state
-                const gameState = await this.fetchGameState();
-
-                console.log('✅ Joined game successfully with Supabase:', this.gameId);
-                
-                return {
-                    success: true,
-                    gameId: this.gameId,
-                    playerId: this.playerId,
-                    gameState: gameState
-                };
-            } else {
-                // Use local fallback
-                console.log('🔄 Joining game with localStorage fallback...');
-                return this.joinGameLocal(this.gameId, nickname);
             }
+            
+            // Try localStorage fallback
+            console.log('🔄 Trying localStorage fallback...');
+            return this.joinGameLocal(this.gameId, nickname);
+            
         } catch (error) {
             console.error('Failed to join game:', error);
-            
-            // Try local fallback on any error
-            console.log('🔄 Error occurred, falling back to localStorage...');
-            return this.joinGameLocal(this.gameId, nickname);
+            return { 
+                success: false, 
+                error: `Failed to join game: ${error.message}. Make sure the game ID is correct and the game was created recently.` 
+            };
         }
     }
 
@@ -299,7 +306,8 @@ class MultiplayerSync {
                     };
                 }
                 
-                // Game exists in registry but no data - create minimal state
+                // Game exists in registry but no data - this shouldn't happen, but handle it
+                console.warn('⚠️ Game found in registry but no game data, creating minimal state');
                 this.localGameState = {
                     gameId: gameId,
                     status: 'waiting',
