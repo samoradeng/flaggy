@@ -12,6 +12,7 @@ class MultiplayerGame {
         this.playerAnswers = [];
         this.gameStartTime = null;
         this.roundStartTime = null;
+        this.timerElement = null;
         
         this.initializeEventListeners();
     }
@@ -40,17 +41,13 @@ class MultiplayerGame {
             this.copyLobbyLink();
         });
 
-        // Share buttons
+        // Share buttons (removed email)
         document.getElementById('share-whatsapp').addEventListener('click', () => {
             this.shareViaWhatsApp();
         });
 
         document.getElementById('share-text').addEventListener('click', () => {
             this.shareViaText();
-        });
-
-        document.getElementById('share-email').addEventListener('click', () => {
-            this.shareViaEmail();
         });
 
         // Results actions
@@ -258,14 +255,6 @@ class MultiplayerGame {
         window.open(smsUrl);
     }
 
-    shareViaEmail() {
-        const link = document.getElementById('lobby-challenge-link').value;
-        const subject = '🌍 Flagtriv Challenge Invitation';
-        const body = `Hi!\n\nI've created a flag guessing challenge on Flagtriv. Think you can beat me?\n\nJoin here: ${link}\n\nLet's see who knows geography better!`;
-        const emailUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.open(emailUrl);
-    }
-
     async startMultiplayerGame() {
         if (!this.multiplayerSync.isHost) return;
         
@@ -343,6 +332,9 @@ class MultiplayerGame {
         document.getElementById('game-container').style.display = 'flex';
         document.getElementById('top-bar').style.display = 'flex';
         
+        // Create and show timer element
+        this.createTimerElement();
+        
         // Update UI for multiplayer
         document.getElementById('heading').textContent = 'Challenge Friends';
         document.getElementById('subHeading').textContent = 'Compete with friends in real-time!';
@@ -360,6 +352,22 @@ class MultiplayerGame {
         this.multiplayerSync.startSync((updatedGameState) => {
             this.handleGameStateUpdate(updatedGameState);
         });
+    }
+
+    createTimerElement() {
+        // Remove existing timer if any
+        if (this.timerElement) {
+            this.timerElement.remove();
+        }
+        
+        // Create new timer element
+        this.timerElement = document.createElement('div');
+        this.timerElement.id = 'multiplayer-timer';
+        this.timerElement.className = 'multiplayer-timer-display';
+        this.timerElement.innerHTML = '⏱️ 10s';
+        
+        // Add to body
+        document.body.appendChild(this.timerElement);
     }
 
     handleGameStateUpdate(gameState) {
@@ -527,12 +535,19 @@ class MultiplayerGame {
     }
 
     updateTimerDisplay(timeRemaining) {
-        const streakDisplay = document.getElementById('streak-display-top');
-        
-        if (timeRemaining > 0) {
-            streakDisplay.innerHTML = `<span class="multiplayer-timer">⏱️ ${timeRemaining}s</span>`;
-        } else {
-            streakDisplay.textContent = `Flag ${this.currentFlagIndex + 1}/${this.gameFlags.length}`;
+        if (this.timerElement) {
+            if (timeRemaining > 0) {
+                this.timerElement.innerHTML = `⏱️ ${timeRemaining}s`;
+                this.timerElement.className = 'multiplayer-timer-display';
+                
+                // Add urgency styling when time is low
+                if (timeRemaining <= 3) {
+                    this.timerElement.classList.add('timer-urgent');
+                }
+            } else {
+                this.timerElement.innerHTML = '⏱️ 0s';
+                this.timerElement.classList.add('timer-expired');
+            }
         }
     }
 
@@ -546,6 +561,11 @@ class MultiplayerGame {
         document.getElementById('message').textContent = '';
         document.getElementById('facts').hidden = true;
         document.getElementById('flag-trivia').hidden = true;
+        
+        // Reset timer styling
+        if (this.timerElement) {
+            this.timerElement.classList.remove('timer-urgent', 'timer-expired');
+        }
     }
 
     endMultiplayerGame() {
@@ -554,6 +574,12 @@ class MultiplayerGame {
         
         // Stop syncing
         this.multiplayerSync.stopSync();
+        
+        // Remove timer element
+        if (this.timerElement) {
+            this.timerElement.remove();
+            this.timerElement = null;
+        }
         
         // Hide game UI
         document.getElementById('game-container').style.display = 'none';
@@ -575,10 +601,13 @@ class MultiplayerGame {
         const resultMessage = document.getElementById('result-message');
         if (myRank === 1) {
             resultMessage.textContent = '🏆 Congratulations! You Won!';
+            resultMessage.style.color = '#FFD700';
         } else if (myRank <= 3) {
             resultMessage.textContent = `🥉 Great Job! You Placed ${myRank}${this.getOrdinalSuffix(myRank)}`;
+            resultMessage.style.color = '#CD7F32';
         } else {
             resultMessage.textContent = `🎯 Good Game! You Placed ${myRank}${this.getOrdinalSuffix(myRank)}`;
+            resultMessage.style.color = '#666';
         }
         
         // Update final stats
@@ -590,6 +619,13 @@ class MultiplayerGame {
         
         // Update leaderboard
         this.updateLeaderboard(results);
+        
+        // Show confetti for winner
+        if (myRank === 1 && typeof AnimationEffects !== 'undefined') {
+            setTimeout(() => {
+                AnimationEffects.showStreakConfetti();
+            }, 500);
+        }
     }
 
     updateLeaderboard(results) {
@@ -607,9 +643,17 @@ class MultiplayerGame {
             const rank = index + 1;
             const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
             
+            // Calculate total time for display
+            const totalTime = player.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+            const avgTime = Math.round(totalTime / this.gameFlags.length / 1000);
+            
             playerDiv.innerHTML = `
-                <span>${rankEmoji} ${player.nickname}</span>
-                <span>${player.score}/${this.gameFlags.length}</span>
+                <div class="player-rank">${rankEmoji}</div>
+                <div class="player-info">
+                    <div class="player-name">${player.nickname}</div>
+                    <div class="player-stats">${player.score}/${this.gameFlags.length} • ${avgTime}s avg</div>
+                </div>
+                <div class="player-score">${player.score}</div>
             `;
             
             leaderboardList.appendChild(playerDiv);
@@ -663,6 +707,12 @@ class MultiplayerGame {
     playAgain() {
         // Clean up current game
         this.multiplayerSync.cleanup();
+        
+        // Remove timer element
+        if (this.timerElement) {
+            this.timerElement.remove();
+            this.timerElement = null;
+        }
         
         // Return to main menu
         document.getElementById('multiplayer-results').style.display = 'none';

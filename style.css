@@ -1,3 +1,5 @@
+/* Existing styles... */
+
 #heading {
     font-size: 24px;
     margin-bottom: 0px;
@@ -280,15 +282,35 @@ body {
     font-weight: 500;
 }
 
-/* Multiplayer Timer */
-.multiplayer-timer {
+/* Multiplayer Timer - Fixed Position */
+.multiplayer-timer-display {
+    position: fixed;
+    top: 16px;
+    right: 16px;
     background: linear-gradient(135deg, #ff6b35, #f7931e);
     color: white;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 14px;
-    animation: pulse 1s infinite;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 4px 16px rgba(255, 107, 53, 0.4);
+    z-index: 1000;
+    min-width: 80px;
+    text-align: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.multiplayer-timer-display.timer-urgent {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    animation: timerPulse 1s infinite;
+    transform: scale(1.05);
+}
+
+.multiplayer-timer-display.timer-expired {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    animation: none;
+    transform: scale(1);
 }
 
 /* Settings Modal */
@@ -762,10 +784,6 @@ body {
     background: linear-gradient(135deg, #007AFF, #0051D5);
 }
 
-.share-btn.email {
-    background: linear-gradient(135deg, #EA4335, #D33B2C);
-}
-
 .share-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -883,6 +901,13 @@ body {
     text-align: center;
 }
 
+#result-message {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 #multiplayer-leaderboard {
     margin: 24px 0;
     padding: 20px;
@@ -898,25 +923,66 @@ body {
 
 .player-result {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: 16px;
     background-color: white;
-    border-radius: 8px;
-    margin-bottom: 8px;
+    border-radius: 12px;
+    margin-bottom: 12px;
     border: 2px solid #e0e0e0;
     font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.player-result:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .player-result:first-child {
     border-color: #FFD700;
     background: linear-gradient(135deg, #fff9e6, #fff3cd);
+    box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
 }
 
 .player-result.current-player {
     border-color: #4CAF50;
     background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
     font-weight: 600;
+}
+
+.player-rank {
+    font-size: 24px;
+    font-weight: 700;
+    min-width: 50px;
+    text-align: center;
+}
+
+.player-info {
+    flex: 1;
+    text-align: left;
+    margin: 0 16px;
+}
+
+.player-name {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.player-stats {
+    font-size: 14px;
+    color: #666;
+    font-weight: 400;
+}
+
+.player-score {
+    font-size: 20px;
+    font-weight: 700;
+    color: #4CAF50;
+    min-width: 40px;
+    text-align: center;
 }
 
 .final-stats {
@@ -1645,6 +1711,12 @@ body {
     100% { transform: scale(1); }
 }
 
+@keyframes timerPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
 @keyframes xpGainFloat {
     0% {
         opacity: 1;
@@ -1723,6 +1795,15 @@ body {
     #settings-btn svg {
         width: 16px;
         height: 16px;
+    }
+    
+    /* Mobile timer positioning */
+    .multiplayer-timer-display {
+        top: 12px;
+        right: 12px;
+        padding: 8px 16px;
+        font-size: 14px;
+        min-width: 70px;
     }
     
     .modal-content {
@@ -1886,6 +1967,31 @@ body {
         margin-top: 16px;
         width: 100%;
     }
+    
+    /* Mobile multiplayer results */
+    .player-result {
+        padding: 12px;
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .player-rank {
+        font-size: 20px;
+        min-width: 40px;
+    }
+    
+    .player-name {
+        font-size: 16px;
+    }
+    
+    .player-stats {
+        font-size: 12px;
+    }
+    
+    .player-score {
+        font-size: 18px;
+        min-width: 35px;
+    }
 }
 
 @media only screen and (max-width: 400px) {
@@ -1949,5 +2055,12 @@ body {
         max-width: calc(100vw - 24px);
         padding: 16px;
         margin: 12px;
+    }
+    
+    /* Very small mobile timer */
+    .multiplayer-timer-display {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-width: 60px;
     }
 }
