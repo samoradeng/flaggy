@@ -13,6 +13,7 @@ let questionStartTime = null;
 let totalXP = parseInt(localStorage.getItem('totalXP') || '0');
 let currentLevel = Math.floor(totalXP / 100) + 1;
 let isMultiplayerMode = false;
+let dailyTimer = null; // Timer for daily challenge
 
 // Initialize classes
 let continentFilter, flagFacts, dailyChallenge, achievementSystem, soundEffects, animationEffects, multiplayerGame;
@@ -222,6 +223,12 @@ function goHome() {
     // Reset game state
     resetGame();
     
+    // Clear daily timer if running
+    if (dailyTimer) {
+        clearInterval(dailyTimer);
+        dailyTimer = null;
+    }
+    
     // Update daily status
     checkDailyStatus();
     updateDailyStreakDisplay();
@@ -239,6 +246,12 @@ function resetGame() {
     currentFlag = null;
     gameStartTime = null;
     questionStartTime = null;
+    
+    // Clear daily timer if running
+    if (dailyTimer) {
+        clearInterval(dailyTimer);
+        dailyTimer = null;
+    }
     
     // Reset UI
     document.getElementById('message').textContent = '';
@@ -278,8 +291,36 @@ function startDailyChallenge() {
     gameStartTime = Date.now();
     questionStartTime = Date.now();
     
+    // Start the timer for daily challenge
+    startDailyTimer();
+    
     displayFlag();
     updateTopBar();
+}
+
+function startDailyTimer() {
+    if (dailyTimer) {
+        clearInterval(dailyTimer);
+    }
+    
+    const startTime = Date.now();
+    
+    dailyTimer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Update the streak display with timer
+        document.getElementById('streak-display-top').textContent = `⏱️ ${timeString}`;
+    }, 1000);
+}
+
+function stopDailyTimer() {
+    if (dailyTimer) {
+        clearInterval(dailyTimer);
+        dailyTimer = null;
+    }
 }
 
 function startChallengeMode() {
@@ -449,6 +490,9 @@ function handleCorrectAnswer(selectedButton, timeSpent) {
     }
     
     if (gameMode === 'daily') {
+        // Stop the timer
+        stopDailyTimer();
+        
         document.getElementById('message').textContent = "🎉 Correct! Well done!";
         setTimeout(() => {
             completeDailyChallenge(true, 3 - lives, timeSpent);
@@ -476,6 +520,9 @@ function handleWrongAnswer(selectedButton, timeSpent) {
     if (gameMode === 'daily') {
         lives--;
         if (lives <= 0) {
+            // Stop the timer
+            stopDailyTimer();
+            
             // Only show correct answer when all attempts are exhausted
             const options = document.querySelectorAll('.option');
             options.forEach(button => {
@@ -550,7 +597,7 @@ function showFacts() {
 
 function updateTopBar() {
     if (gameMode === 'daily') {
-        document.getElementById('streak-display-top').textContent = `Daily Challenge`;
+        // Timer is handled by startDailyTimer function
         document.getElementById('lives-count').textContent = lives;
         document.getElementById('score-display').textContent = `Attempts: ${3 - lives}/2`;
     } else if (gameMode === 'challenge') {
