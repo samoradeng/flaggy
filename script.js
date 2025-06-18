@@ -30,10 +30,6 @@ fetch('countries.json')
     });
 
 function initializeGame() {
-    // Reset daily challenge data for testing
-    localStorage.removeItem('dailyStats');
-    localStorage.removeItem('dailyUsedCountries');
-    
     // Initialize all systems
     continentFilter = new ContinentFilter();
     flagFacts = new FlagFacts();
@@ -484,11 +480,11 @@ function handleCorrectAnswer(selectedButton, timeSpent) {
         AnimationEffects.showAchievementUnlock(achievement);
     });
     
-    // Show confetti for streaks
-    if (streak >= 5) {
+    // Show confetti for streaks - but NOT for daily mode
+    if (gameMode !== 'daily' && streak >= 5) {
         AnimationEffects.showStreakConfetti();
         soundEffects.playStreak();
-    } else {
+    } else if (gameMode !== 'daily') {
         AnimationEffects.showConfetti();
     }
     

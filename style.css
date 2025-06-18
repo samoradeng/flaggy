@@ -1536,6 +1536,32 @@ body {
     margin: 0;
 }
 
+/* Daily Complete Actions */
+.daily-complete-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.view-leaderboard-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.view-leaderboard-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
 #try-again,
 #see-stats-from-gameover,
 #share-endless-result,
@@ -1913,6 +1939,11 @@ body {
     .daily-name-actions {
         flex-direction: column;
         gap: 12px;
+    }
+    
+    .daily-complete-actions {
+        flex-direction: column;
+        gap: 8px;
     }
     
     .leaderboard-item {

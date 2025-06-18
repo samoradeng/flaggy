@@ -47,10 +47,15 @@ class DailyChallenge {
 
     saveDailyStats() {
         localStorage.setItem('dailyStats', JSON.stringify(this.dailyStats));
+        // Also save a simple flag for quick checking
+        localStorage.setItem('dailyPlayedToday', this.today);
     }
 
     hasPlayedToday() {
-        return this.dailyStats.results[this.today] !== undefined;
+        // Check both the detailed results and the simple flag
+        const hasDetailedResult = this.dailyStats.results[this.today] !== undefined;
+        const hasSimpleFlag = localStorage.getItem('dailyPlayedToday') === this.today;
+        return hasDetailedResult || hasSimpleFlag;
     }
 
     getTodaysCountry() {
