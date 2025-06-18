@@ -689,6 +689,12 @@ async function submitDailyName() {
     // Submit to global leaderboard
     const result = await dailyChallenge.submitToLeaderboard(playerName, timeSpent, attempts);
     
+    if (!result.success) {
+        // Show error message if submission failed
+        alert(result.error || 'Failed to submit to leaderboard. Please try again.');
+        return;
+    }
+    
     closeDailyNameModal();
     showDailyComplete(attempts, timeSpent, result.global);
 }
@@ -709,12 +715,12 @@ function showDailyComplete(attempts, timeSpent, submittedToGlobal) {
     document.getElementById('daily-attempts-display').textContent = `Solved in ${attempts} attempt${attempts === 1 ? '' : 's'}`;
     document.getElementById('daily-streak-display').textContent = `🔥 Daily Streak: ${dailyChallenge.dailyStats.streak}`;
     
-    // Show submission status instead of fake global stat
+    // Show submission status
     const globalStatElement = document.getElementById('daily-global-stat');
     if (submittedToGlobal) {
         globalStatElement.textContent = '🌍 Score submitted to global leaderboard!';
     } else {
-        globalStatElement.textContent = '📱 Score saved locally';
+        globalStatElement.textContent = '📱 Score saved locally - global leaderboard unavailable';
     }
     
     // Update countdown
@@ -773,14 +779,22 @@ async function showDailyLeaderboard() {
         scopeElement.textContent = '🌍 Global leaderboard - compete with players worldwide!';
     } else {
         title.innerHTML = '🏆 Daily Leaderboard <span class="global-status local">LOCAL</span>';
-        scopeElement.textContent = '📱 Local leaderboard - global leaderboard unavailable';
+        if (leaderboardData.error) {
+            scopeElement.textContent = `❌ ${leaderboardData.error}`;
+        } else {
+            scopeElement.textContent = '📱 Local leaderboard - global leaderboard unavailable';
+        }
     }
     
     // Clear existing entries
     leaderboardList.innerHTML = '';
     
     if (leaderboardData.entries.length === 0) {
-        leaderboardList.innerHTML = '<div class="leaderboard-empty">No players yet - be the first! 🚀</div>';
+        if (leaderboardData.error) {
+            leaderboardList.innerHTML = `<div class="leaderboard-empty">❌ ${leaderboardData.error}</div>`;
+        } else {
+            leaderboardList.innerHTML = '<div class="leaderboard-empty">No players yet - be the first! 🚀</div>';
+        }
     } else {
         console.log('📋 Displaying', leaderboardData.entries.length, 'leaderboard entries');
         

@@ -1,7 +1,8 @@
 class GlobalLeaderboard {
     constructor() {
         this.initializeSupabase();
-        this.fallbackToLocal = true;
+        this.retryAttempts = 3;
+        this.retryDelay = 2000; // 2 seconds
     }
 
     // Initialize Supabase with proper error handling
@@ -13,10 +14,10 @@ class GlobalLeaderboard {
                 this.useRealBackend = true;
                 console.log('✅ Global leaderboard using Supabase');
             } else {
-                // Fallback to localStorage
+                // NO FALLBACK - Supabase is required for global functionality
                 this.supabase = null;
                 this.useRealBackend = false;
-                console.warn('⚠️ Supabase not available - using localStorage fallback for leaderboard');
+                console.error('❌ Supabase not available - global leaderboard will not work');
             }
         } catch (error) {
             console.error('Error initializing Supabase for leaderboard:', error);
@@ -53,8 +54,37 @@ class GlobalLeaderboard {
         }
     }
 
-    // Submit score to global leaderboard
+    // Retry function for network operations
+    async retryOperation(operation, maxRetries = this.retryAttempts) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const result = await operation();
+                return result;
+            } catch (error) {
+                console.warn(`Attempt ${attempt}/${maxRetries} failed:`, error.message);
+                
+                if (attempt === maxRetries) {
+                    throw error; // Final attempt failed
+                }
+                
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
+            }
+        }
+    }
+
+    // Submit score to global leaderboard with retries
     async submitScore(playerName, timeSpent, attempts, date) {
+        // Check if Supabase is available
+        if (!this.validateSupabaseConnection()) {
+            console.error('❌ Cannot submit to global leaderboard - Supabase not available');
+            return { 
+                success: false, 
+                global: false, 
+                error: 'Global leaderboard unavailable. Please check your connection and try again.' 
+            };
+        }
+
         try {
             const country = await this.getUserCountry();
             
@@ -66,152 +96,92 @@ class GlobalLeaderboard {
                 date: date
             };
 
-            // Always try Supabase first if available
-            if (this.validateSupabaseConnection()) {
-                console.log('🔄 Submitting to global leaderboard via Supabase...');
-                
-                try {
-                    const { data, error } = await this.supabase
-                        .from('daily_leaderboard')
-                        .insert(entry)
-                        .select()
-                        .single();
+            console.log('🔄 Submitting to global leaderboard via Supabase...');
+            
+            // Use retry mechanism for submission
+            const result = await this.retryOperation(async () => {
+                const { data, error } = await this.supabase
+                    .from('daily_leaderboard')
+                    .insert(entry)
+                    .select()
+                    .single();
 
-                    if (error) {
-                        console.error('Supabase leaderboard error:', error);
-                        throw new Error(error.message);
-                    }
-
-                    console.log('✅ Score submitted to global leaderboard successfully');
-                    
-                    // Also save locally as backup
-                    this.submitToLocalStorage({
-                        name: playerName,
-                        country: country,
-                        time: timeSpent,
-                        attempts: attempts,
-                        date: date,
-                        timestamp: Date.now(),
-                        id: this.generateEntryId()
-                    });
-                    
-                    return { success: true, global: true };
-                } catch (supabaseError) {
-                    console.error('Supabase submission failed, falling back to localStorage:', supabaseError);
-                    // Fall through to localStorage fallback
+                if (error) {
+                    throw new Error(`Database error: ${error.message}`);
                 }
-            }
-            
-            // Use local fallback
-            console.log('🔄 Using localStorage fallback for leaderboard...');
-            this.submitToLocalStorage({
-                name: playerName,
-                country: country,
-                time: timeSpent,
-                attempts: attempts,
-                date: date,
-                timestamp: Date.now(),
-                id: this.generateEntryId()
+
+                return data;
             });
-            
-            return { success: true, global: false };
+
+            console.log('✅ Score submitted to global leaderboard successfully');
+            return { success: true, global: true };
             
         } catch (error) {
-            console.error('Failed to submit score:', error);
-            // Final fallback to local
-            this.submitToLocalStorage({
-                name: playerName,
-                country: country,
-                time: timeSpent,
-                attempts: attempts,
-                date: date,
-                timestamp: Date.now(),
-                id: this.generateEntryId()
-            });
-            return { success: true, global: false };
+            console.error('❌ Failed to submit to global leaderboard after retries:', error);
+            return { 
+                success: false, 
+                global: false, 
+                error: `Failed to submit to global leaderboard: ${error.message}. Please try again.` 
+            };
         }
     }
 
-    // Submit to local storage (fallback)
-    submitToLocalStorage(entry) {
-        const today = entry.date;
-        const storageKey = `dailyLeaderboard_${today}`;
-        const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        existing.push(entry);
-        
-        // Sort by time and keep top 50
-        existing.sort((a, b) => a.time - b.time);
-        const limited = existing.slice(0, 50);
-        
-        localStorage.setItem(storageKey, JSON.stringify(limited));
-    }
-
-    // Get leaderboard (try global first, fallback to local)
+    // Get leaderboard with retries
     async getLeaderboard(date) {
+        // Check if Supabase is available
+        if (!this.validateSupabaseConnection()) {
+            console.error('❌ Cannot fetch global leaderboard - Supabase not available');
+            return {
+                entries: [],
+                isGlobal: false,
+                error: 'Global leaderboard unavailable. Please check your connection.'
+            };
+        }
+
         try {
-            // Always try Supabase first if available
-            if (this.validateSupabaseConnection()) {
-                console.log('🔄 Fetching global leaderboard from Supabase...');
-                
-                try {
-                    const { data, error } = await this.supabase
-                        .from('daily_leaderboard')
-                        .select('*')
-                        .eq('date', date)
-                        .order('time_spent', { ascending: true })
-                        .order('submitted_at', { ascending: true })
-                        .limit(100);
+            console.log('🔄 Fetching global leaderboard from Supabase...');
+            
+            // Use retry mechanism for fetching
+            const data = await this.retryOperation(async () => {
+                const { data, error } = await this.supabase
+                    .from('daily_leaderboard')
+                    .select('*')
+                    .eq('date', date)
+                    .order('time_spent', { ascending: true })
+                    .order('submitted_at', { ascending: true })
+                    .limit(100);
 
-                    if (error) {
-                        console.error('Error fetching leaderboard:', error);
-                        throw new Error(error.message);
-                    }
-
-                    if (data && data.length > 0) {
-                        console.log('✅ Global leaderboard fetched successfully:', data.length, 'entries');
-                        
-                        // Convert to expected format
-                        const entries = data.map(entry => ({
-                            name: entry.player_name,
-                            country: entry.country,
-                            time: entry.time_spent,
-                            attempts: entry.attempts,
-                            date: entry.date,
-                            timestamp: new Date(entry.submitted_at).getTime(),
-                            id: entry.id
-                        }));
-                        
-                        return {
-                            entries: entries,
-                            isGlobal: true
-                        };
-                    } else {
-                        console.log('📊 No global entries found for today');
-                        // Fall through to local fallback
-                    }
-                } catch (supabaseError) {
-                    console.error('Supabase fetch failed, trying localStorage:', supabaseError);
-                    // Fall through to localStorage
+                if (error) {
+                    throw new Error(`Database error: ${error.message}`);
                 }
-            }
 
-            // Fallback to local
-            console.log('🔄 Using localStorage fallback for leaderboard...');
-            const storageKey = `dailyLeaderboard_${date}`;
-            const localData = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                return data;
+            });
+
+            console.log('✅ Global leaderboard fetched successfully:', data.length, 'entries');
+            
+            // Convert to expected format
+            const entries = data.map(entry => ({
+                name: entry.player_name,
+                country: entry.country,
+                time: entry.time_spent,
+                attempts: entry.attempts,
+                date: entry.date,
+                timestamp: new Date(entry.submitted_at).getTime(),
+                id: entry.id
+            }));
             
             return {
-                entries: localData.sort((a, b) => a.time - b.time),
-                isGlobal: false
+                entries: entries,
+                isGlobal: true
             };
+            
         } catch (error) {
-            console.error('Failed to get leaderboard:', error);
-            // Final fallback to local
-            const storageKey = `dailyLeaderboard_${date}`;
-            const localData = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            console.error('❌ Failed to fetch global leaderboard after retries:', error);
             return {
-                entries: localData.sort((a, b) => a.time - b.time),
-                isGlobal: false
+                entries: [],
+                isGlobal: false,
+                error: `Failed to fetch global leaderboard: ${error.message}`
             };
         }
     }
