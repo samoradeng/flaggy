@@ -83,6 +83,9 @@ function setupEventListeners() {
     document.getElementById('close-leaderboard').addEventListener('click', closeDailyLeaderboard);
     document.getElementById('copy-leaderboard').addEventListener('click', copyLeaderboard);
 
+    // View Leaderboard button from daily complete screen
+    document.getElementById('view-leaderboard-btn').addEventListener('click', showDailyLeaderboard);
+
     // Stats modal - Fixed close button event listener
     document.querySelector('#stats-modal .close-btn').addEventListener('click', closeStats);
     document.getElementById('share-button').addEventListener('click', shareStats);
