@@ -757,8 +757,12 @@ function endChallengeMode() {
 }
 
 async function showDailyLeaderboard() {
+    console.log('🔄 Loading daily leaderboard...');
+    
     const leaderboardData = await dailyChallenge.getLeaderboard();
     const leaderboardList = document.getElementById('daily-leaderboard-list');
+    
+    console.log('📊 Leaderboard data:', leaderboardData);
     
     // Update title and description based on scope
     const title = document.getElementById('leaderboard-title');
@@ -778,6 +782,8 @@ async function showDailyLeaderboard() {
     if (leaderboardData.entries.length === 0) {
         leaderboardList.innerHTML = '<div class="leaderboard-empty">No players yet - be the first! 🚀</div>';
     } else {
+        console.log('📋 Displaying', leaderboardData.entries.length, 'leaderboard entries');
+        
         leaderboardData.entries.slice(0, 10).forEach((entry, index) => {
             const rank = index + 1;
             const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;

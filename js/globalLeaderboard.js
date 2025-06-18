@@ -1,9 +1,44 @@
 class GlobalLeaderboard {
     constructor() {
-        // Use a simple but effective global sync system
-        this.globalStorageKey = 'flagtriv_global_leaderboard';
-        this.syncUrl = 'https://api.github.com/gists'; // Using GitHub Gists as free global storage
+        this.initializeSupabase();
         this.fallbackToLocal = true;
+    }
+
+    // Initialize Supabase with proper error handling
+    initializeSupabase() {
+        try {
+            // Check if Supabase is available globally
+            if (typeof window !== 'undefined' && window.supabase) {
+                this.supabase = window.supabase;
+                this.useRealBackend = true;
+                console.log('✅ Global leaderboard using Supabase');
+            } else {
+                // Fallback to localStorage
+                this.supabase = null;
+                this.useRealBackend = false;
+                console.warn('⚠️ Supabase not available - using localStorage fallback for leaderboard');
+            }
+        } catch (error) {
+            console.error('Error initializing Supabase for leaderboard:', error);
+            this.supabase = null;
+            this.useRealBackend = false;
+        }
+    }
+
+    // Validate Supabase connection before use
+    validateSupabaseConnection() {
+        if (!this.useRealBackend || !this.supabase) {
+            return false;
+        }
+        
+        // Check if the from method exists
+        if (typeof this.supabase.from !== 'function') {
+            console.error('❌ Supabase client is invalid for leaderboard');
+            this.useRealBackend = false;
+            return false;
+        }
+        
+        return true;
     }
 
     // Get user's country from IP (using a free service)
@@ -24,6 +59,52 @@ class GlobalLeaderboard {
             const country = await this.getUserCountry();
             
             const entry = {
+                player_name: playerName,
+                country: country,
+                time_spent: timeSpent,
+                attempts: attempts,
+                date: date
+            };
+
+            // Always try Supabase first if available
+            if (this.validateSupabaseConnection()) {
+                console.log('🔄 Submitting to global leaderboard via Supabase...');
+                
+                try {
+                    const { data, error } = await this.supabase
+                        .from('daily_leaderboard')
+                        .insert(entry)
+                        .select()
+                        .single();
+
+                    if (error) {
+                        console.error('Supabase leaderboard error:', error);
+                        throw new Error(error.message);
+                    }
+
+                    console.log('✅ Score submitted to global leaderboard successfully');
+                    
+                    // Also save locally as backup
+                    this.submitToLocalStorage({
+                        name: playerName,
+                        country: country,
+                        time: timeSpent,
+                        attempts: attempts,
+                        date: date,
+                        timestamp: Date.now(),
+                        id: this.generateEntryId()
+                    });
+                    
+                    return { success: true, global: true };
+                } catch (supabaseError) {
+                    console.error('Supabase submission failed, falling back to localStorage:', supabaseError);
+                    // Fall through to localStorage fallback
+                }
+            }
+            
+            // Use local fallback
+            console.log('🔄 Using localStorage fallback for leaderboard...');
+            this.submitToLocalStorage({
                 name: playerName,
                 country: country,
                 time: timeSpent,
@@ -31,62 +112,23 @@ class GlobalLeaderboard {
                 date: date,
                 timestamp: Date.now(),
                 id: this.generateEntryId()
-            };
-
-            // Try multiple global sync methods
-            const globalSuccess = await this.syncToGlobal(entry);
+            });
             
-            // Always save locally as backup
-            this.submitToLocalStorage(entry);
+            return { success: true, global: false };
             
-            if (globalSuccess) {
-                console.log('✅ Score synced globally');
-                sessionStorage.setItem('leaderboard_is_global', 'true');
-                return { success: true, global: true };
-            } else {
-                console.log('⚠️ Using local leaderboard');
-                sessionStorage.setItem('leaderboard_is_global', 'false');
-                return { success: true, global: false };
-            }
         } catch (error) {
             console.error('Failed to submit score:', error);
-            this.submitToLocalStorage(entry);
-            sessionStorage.setItem('leaderboard_is_global', 'false');
+            // Final fallback to local
+            this.submitToLocalStorage({
+                name: playerName,
+                country: country,
+                time: timeSpent,
+                attempts: attempts,
+                date: date,
+                timestamp: Date.now(),
+                id: this.generateEntryId()
+            });
             return { success: true, global: false };
-        }
-    }
-
-    // Sync to global storage using multiple methods
-    async syncToGlobal(entry) {
-        try {
-            // Method 1: Use localStorage with a global key pattern
-            const globalKey = `flagtriv_global_${entry.date}`;
-            
-            // Simulate global sync by using a shared localStorage pattern
-            // In a real implementation, this would use a proper backend
-            const existing = JSON.parse(localStorage.getItem(globalKey) || '[]');
-            existing.push(entry);
-            
-            // Sort by time and keep top 100
-            existing.sort((a, b) => a.time - b.time);
-            const limited = existing.slice(0, 100);
-            
-            localStorage.setItem(globalKey, JSON.stringify(limited));
-            
-            // Also sync to a cross-device storage if available
-            if (typeof BroadcastChannel !== 'undefined') {
-                const channel = new BroadcastChannel('flagtriv_sync');
-                channel.postMessage({
-                    type: 'leaderboard_update',
-                    date: entry.date,
-                    entries: limited
-                });
-            }
-            
-            return true;
-        } catch (error) {
-            console.error('Global sync failed:', error);
-            return false;
         }
     }
 
@@ -107,25 +149,60 @@ class GlobalLeaderboard {
     // Get leaderboard (try global first, fallback to local)
     async getLeaderboard(date) {
         try {
-            // Try to get global data
-            const globalData = await this.fetchFromGlobal(date);
-            if (globalData && globalData.length > 0) {
-                return {
-                    entries: globalData.sort((a, b) => a.time - b.time),
-                    isGlobal: true
-                };
+            // Always try Supabase first if available
+            if (this.validateSupabaseConnection()) {
+                console.log('🔄 Fetching global leaderboard from Supabase...');
+                
+                try {
+                    const { data, error } = await this.supabase
+                        .from('daily_leaderboard')
+                        .select('*')
+                        .eq('date', date)
+                        .order('time_spent', { ascending: true })
+                        .order('submitted_at', { ascending: true })
+                        .limit(100);
+
+                    if (error) {
+                        console.error('Error fetching leaderboard:', error);
+                        throw new Error(error.message);
+                    }
+
+                    if (data && data.length > 0) {
+                        console.log('✅ Global leaderboard fetched successfully:', data.length, 'entries');
+                        
+                        // Convert to expected format
+                        const entries = data.map(entry => ({
+                            name: entry.player_name,
+                            country: entry.country,
+                            time: entry.time_spent,
+                            attempts: entry.attempts,
+                            date: entry.date,
+                            timestamp: new Date(entry.submitted_at).getTime(),
+                            id: entry.id
+                        }));
+                        
+                        return {
+                            entries: entries,
+                            isGlobal: true
+                        };
+                    } else {
+                        console.log('📊 No global entries found for today');
+                        // Fall through to local fallback
+                    }
+                } catch (supabaseError) {
+                    console.error('Supabase fetch failed, trying localStorage:', supabaseError);
+                    // Fall through to localStorage
+                }
             }
 
             // Fallback to local
+            console.log('🔄 Using localStorage fallback for leaderboard...');
             const storageKey = `dailyLeaderboard_${date}`;
             const localData = JSON.parse(localStorage.getItem(storageKey) || '[]');
             
-            // Check if we should show as global (if we submitted to global this session)
-            const isGlobal = sessionStorage.getItem('leaderboard_is_global') === 'true';
-            
             return {
                 entries: localData.sort((a, b) => a.time - b.time),
-                isGlobal: isGlobal && localData.length > 0
+                isGlobal: false
             };
         } catch (error) {
             console.error('Failed to get leaderboard:', error);
@@ -136,29 +213,6 @@ class GlobalLeaderboard {
                 entries: localData.sort((a, b) => a.time - b.time),
                 isGlobal: false
             };
-        }
-    }
-
-    // Fetch from global storage
-    async fetchFromGlobal(date) {
-        try {
-            const globalKey = `flagtriv_global_${date}`;
-            const data = JSON.parse(localStorage.getItem(globalKey) || '[]');
-            
-            // Listen for cross-device updates
-            if (typeof BroadcastChannel !== 'undefined') {
-                const channel = new BroadcastChannel('flagtriv_sync');
-                channel.onmessage = (event) => {
-                    if (event.data.type === 'leaderboard_update' && event.data.date === date) {
-                        localStorage.setItem(globalKey, JSON.stringify(event.data.entries));
-                    }
-                };
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('Failed to fetch global leaderboard:', error);
-            return null;
         }
     }
 
