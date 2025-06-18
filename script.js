@@ -290,6 +290,9 @@ function startDailyChallenge() {
     gameStartTime = Date.now();
     questionStartTime = Date.now();
     
+    // Start precise timing for leaderboard
+    dailyChallenge.startTiming();
+    
     // Start the timer for daily challenge
     startDailyTimer();
     
@@ -805,10 +808,13 @@ async function showDailyLeaderboard() {
             const leaderboardItem = document.createElement('div');
             leaderboardItem.className = 'leaderboard-item';
             
+            // Show time and attempts for better context
+            const attemptsDisplay = entry.attempts === 1 ? '1st try' : `${entry.attempts} tries`;
+            
             leaderboardItem.innerHTML = `
                 <span class="rank">${rankEmoji}</span>
                 <span class="player-name">${entry.name} (${entry.country})</span>
-                <span class="player-time">${entry.time}s</span>
+                <span class="player-time">${entry.time}s (${attemptsDisplay})</span>
             `;
             
             leaderboardList.appendChild(leaderboardItem);

@@ -73,6 +73,14 @@ class GlobalLeaderboard {
         }
     }
 
+    // Calculate fair score (lower is better)
+    calculateScore(timeMilliseconds, attempts) {
+        // Base score is time in milliseconds
+        // Add penalty: (attempts - 1) * 10000ms (10 seconds per extra attempt)
+        // This ensures first-attempt accuracy is always rewarded
+        return timeMilliseconds + ((attempts - 1) * 10000);
+    }
+
     // Submit score to global leaderboard with retries
     async submitScore(playerName, timeSpent, attempts, date) {
         // Check if Supabase is available
@@ -88,15 +96,27 @@ class GlobalLeaderboard {
         try {
             const country = await this.getUserCountry();
             
+            // Convert time to milliseconds for precise scoring
+            const timeMilliseconds = timeSpent * 1000;
+            const score = this.calculateScore(timeMilliseconds, attempts);
+            
             const entry = {
                 player_name: playerName,
                 country: country,
-                time_spent: timeSpent,
+                time_spent: timeSpent, // Keep for backward compatibility
+                time_milliseconds: timeMilliseconds,
                 attempts: attempts,
+                score: score,
                 date: date
             };
 
             console.log('🔄 Submitting to global leaderboard via Supabase...');
+            console.log('📊 Score calculation:', {
+                timeMs: timeMilliseconds,
+                attempts: attempts,
+                penalty: (attempts - 1) * 10000,
+                finalScore: score
+            });
             
             // Use retry mechanism for submission
             const result = await this.retryOperation(async () => {
@@ -147,8 +167,8 @@ class GlobalLeaderboard {
                     .from('daily_leaderboard')
                     .select('*')
                     .eq('date', date)
-                    .order('time_spent', { ascending: true })
-                    .order('submitted_at', { ascending: true })
+                    .order('score', { ascending: true }) // Lower score = better rank
+                    .order('submitted_at', { ascending: true }) // Tiebreaker: who submitted first
                     .limit(100);
 
                 if (error) {
@@ -164,8 +184,10 @@ class GlobalLeaderboard {
             const entries = data.map(entry => ({
                 name: entry.player_name,
                 country: entry.country,
-                time: entry.time_spent,
+                time: entry.time_spent, // Display time in seconds
+                timeMs: entry.time_milliseconds || (entry.time_spent * 1000),
                 attempts: entry.attempts,
+                score: entry.score,
                 date: entry.date,
                 timestamp: new Date(entry.submitted_at).getTime(),
                 id: entry.id
@@ -203,7 +225,12 @@ class GlobalLeaderboard {
             entries.slice(0, 10).forEach((entry, index) => {
                 const rank = index + 1;
                 const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
-                text += `${medal} ${entry.name} (${entry.country}) - ${entry.time}s\n`;
+                
+                // Show time and attempts for context
+                const timeDisplay = entry.time;
+                const attemptsDisplay = entry.attempts === 1 ? '1st try' : `${entry.attempts} tries`;
+                
+                text += `${medal} ${entry.name} (${entry.country}) - ${timeDisplay}s (${attemptsDisplay})\n`;
             });
         }
         

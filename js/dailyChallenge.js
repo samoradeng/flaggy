@@ -6,6 +6,7 @@ class DailyChallenge {
         this.dailyStats = this.loadDailyStats();
         this.usedCountries = this.loadUsedCountries();
         this.globalLeaderboard = new GlobalLeaderboard();
+        this.startTime = null; // Track when question started for precise timing
     }
 
     getStandardizedDate() {
@@ -91,13 +92,30 @@ class DailyChallenge {
         return positiveHash;
     }
 
+    // Start timing for precise measurement
+    startTiming() {
+        this.startTime = performance.now();
+    }
+
+    // Get precise time elapsed in milliseconds
+    getElapsedTime() {
+        if (!this.startTime) return 0;
+        return Math.round(performance.now() - this.startTime);
+    }
+
     async submitResult(correct, attempts, timeSpent = 0) {
         if (this.hasPlayedToday()) return false;
+
+        // Use precise timing if available
+        const preciseTime = this.getElapsedTime();
+        const finalTimeMs = preciseTime > 0 ? preciseTime : (timeSpent * 1000);
+        const finalTimeSeconds = Math.round(finalTimeMs / 1000);
 
         const result = {
             correct,
             attempts,
-            timeSpent,
+            timeSpent: finalTimeSeconds,
+            timeMs: finalTimeMs,
             date: this.today,
             country: this.getTodaysCountry().name
         };
@@ -126,9 +144,20 @@ class DailyChallenge {
         return true;
     }
 
-    // Submit to global leaderboard
+    // Submit to global leaderboard with precise timing
     async submitToLeaderboard(playerName, timeSpent, attempts) {
-        return await this.globalLeaderboard.submitScore(playerName, timeSpent, attempts, this.today);
+        // Use precise timing if available
+        const preciseTime = this.getElapsedTime();
+        const finalTimeSeconds = preciseTime > 0 ? Math.round(preciseTime / 1000) : timeSpent;
+        
+        console.log('⏱️ Submitting with timing:', {
+            originalTime: timeSpent,
+            preciseTimeMs: preciseTime,
+            finalTimeSeconds: finalTimeSeconds,
+            attempts: attempts
+        });
+        
+        return await this.globalLeaderboard.submitScore(playerName, finalTimeSeconds, attempts, this.today);
     }
 
     // Get today's leaderboard
@@ -168,8 +197,9 @@ class DailyChallenge {
 
         const flag = this.getTodaysCountry().flag?.emoji || '🏳️';
         const timeStr = result.timeSpent ? ` in ${Math.floor(result.timeSpent / 60)}:${(result.timeSpent % 60).toString().padStart(2, '0')}` : '';
+        const attemptsStr = attempts === 1 ? ' (1st try!)' : ` (${attempts} tries)`;
         
-        return `Flagtriv Daily ${flag}\n${squares.join('')}${timeStr}\nflagtriv.com`;
+        return `Flagtriv Daily ${flag}\n${squares.join('')}${timeStr}${attemptsStr}\nflagtriv.com`;
     }
 
     getTimeUntilNext() {
