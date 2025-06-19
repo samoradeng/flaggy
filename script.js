@@ -114,11 +114,16 @@ function setupEventListeners() {
 }
 
 function handleDailyChallengeClick() {
+    console.log('🔄 Daily challenge button clicked');
+    console.log('📅 Has played today:', dailyChallenge.hasPlayedToday());
+    
     if (dailyChallenge.hasPlayedToday()) {
         // If already played today, show leaderboard
+        console.log('📊 Showing daily leaderboard...');
         showDailyLeaderboard();
     } else {
         // If not played today, start the challenge
+        console.log('🎮 Starting daily challenge...');
         startDailyChallenge();
     }
 }
@@ -197,12 +202,17 @@ function updateDailyStreakDisplay() {
 function checkDailyStatus() {
     const dailyBtn = document.getElementById('daily-challenge-btn');
     
+    console.log('🔍 Checking daily status...');
+    console.log('📅 Has played today:', dailyChallenge.hasPlayedToday());
+    
     if (dailyChallenge.hasPlayedToday()) {
         dailyBtn.textContent = '🏆 View Leaderboard';
         dailyBtn.disabled = false; // Keep button enabled so users can view leaderboard
+        console.log('✅ Daily challenge completed - button shows "View Leaderboard"');
     } else {
         dailyBtn.textContent = 'Daily Streak';
         dailyBtn.disabled = false;
+        console.log('✅ Daily challenge available - button shows "Daily Streak"');
     }
 }
 
@@ -768,60 +778,78 @@ function endChallengeMode() {
 async function showDailyLeaderboard() {
     console.log('🔄 Loading daily leaderboard...');
     
-    const leaderboardData = await dailyChallenge.getLeaderboard();
-    const leaderboardList = document.getElementById('daily-leaderboard-list');
-    
-    console.log('📊 Leaderboard data:', leaderboardData);
-    
-    // Update title and description based on scope
-    const title = document.getElementById('leaderboard-title');
-    const scopeElement = document.getElementById('leaderboard-scope');
-    
-    if (leaderboardData.isGlobal) {
-        title.innerHTML = '🏆 Daily Leaderboard <span class="global-status global">GLOBAL</span>';
-        scopeElement.textContent = '🌍 Global leaderboard - compete with players worldwide!';
-    } else {
-        title.innerHTML = '🏆 Daily Leaderboard <span class="global-status local">LOCAL</span>';
-        if (leaderboardData.error) {
-            scopeElement.textContent = `❌ ${leaderboardData.error}`;
-        } else {
-            scopeElement.textContent = '📱 Local leaderboard - global leaderboard unavailable';
-        }
-    }
-    
-    // Clear existing entries
-    leaderboardList.innerHTML = '';
-    
-    if (leaderboardData.entries.length === 0) {
-        if (leaderboardData.error) {
-            leaderboardList.innerHTML = `<div class="leaderboard-empty">❌ ${leaderboardData.error}</div>`;
-        } else {
-            leaderboardList.innerHTML = '<div class="leaderboard-empty">No players yet - be the first! 🚀</div>';
-        }
-    } else {
-        console.log('📋 Displaying', leaderboardData.entries.length, 'leaderboard entries');
+    try {
+        const leaderboardData = await dailyChallenge.getLeaderboard();
+        const leaderboardList = document.getElementById('daily-leaderboard-list');
         
-        leaderboardData.entries.slice(0, 10).forEach((entry, index) => {
-            const rank = index + 1;
-            const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+        console.log('📊 Leaderboard data received:', leaderboardData);
+        
+        // Update title and description based on scope
+        const title = document.getElementById('leaderboard-title');
+        const scopeElement = document.getElementById('leaderboard-scope');
+        
+        if (leaderboardData.isGlobal) {
+            title.innerHTML = '🏆 Daily Leaderboard <span class="global-status global">GLOBAL</span>';
+            if (scopeElement) {
+                scopeElement.textContent = '🌍 Global leaderboard - compete with players worldwide!';
+            }
+        } else {
+            title.innerHTML = '🏆 Daily Leaderboard <span class="global-status local">LOCAL</span>';
+            if (scopeElement) {
+                if (leaderboardData.error) {
+                    scopeElement.textContent = `❌ ${leaderboardData.error}`;
+                } else {
+                    scopeElement.textContent = '📱 Local leaderboard - global leaderboard unavailable';
+                }
+            }
+        }
+        
+        // Clear existing entries
+        leaderboardList.innerHTML = '';
+        
+        if (leaderboardData.entries.length === 0) {
+            if (leaderboardData.error) {
+                leaderboardList.innerHTML = `<div class="leaderboard-empty">❌ ${leaderboardData.error}</div>`;
+            } else {
+                leaderboardList.innerHTML = '<div class="leaderboard-empty">No players yet - be the first! 🚀</div>';
+            }
+        } else {
+            console.log('📋 Displaying', leaderboardData.entries.length, 'leaderboard entries');
             
-            const leaderboardItem = document.createElement('div');
-            leaderboardItem.className = 'leaderboard-item';
-            
-            // Show time and attempts for better context
-            const attemptsDisplay = entry.attempts === 1 ? '1st try' : `${entry.attempts} tries`;
-            
-            leaderboardItem.innerHTML = `
-                <span class="rank">${rankEmoji}</span>
-                <span class="player-name">${entry.name} (${entry.country})</span>
-                <span class="player-time">${entry.time}s (${attemptsDisplay})</span>
-            `;
-            
-            leaderboardList.appendChild(leaderboardItem);
-        });
+            leaderboardData.entries.slice(0, 10).forEach((entry, index) => {
+                const rank = index + 1;
+                const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+                
+                const leaderboardItem = document.createElement('div');
+                leaderboardItem.className = 'leaderboard-item';
+                
+                // Show time and attempts for better context
+                const attemptsDisplay = entry.attempts === 1 ? '1st try' : `${entry.attempts} tries`;
+                
+                leaderboardItem.innerHTML = `
+                    <span class="rank">${rankEmoji}</span>
+                    <span class="player-name">${entry.name} (${entry.country})</span>
+                    <span class="player-time">${entry.time}s (${attemptsDisplay})</span>
+                `;
+                
+                leaderboardList.appendChild(leaderboardItem);
+            });
+        }
+        
+        // Show the modal
+        console.log('📊 Showing daily leaderboard modal');
+        document.getElementById('daily-leaderboard-modal').style.display = 'block';
+        
+    } catch (error) {
+        console.error('❌ Error showing daily leaderboard:', error);
+        
+        // Show error in modal
+        const leaderboardList = document.getElementById('daily-leaderboard-list');
+        leaderboardList.innerHTML = `<div class="leaderboard-empty">❌ Error loading leaderboard: ${error.message}</div>`;
+        
+        // Still show the modal so user can see the error
+        document.getElementById('daily-leaderboard-modal').style.display = 'block';
     }
-    
-    document.getElementById('daily-leaderboard-modal').style.display = 'block';
 }
 
 function closeDailyLeaderboard() {
