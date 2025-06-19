@@ -6,6 +6,7 @@ class MultiplayerSync {
         this.gameState = null;
         this.syncInterval = null;
         this.subscription = null;
+        this.lastAdvanceTime = 0; // Track when we last advanced to prevent rapid advances
         
         // Initialize Supabase client with proper error handling
         this.initializeSupabase();
@@ -17,7 +18,7 @@ class MultiplayerSync {
             currentFlag: 0,
             totalFlags: 10,
             roundStartTime: null,
-            roundDuration: 10000,
+            roundDuration: 15000, // 15 seconds per flag
             players: {},
             flags: [],
             continent: 'all',
@@ -96,7 +97,8 @@ class MultiplayerSync {
                             total_flags: flagCount,
                             continent: continent,
                             host_id: this.playerId,
-                            status: 'waiting'
+                            status: 'waiting',
+                            round_duration: 15000 // 15 seconds per flag
                         })
                         .select()
                         .single();
@@ -155,6 +157,7 @@ class MultiplayerSync {
             this.localGameState.totalFlags = flagCount;
             this.localGameState.continent = continent;
             this.localGameState.hostId = this.playerId;
+            this.localGameState.roundDuration = 15000; // 15 seconds
             this.localGameState.players[this.playerId] = {
                 id: this.playerId,
                 nickname: 'Host',
@@ -314,7 +317,7 @@ class MultiplayerSync {
                     currentFlag: 0,
                     totalFlags: 10,
                     roundStartTime: null,
-                    roundDuration: 10000,
+                    roundDuration: 15000, // 15 seconds
                     players: {},
                     flags: [],
                     continent: 'all',
@@ -442,6 +445,7 @@ class MultiplayerSync {
                 }
 
                 console.log('✅ Game started successfully with Supabase');
+                this.lastAdvanceTime = Date.now(); // Track when we started
                 return { success: true };
             } else {
                 // Local fallback
@@ -449,6 +453,7 @@ class MultiplayerSync {
                 this.localGameState.flags = flags;
                 this.localGameState.currentFlag = 0;
                 this.localGameState.roundStartTime = Date.now();
+                this.lastAdvanceTime = Date.now(); // Track when we started
                 
                 const storageKey = 'multiplayerGame_' + this.gameId;
                 localStorage.setItem(storageKey, JSON.stringify(this.localGameState));
@@ -583,18 +588,43 @@ class MultiplayerSync {
         return Math.ceil(remaining / 1000);
     }
 
-    // Check if we should advance to next flag
+    // Check if we should advance to next flag - with proper timing controls
     shouldAdvanceFlag() {
         const gameState = this.useRealBackend ? this.gameState : this.localGameState;
         if (!gameState || gameState.status !== 'playing') return false;
         
         const timeRemaining = this.getTimeRemaining();
-        return timeRemaining <= 0;
+        const now = Date.now();
+        
+        // Prevent rapid advances - must wait at least 2 seconds since last advance
+        const timeSinceLastAdvance = now - this.lastAdvanceTime;
+        if (timeSinceLastAdvance < 2000) {
+            console.log('⏸️ Preventing rapid advance, only', timeSinceLastAdvance, 'ms since last advance');
+            return false;
+        }
+        
+        // Only advance if time is truly up
+        const shouldAdvance = timeRemaining <= 0;
+        
+        if (shouldAdvance) {
+            console.log('⏰ Time up! Advancing flag. Current:', gameState.currentFlag, 'Total:', gameState.totalFlags);
+        }
+        
+        return shouldAdvance;
     }
 
-    // Advance to next flag (auto-sync)
+    // Advance to next flag (auto-sync) - with proper timing controls
     async advanceToNextFlag() {
         if (!this.isHost) return;
+
+        const now = Date.now();
+        
+        // Double-check timing to prevent rapid advances
+        const timeSinceLastAdvance = now - this.lastAdvanceTime;
+        if (timeSinceLastAdvance < 2000) {
+            console.log('⏸️ Skipping advance - too soon since last advance');
+            return;
+        }
 
         try {
             if (this.validateSupabaseConnection()) {
@@ -603,8 +633,11 @@ class MultiplayerSync {
 
                 const nextFlag = gameState.currentFlag + 1;
                 
+                console.log('🚀 Host advancing from flag', gameState.currentFlag, 'to', nextFlag, 'of', gameState.totalFlags);
+                
                 if (nextFlag >= gameState.totalFlags) {
                     // Game finished
+                    console.log('🏁 Game finished! All flags completed.');
                     await this.supabase
                         .from('multiplayer_games')
                         .update({
@@ -614,6 +647,7 @@ class MultiplayerSync {
                         .eq('game_id', this.gameId);
                 } else {
                     // Next flag
+                    console.log('➡️ Moving to next flag:', nextFlag);
                     await this.supabase
                         .from('multiplayer_games')
                         .update({
@@ -622,19 +656,29 @@ class MultiplayerSync {
                         })
                         .eq('game_id', this.gameId);
                 }
+                
+                this.lastAdvanceTime = now; // Update last advance time
             } else {
                 // Local fallback
-                this.localGameState.currentFlag++;
+                const nextFlag = this.localGameState.currentFlag + 1;
                 
-                if (this.localGameState.currentFlag >= this.localGameState.totalFlags) {
+                console.log('🚀 Local host advancing from flag', this.localGameState.currentFlag, 'to', nextFlag, 'of', this.localGameState.totalFlags);
+                
+                this.localGameState.currentFlag = nextFlag;
+                
+                if (nextFlag >= this.localGameState.totalFlags) {
                     this.localGameState.status = 'finished';
                     this.localGameState.roundStartTime = null;
+                    console.log('🏁 Local game finished!');
                 } else {
-                    this.localGameState.roundStartTime = Date.now();
+                    this.localGameState.roundStartTime = now;
+                    console.log('➡️ Local moving to next flag:', nextFlag);
                 }
                 
                 const storageKey = 'multiplayerGame_' + this.gameId;
                 localStorage.setItem(storageKey, JSON.stringify(this.localGameState));
+                
+                this.lastAdvanceTime = now; // Update last advance time
             }
         } catch (error) {
             console.error('Error advancing to next flag:', error);
@@ -690,18 +734,19 @@ class MultiplayerSync {
                 )
                 .subscribe();
 
-            // Also poll for time-based updates (for round timer)
+            // Also poll for time-based updates (for round timer) - but less frequently
             this.syncInterval = setInterval(async () => {
+                // Only host should check for auto-advance
                 if (this.isHost && this.shouldAdvanceFlag()) {
                     await this.advanceToNextFlag();
                 }
                 
-                // Update timer display
+                // Update timer display for all players
                 const gameState = await this.fetchGameState();
                 if (gameState && onStateUpdate) {
                     onStateUpdate(gameState);
                 }
-            }, 1000);
+            }, 1000); // Check every second, but advance logic has its own protections
         } catch (error) {
             console.error('Error starting realtime sync:', error);
             // Fallback to polling
@@ -716,6 +761,7 @@ class MultiplayerSync {
             if (result.success && onStateUpdate) {
                 onStateUpdate(result.gameState);
                 
+                // Only host should check for auto-advance
                 if (this.isHost && this.shouldAdvanceFlag()) {
                     await this.advanceToNextFlag();
                 }
@@ -797,6 +843,7 @@ class MultiplayerSync {
         this.playerId = null;
         this.isHost = false;
         this.gameState = null;
+        this.lastAdvanceTime = 0;
     }
 }
 
