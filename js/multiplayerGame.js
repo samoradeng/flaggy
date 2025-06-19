@@ -15,6 +15,7 @@ class MultiplayerGame {
         this.timerElement = null;
         this.gameEnded = false; // Track if game has ended
         this.lastFlagIndex = -1; // Track last displayed flag to prevent skipping
+        this.totalFlagsInGame = 10; // Track total flags for UI display
         
         this.initializeEventListeners();
     }
@@ -160,6 +161,9 @@ class MultiplayerGame {
     }
 
     showLobby(gameId, continent, flagCount) {
+        // Store total flags for UI display
+        this.totalFlagsInGame = flagCount;
+        
         // Hide main menu
         document.getElementById('mode-selection').style.display = 'none';
         
@@ -283,6 +287,12 @@ class MultiplayerGame {
         // Ensure we don't try to get more flags than available countries
         const maxFlags = Math.min(gameState.totalFlags, countryCodes.length);
         
+        console.log('🏳️ Generating flags:', {
+            requested: gameState.totalFlags,
+            available: countryCodes.length,
+            willGenerate: maxFlags
+        });
+        
         for (let i = 0; i < maxFlags; i++) {
             let countryCode;
             let attempts = 0;
@@ -300,6 +310,8 @@ class MultiplayerGame {
                 this.gameFlags.push(filteredCountries[countryCode]);
             }
         }
+        
+        console.log('✅ Generated flags:', this.gameFlags.length, 'flags for game');
         
         // If we couldn't generate enough unique flags, log a warning
         if (this.gameFlags.length < gameState.totalFlags) {
@@ -329,6 +341,9 @@ class MultiplayerGame {
         this.gameEnded = false; // Reset game ended flag
         this.lastFlagIndex = -1; // Reset flag tracking
         
+        // Store total flags for UI display
+        this.totalFlagsInGame = gameState.totalFlags;
+        
         // Hide lobby
         document.getElementById('multiplayer-lobby').style.display = 'none';
         
@@ -348,6 +363,12 @@ class MultiplayerGame {
         this.currentFlagIndex = gameState.currentFlag;
         this.gameStartTime = Date.now();
         this.playerAnswers = [];
+        
+        console.log('🎮 Starting gameplay with:', {
+            totalFlags: this.totalFlagsInGame,
+            gameFlags: this.gameFlags.length,
+            currentFlag: this.currentFlagIndex
+        });
         
         // Start the first flag
         this.displayCurrentFlag();
@@ -407,6 +428,7 @@ class MultiplayerGame {
             this.currentFlagIndex = gameState.currentFlag;
             this.lastFlagIndex = gameState.currentFlag;
             
+            // FIXED: Use actual total flags from game state, not hardcoded 10
             if (this.currentFlagIndex >= gameState.totalFlags) {
                 // Game finished
                 console.log('🏁 All flags completed!');
@@ -450,9 +472,11 @@ class MultiplayerGame {
         // Reset UI
         this.resetQuestionUI();
         
-        // Update progress
-        const progress = `Flag ${this.currentFlagIndex + 1}/${this.gameFlags.length}`;
+        // FIXED: Update progress with correct total flags
+        const progress = `Flag ${this.currentFlagIndex + 1}/${this.totalFlagsInGame}`;
         document.getElementById('streak-display-top').textContent = progress;
+        
+        console.log('📊 Updated progress display:', progress);
     }
 
     updateMultiplayerOptions() {
@@ -680,9 +704,9 @@ class MultiplayerGame {
         
         // Update final stats
         const correctAnswers = this.playerAnswers.filter(a => a && a.isCorrect).length;
-        const accuracy = Math.round((correctAnswers / this.gameFlags.length) * 100);
+        const accuracy = Math.round((correctAnswers / this.totalFlagsInGame) * 100);
         
-        document.getElementById('final-score').textContent = `${correctAnswers}/${this.gameFlags.length}`;
+        document.getElementById('final-score').textContent = `${correctAnswers}/${this.totalFlagsInGame}`;
         document.getElementById('final-accuracy').textContent = `${accuracy}%`;
         
         // Update leaderboard
@@ -713,13 +737,13 @@ class MultiplayerGame {
             
             // Calculate total time for display
             const totalTime = player.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
-            const avgTime = Math.round(totalTime / this.gameFlags.length / 1000);
+            const avgTime = Math.round(totalTime / this.totalFlagsInGame / 1000);
             
             playerDiv.innerHTML = `
                 <div class="player-rank">${rankEmoji}</div>
                 <div class="player-info">
                     <div class="player-name">${player.nickname}</div>
-                    <div class="player-stats">${player.score}/${this.gameFlags.length} • ${avgTime}s avg</div>
+                    <div class="player-stats">${player.score}/${this.totalFlagsInGame} • ${avgTime}s avg</div>
                 </div>
                 <div class="player-score">${player.score}</div>
             `;
@@ -795,6 +819,7 @@ class MultiplayerGame {
         this.roundStartTime = null;
         this.gameEnded = false;
         this.lastFlagIndex = -1;
+        this.totalFlagsInGame = 10; // Reset to default
         
         // Reset multiplayer mode flag
         window.isMultiplayerMode = false;
