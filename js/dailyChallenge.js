@@ -7,6 +7,7 @@ class DailyChallenge {
         this.usedCountries = this.loadUsedCountries();
         this.globalLeaderboard = new GlobalLeaderboard();
         this.startTime = null; // Track when question started for precise timing
+        this.questionStartTime = null; // Track when current question started
     }
 
     getStandardizedDate() {
@@ -92,15 +93,41 @@ class DailyChallenge {
         return positiveHash;
     }
 
-    // Start timing for precise measurement
+    // Start timing for precise measurement - ENHANCED
     startTiming() {
         this.startTime = performance.now();
+        this.questionStartTime = performance.now();
+        console.log('⏱️ Started precise timing at:', this.startTime);
     }
 
-    // Get precise time elapsed in milliseconds
+    // Reset timing for new question (if multiple attempts)
+    resetQuestionTiming() {
+        this.questionStartTime = performance.now();
+        console.log('⏱️ Reset question timing at:', this.questionStartTime);
+    }
+
+    // Get precise time elapsed in milliseconds - ENHANCED
     getElapsedTime() {
-        if (!this.startTime) return 0;
-        return Math.round(performance.now() - this.startTime);
+        if (!this.startTime) {
+            console.warn('⚠️ No start time recorded, using 0');
+            return 0;
+        }
+        
+        const elapsed = Math.round(performance.now() - this.startTime);
+        console.log('⏱️ Total elapsed time:', elapsed, 'ms');
+        return elapsed;
+    }
+
+    // Get time for current question attempt
+    getQuestionElapsedTime() {
+        if (!this.questionStartTime) {
+            console.warn('⚠️ No question start time recorded, using total elapsed');
+            return this.getElapsedTime();
+        }
+        
+        const elapsed = Math.round(performance.now() - this.questionStartTime);
+        console.log('⏱️ Question elapsed time:', elapsed, 'ms');
+        return elapsed;
     }
 
     async submitResult(correct, attempts, timeSpent = 0) {
@@ -110,6 +137,14 @@ class DailyChallenge {
         const preciseTime = this.getElapsedTime();
         const finalTimeMs = preciseTime > 0 ? preciseTime : (timeSpent * 1000);
         const finalTimeSeconds = Math.round(finalTimeMs / 1000);
+
+        console.log('⏱️ Submitting result with timing:', {
+            preciseTimeMs: preciseTime,
+            fallbackTimeMs: timeSpent * 1000,
+            finalTimeMs: finalTimeMs,
+            finalTimeSeconds: finalTimeSeconds,
+            attempts: attempts
+        });
 
         const result = {
             correct,
@@ -144,17 +179,18 @@ class DailyChallenge {
         return true;
     }
 
-    // Submit to global leaderboard with precise timing
+    // Submit to global leaderboard with precise timing - ENHANCED
     async submitToLeaderboard(playerName, timeSpent, attempts) {
         // Use precise timing if available
         const preciseTime = this.getElapsedTime();
         const finalTimeSeconds = preciseTime > 0 ? Math.round(preciseTime / 1000) : timeSpent;
         
-        console.log('⏱️ Submitting with timing:', {
+        console.log('⏱️ Submitting to leaderboard with enhanced timing:', {
             originalTime: timeSpent,
             preciseTimeMs: preciseTime,
             finalTimeSeconds: finalTimeSeconds,
-            attempts: attempts
+            attempts: attempts,
+            timingSource: preciseTime > 0 ? 'performance.now()' : 'fallback'
         });
         
         return await this.globalLeaderboard.submitScore(playerName, finalTimeSeconds, attempts, this.today);

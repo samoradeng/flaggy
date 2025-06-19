@@ -300,8 +300,9 @@ function startDailyChallenge() {
     gameStartTime = Date.now();
     questionStartTime = Date.now();
     
-    // Start precise timing for leaderboard
+    // Start precise timing for leaderboard - ENHANCED
     dailyChallenge.startTiming();
+    console.log('⏱️ Daily challenge timing started');
     
     // Start the timer for daily challenge
     startDailyTimer();
@@ -374,6 +375,10 @@ function nextQuestion() {
     
     if (gameMode === 'daily') {
         // Daily challenge uses the predetermined flag
+        // Reset question timing for new attempt
+        if (dailyChallenge) {
+            dailyChallenge.resetQuestionTiming();
+        }
         displayFlag();
     } else {
         // Get filtered countries based on continent selection
@@ -449,7 +454,18 @@ function checkAnswer(event) {
     
     const selectedAnswer = event.target.textContent;
     const isCorrect = selectedAnswer === currentFlag.name;
-    const timeSpent = Math.round((Date.now() - questionStartTime) / 1000);
+    
+    // Calculate time spent - ENHANCED for daily challenge
+    let timeSpent;
+    if (gameMode === 'daily' && dailyChallenge) {
+        // Use precise timing for daily challenge
+        timeSpent = Math.round(dailyChallenge.getQuestionElapsedTime() / 1000);
+        console.log('⏱️ Daily challenge answer time:', timeSpent, 'seconds');
+    } else {
+        // Use basic timing for challenge mode
+        timeSpent = Math.round((Date.now() - questionStartTime) / 1000);
+        console.log('⏱️ Challenge mode answer time:', timeSpent, 'seconds');
+    }
     
     // Disable all options
     const options = document.querySelectorAll('.option');
@@ -653,6 +669,8 @@ function updateTopBar() {
 }
 
 async function completeDailyChallenge(success, attempts, timeSpent) {
+    console.log('⏱️ Completing daily challenge with time:', timeSpent, 'seconds');
+    
     // Submit result to daily challenge
     await dailyChallenge.submitResult(success, attempts, timeSpent);
     
@@ -698,6 +716,8 @@ async function submitDailyName() {
     }
     
     const { attempts, timeSpent } = window.dailyCompletionData;
+    
+    console.log('⏱️ Submitting daily name with time:', timeSpent, 'seconds');
     
     // Submit to global leaderboard
     const result = await dailyChallenge.submitToLeaderboard(playerName, timeSpent, attempts);
@@ -823,8 +843,15 @@ async function showDailyLeaderboard() {
                 const leaderboardItem = document.createElement('div');
                 leaderboardItem.className = 'leaderboard-item';
                 
-                // Show time and attempts for better context
+                // Show time and attempts for better context - ENHANCED DISPLAY
                 const attemptsDisplay = entry.attempts === 1 ? '1st try' : `${entry.attempts} tries`;
+                
+                console.log('⏱️ Leaderboard entry timing:', {
+                    name: entry.name,
+                    time: entry.time,
+                    timeMs: entry.timeMs,
+                    attempts: entry.attempts
+                });
                 
                 leaderboardItem.innerHTML = `
                     <span class="rank">${rankEmoji}</span>
