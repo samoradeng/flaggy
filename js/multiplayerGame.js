@@ -220,6 +220,8 @@ class MultiplayerGame {
             const playerDiv = document.createElement('div');
             playerDiv.className = 'player-item';
             
+            console.log('🎭 Displaying player in lobby:', player.nickname, 'isHost:', player.isHost);
+            
             playerDiv.innerHTML = `
                 <span>${player.nickname}</span>
                 <div>
@@ -749,6 +751,8 @@ class MultiplayerGame {
             // Calculate total time for display
             const totalTime = player.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
             const avgTime = Math.round(totalTime / this.totalFlagsInGame / 1000);
+            
+            console.log('🏆 Displaying player in results:', player.nickname, 'Score:', player.score);
             
             playerDiv.innerHTML = `
                 <div class="player-rank">${rankEmoji}</div>
