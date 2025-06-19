@@ -216,6 +216,11 @@
             <p class="challenge-description">Set up a flag challenge for your friends!</p>
             
             <div class="challenge-setting">
+                <label for="host-nickname">Your Nickname:</label>
+                <input type="text" id="host-nickname" placeholder="Enter your nickname (optional)" maxlength="20">
+            </div>
+            
+            <div class="challenge-setting">
                 <label for="flag-count-select">Number of Flags:</label>
                 <select id="flag-count-select">
                     <option value="5">5 Flags</option>
@@ -256,7 +261,7 @@
             
             <div class="challenge-setting">
                 <label for="player-nickname">Your Nickname:</label>
-                <input type="text" id="player-nickname" placeholder="Enter your nickname (optional)">
+                <input type="text" id="player-nickname" placeholder="Enter your nickname (optional)" maxlength="20">
             </div>
             
             <button id="join-challenge-btn" class="create-challenge-btn">🎯 Join Challenge</button>

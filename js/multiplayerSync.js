@@ -81,11 +81,13 @@ class MultiplayerSync {
     }
 
     // Create a new multiplayer game
-    async createGame(flagCount, continent) {
+    async createGame(flagCount, continent, hostNickname = 'Host') {
         try {
             this.gameId = this.generateGameId();
             this.playerId = this.generatePlayerId();
             this.isHost = true;
+
+            console.log('🎮 Creating game with host nickname:', hostNickname);
 
             // Always try Supabase first if available
             if (this.validateSupabaseConnection()) {
@@ -111,13 +113,13 @@ class MultiplayerSync {
                         throw new Error(gameError.message);
                     }
 
-                    // Add host as first player
+                    // Add host as first player with custom nickname
                     const { error: playerError } = await this.supabase
                         .from('multiplayer_players')
                         .insert({
                             game_id: this.gameId,
                             player_id: this.playerId,
-                            nickname: 'Host',
+                            nickname: hostNickname,
                             is_host: true,
                             score: 0,
                             answers: []
@@ -143,18 +145,18 @@ class MultiplayerSync {
             
             // Use local fallback
             console.log('🔄 Creating game with localStorage fallback...');
-            return this.createGameLocal(flagCount, continent);
+            return this.createGameLocal(flagCount, continent, hostNickname);
             
         } catch (error) {
             console.error('Failed to create game:', error);
             // Try local fallback on error
             console.log('🔄 Falling back to localStorage...');
-            return this.createGameLocal(flagCount, continent);
+            return this.createGameLocal(flagCount, continent, hostNickname);
         }
     }
 
     // Local fallback for game creation
-    createGameLocal(flagCount, continent) {
+    createGameLocal(flagCount, continent, hostNickname = 'Host') {
         try {
             this.localGameState.gameId = this.gameId;
             this.localGameState.totalFlags = flagCount;
@@ -163,7 +165,7 @@ class MultiplayerSync {
             this.localGameState.roundDuration = 10000; // 10 seconds
             this.localGameState.players[this.playerId] = {
                 id: this.playerId,
-                nickname: 'Host',
+                nickname: hostNickname,
                 isHost: true,
                 score: 0,
                 answers: [],

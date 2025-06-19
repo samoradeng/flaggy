@@ -87,8 +87,18 @@ class MultiplayerGame {
     async createChallenge() {
         const flagCount = parseInt(document.getElementById('flag-count-select').value);
         const continent = document.getElementById('challenge-continent-select').value;
+        const hostNickname = document.getElementById('host-nickname').value.trim();
         
-        const result = await this.multiplayerSync.createGame(flagCount, continent);
+        // Use provided nickname or default to "Host"
+        const finalNickname = hostNickname || 'Host';
+        
+        console.log('🎮 Creating challenge with:', {
+            flagCount,
+            continent,
+            hostNickname: finalNickname
+        });
+        
+        const result = await this.multiplayerSync.createGame(flagCount, continent, finalNickname);
         
         if (result.success) {
             document.getElementById('create-challenge-modal').style.display = 'none';
@@ -362,6 +372,7 @@ class MultiplayerGame {
         this.gameFlags = gameState.flags;
         this.currentFlagIndex = gameState.currentFlag;
         this.gameStartTime = Date.now();
+        this.roundStartTime = null;
         this.playerAnswers = [];
         
         console.log('🎮 Starting gameplay with:', {
@@ -374,8 +385,8 @@ class MultiplayerGame {
         this.displayCurrentFlag();
         
         // Continue syncing for game updates
-        this.multiplayerSync.startSync((updatedGameState) => {
-            this.handleGameStateUpdate(updatedGameState);
+        this.multiplayerSync.startSync((gameState) => {
+            this.handleGameStateUpdate(gameState);
         });
     }
 
