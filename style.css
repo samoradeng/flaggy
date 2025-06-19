@@ -150,7 +150,7 @@ body {
     padding: 12px;
     background-color: #f8f9fa;
     border-radius: 8px;
-    border-left: 4px solid #4CAF50;
+   
 }
 
 .trivia-text {
@@ -514,7 +514,7 @@ body {
     background-color: #f0f8ff;
     padding: 12px;
     border-radius: 8px;
-    border-left: 4px solid #4CAF50;
+   
     margin-bottom: 24px;
 }
 
@@ -812,7 +812,7 @@ body {
     padding: 20px;
     border-radius: 12px;
     margin: 20px 0;
-    border-left: 4px solid #4CAF50;
+   
 }
 
 .lobby-info p {
@@ -913,7 +913,7 @@ body {
     padding: 20px;
     background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     border-radius: 12px;
-    border-left: 4px solid #4CAF50;
+   
 }
 
 #multiplayer-leaderboard h3 {
@@ -1036,7 +1036,7 @@ body {
     padding: 20px;
     background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     border-radius: 12px;
-    border-left: 4px solid #ff6b35;
+   
 }
 
 #late-joiner-leaderboard h3 {
@@ -1514,7 +1514,7 @@ body {
     background-color: #f0f8ff;
     padding: 12px;
     border-radius: 8px;
-    border-left: 4px solid #4CAF50;
+   
     font-style: italic;
 }
 
