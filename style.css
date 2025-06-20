@@ -66,39 +66,6 @@ body {
     object-fit: contain;
 }
 
-/* Home Stats Button (Top Center) */
-#home-stats-btn {
-    position: fixed;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    z-index: 1000;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-#home-stats-btn:hover {
-    background-color: rgba(255, 255, 255, 1);
-    transform: translateX(-50%) scale(1.05);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.home-stats-icon {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-}
-
 #game-container {
     position: fixed;
     top: 50%;
@@ -286,8 +253,7 @@ body {
     gap: 4px;
 }
 
-#settings-btn,
-#stats-btn-game {
+#settings-btn {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -301,8 +267,7 @@ body {
     padding: 0;
 }
 
-#settings-btn:hover,
-#stats-btn-game:hover {
+#settings-btn:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -310,12 +275,6 @@ body {
     width: 20px;
     height: 20px;
     fill: #666;
-}
-
-.stats-icon {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
 }
 
 #score-display {
@@ -1837,17 +1796,6 @@ body {
         width: 40px;
         height: 40px;
     }
-
-    #home-stats-btn {
-        top: 12px;
-        width: 40px;
-        height: 40px;
-    }
-
-    .home-stats-icon {
-        width: 20px;
-        height: 20px;
-    }
     
     #flag {
         width: 280px;
@@ -1865,18 +1813,12 @@ body {
         gap: 8px;
     }
     
-    #settings-btn,
-    #stats-btn-game {
+    #settings-btn {
         width: 28px;
         height: 28px;
     }
     
     #settings-btn svg {
-        width: 16px;
-        height: 16px;
-    }
-
-    .stats-icon {
         width: 16px;
         height: 16px;
     }
@@ -2094,17 +2036,6 @@ body {
     .home-logo-main {
         width: 36px;
         height: 36px;
-    }
-
-    #home-stats-btn {
-        top: 8px;
-        width: 36px;
-        height: 36px;
-    }
-
-    .home-stats-icon {
-        width: 18px;
-        height: 18px;
     }
     
     #flag {
