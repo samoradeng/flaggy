@@ -809,7 +809,7 @@ async function showDailyLeaderboard() {
         const scopeElement = document.getElementById('leaderboard-scope');
         
         if (leaderboardData.isGlobal) {
-            title.innerHTML = '🏆 Daily Leaderboard <span class="global-status global">GLOBAL</span>';
+          //  title.innerHTML = '🏆 Daily Leaderboard <span class="global-status global">GLOBAL</span>';
             if (scopeElement) {
                 scopeElement.textContent = '🌍 Global leaderboard - compete with players worldwide!';
             }
