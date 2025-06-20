@@ -309,7 +309,7 @@ function checkDailyStatus() {
     
     if (dailyBtn) {
         if (dailyChallenge.hasPlayedToday()) {
-            dailyBtn.textContent = '🏆 View Leaderboard';
+            dailyBtn.textContent = '🏆 Daily Flag Leaderboard';
             dailyBtn.disabled = false; // Keep button enabled so users can view leaderboard
         } else {
             dailyBtn.textContent = 'Daily Flag';
