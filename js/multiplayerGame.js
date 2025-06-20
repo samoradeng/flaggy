@@ -367,8 +367,11 @@ class MultiplayerGame {
         this.createTimerElement();
         
         // Update UI for multiplayer
-        document.getElementById('heading').textContent = 'Challenge Friends';
+        document.getElementById('heading').textContent = 'Flag Duel';
         document.getElementById('subHeading').textContent = 'Compete with friends in real-time!';
+        
+        // HIDE LIVES DISPLAY IN MULTIPLAYER
+        document.getElementById('lives-display').style.display = 'none';
         
         // Initialize game state
         this.gameFlags = gameState.flags;
@@ -402,7 +405,7 @@ class MultiplayerGame {
         this.timerElement = document.createElement('div');
         this.timerElement.id = 'multiplayer-timer';
         this.timerElement.className = 'multiplayer-timer-display';
-        this.timerElement.innerHTML = '⏱️ 10s';
+        this.timerElement.innerHTML = '⏱️ 6s';
         
         // Add to body
         document.body.appendChild(this.timerElement);
@@ -621,7 +624,7 @@ class MultiplayerGame {
                 this.timerElement.className = 'multiplayer-timer-display';
                 
                 // Add urgency styling when time is low
-                if (timeRemaining <= 3) {
+                if (timeRemaining <= 2) {
                     this.timerElement.classList.add('timer-urgent');
                 }
             } else {

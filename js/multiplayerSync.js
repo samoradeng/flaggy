@@ -21,7 +21,7 @@ class MultiplayerSync {
             currentFlag: 0,
             totalFlags: 10,
             roundStartTime: null,
-            roundDuration: 10000, // 10 seconds per flag
+            roundDuration: 6000, // 6 seconds per flag
             players: {},
             flags: [],
             continent: 'all',
@@ -103,7 +103,7 @@ class MultiplayerSync {
                             continent: continent,
                             host_id: this.playerId,
                             status: 'waiting',
-                            round_duration: 10000 // 10 seconds per flag
+                            round_duration: 6000 // 6 seconds per flag
                         })
                         .select()
                         .single();
@@ -162,7 +162,7 @@ class MultiplayerSync {
             this.localGameState.totalFlags = flagCount;
             this.localGameState.continent = continent;
             this.localGameState.hostId = this.playerId;
-            this.localGameState.roundDuration = 10000; // 10 seconds
+            this.localGameState.roundDuration = 6000; // 6 seconds
             this.localGameState.players[this.playerId] = {
                 id: this.playerId,
                 nickname: hostNickname,
@@ -322,7 +322,7 @@ class MultiplayerSync {
                     currentFlag: 0,
                     totalFlags: 10,
                     roundStartTime: null,
-                    roundDuration: 10000, // 10 seconds
+                    roundDuration: 6000, // 6 seconds
                     players: {},
                     flags: [],
                     continent: 'all',
@@ -492,13 +492,13 @@ class MultiplayerSync {
             clearTimeout(this.roundTimer);
         }
         
-        console.log('⏰ Starting round timer for 10 seconds');
+        console.log('⏰ Starting round timer for 6 seconds');
         
-        // Set timer for exactly 10 seconds
+        // Set timer for exactly 6 seconds
         this.roundTimer = setTimeout(async () => {
             console.log('⏰ Round timer expired - advancing flag');
             await this.advanceToNextFlag();
-        }, 10000); // Exactly 10 seconds
+        }, 6000); // Exactly 6 seconds
     }
 
     // Submit an answer
