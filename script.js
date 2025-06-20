@@ -55,48 +55,143 @@ function initializeGame() {
 
 function setupEventListeners() {
     // Mode selection buttons
-    document.getElementById('daily-challenge-btn').addEventListener('click', handleDailyChallengeClick);
-    document.getElementById('challenge-mode-btn').addEventListener('click', startChallengeMode);
+    const dailyChallengeBtn = document.getElementById('daily-challenge-btn');
+    if (dailyChallengeBtn) {
+        dailyChallengeBtn.addEventListener('click', handleDailyChallengeClick);
+    }
+    
+    const challengeModeBtn = document.getElementById('challenge-mode-btn');
+    if (challengeModeBtn) {
+        challengeModeBtn.addEventListener('click', startChallengeMode);
+    }
 
     // Game controls
-    document.getElementById('next').addEventListener('click', nextQuestion);
-    document.getElementById('try-again').addEventListener('click', startChallengeMode);
-    document.getElementById('play-endless-from-daily').addEventListener('click', startChallengeMode);
-    document.getElementById('play-endless-from-gameover').addEventListener('click', startChallengeMode);
+    const nextBtn = document.getElementById('next');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', nextQuestion);
+    }
+    
+    const tryAgainBtn = document.getElementById('try-again');
+    if (tryAgainBtn) {
+        tryAgainBtn.addEventListener('click', startChallengeMode);
+    }
+    
+    const playEndlessFromDailyBtn = document.getElementById('play-endless-from-daily');
+    if (playEndlessFromDailyBtn) {
+        playEndlessFromDailyBtn.addEventListener('click', startChallengeMode);
+    }
+    
+    const playEndlessFromGameoverBtn = document.getElementById('play-endless-from-gameover');
+    if (playEndlessFromGameoverBtn) {
+        playEndlessFromGameoverBtn.addEventListener('click', startChallengeMode);
+    }
 
     // Home logo button
-    document.getElementById('home-logo-btn').addEventListener('click', goHome);
+    const homeLogoBtn = document.getElementById('home-logo-btn');
+    if (homeLogoBtn) {
+        homeLogoBtn.addEventListener('click', goHome);
+    }
 
     // Settings
-    document.getElementById('settings-btn').addEventListener('click', openSettings);
-    document.querySelector('.settings-close').addEventListener('click', closeSettings);
-    document.getElementById('continent-filter-btn').addEventListener('click', openContinentFilter);
-    document.getElementById('sound-toggle-setting').addEventListener('click', toggleSound);
-    document.getElementById('stats-btn').addEventListener('click', openStats);
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', openSettings);
+    }
+    
+    const settingsClose = document.querySelector('.settings-close');
+    if (settingsClose) {
+        settingsClose.addEventListener('click', closeSettings);
+    }
+    
+    const continentFilterBtn = document.getElementById('continent-filter-btn');
+    if (continentFilterBtn) {
+        continentFilterBtn.addEventListener('click', openContinentFilter);
+    }
+    
+    const soundToggleSetting = document.getElementById('sound-toggle-setting');
+    if (soundToggleSetting) {
+        soundToggleSetting.addEventListener('click', toggleSound);
+    }
+    
+    const statsBtn = document.getElementById('stats-btn');
+    if (statsBtn) {
+        statsBtn.addEventListener('click', openStats);
+    }
 
     // Continent filter
-    document.querySelector('.continent-filter-close').addEventListener('click', closeContinentFilter);
-    document.getElementById('apply-continent-filter').addEventListener('click', applyContinentFilter);
+    const continentFilterClose = document.querySelector('.continent-filter-close');
+    if (continentFilterClose) {
+        continentFilterClose.addEventListener('click', closeContinentFilter);
+    }
+    
+    const applyContinentFilterBtn = document.getElementById('apply-continent-filter');
+    if (applyContinentFilterBtn) {
+        applyContinentFilterBtn.addEventListener('click', applyContinentFilter);
+    }
 
     // Daily challenge modals
-    document.querySelector('.daily-name-close').addEventListener('click', closeDailyNameModal);
-    document.getElementById('submit-daily-name').addEventListener('click', submitDailyName);
-    document.getElementById('skip-daily-name').addEventListener('click', skipDailyName);
-    document.querySelector('.daily-leaderboard-close').addEventListener('click', closeDailyLeaderboard);
-    document.getElementById('close-leaderboard').addEventListener('click', closeDailyLeaderboard);
-    document.getElementById('copy-leaderboard').addEventListener('click', copyLeaderboard);
+    const dailyNameClose = document.querySelector('.daily-name-close');
+    if (dailyNameClose) {
+        dailyNameClose.addEventListener('click', closeDailyNameModal);
+    }
+    
+    const submitDailyNameBtn = document.getElementById('submit-daily-name');
+    if (submitDailyNameBtn) {
+        submitDailyNameBtn.addEventListener('click', submitDailyName);
+    }
+    
+    const skipDailyNameBtn = document.getElementById('skip-daily-name');
+    if (skipDailyNameBtn) {
+        skipDailyNameBtn.addEventListener('click', skipDailyName);
+    }
+    
+    const dailyLeaderboardClose = document.querySelector('.daily-leaderboard-close');
+    if (dailyLeaderboardClose) {
+        dailyLeaderboardClose.addEventListener('click', closeDailyLeaderboard);
+    }
+    
+    const closeLeaderboardBtn = document.getElementById('close-leaderboard');
+    if (closeLeaderboardBtn) {
+        closeLeaderboardBtn.addEventListener('click', closeDailyLeaderboard);
+    }
+    
+    const copyLeaderboardBtn = document.getElementById('copy-leaderboard');
+    if (copyLeaderboardBtn) {
+        copyLeaderboardBtn.addEventListener('click', copyLeaderboard);
+    }
 
     // View Leaderboard button from daily complete screen
-    document.getElementById('view-leaderboard-btn').addEventListener('click', showDailyLeaderboard);
+    const viewLeaderboardBtn = document.getElementById('view-leaderboard-btn');
+    if (viewLeaderboardBtn) {
+        viewLeaderboardBtn.addEventListener('click', showDailyLeaderboard);
+    }
 
     // Stats modal - Fixed close button event listener
-    document.querySelector('#stats-modal .close-btn').addEventListener('click', closeStats);
-    document.getElementById('share-button').addEventListener('click', shareStats);
+    const statsModalClose = document.querySelector('#stats-modal .close-btn');
+    if (statsModalClose) {
+        statsModalClose.addEventListener('click', closeStats);
+    }
+    
+    const shareButton = document.getElementById('share-button');
+    if (shareButton) {
+        shareButton.addEventListener('click', shareStats);
+    }
 
     // Share buttons
-    document.getElementById('share-daily-result').addEventListener('click', shareDailyResult);
-    document.getElementById('share-endless-result').addEventListener('click', shareEndlessResult);
-    document.getElementById('see-stats-from-gameover').addEventListener('click', openStats);
+    const shareDailyResultBtn = document.getElementById('share-daily-result');
+    if (shareDailyResultBtn) {
+        shareDailyResultBtn.addEventListener('click', shareDailyResult);
+    }
+    
+    const shareEndlessResultBtn = document.getElementById('share-endless-result');
+    if (shareEndlessResultBtn) {
+        shareEndlessResultBtn.addEventListener('click', shareEndlessResult);
+    }
+    
+    const seeStatsFromGameoverBtn = document.getElementById('see-stats-from-gameover');
+    if (seeStatsFromGameoverBtn) {
+        seeStatsFromGameoverBtn.addEventListener('click', openStats);
+    }
 
     // Tab switching in stats
     document.querySelectorAll('.tab-button').forEach(button => {
@@ -133,7 +228,10 @@ function handleDailyChallengeClick() {
 
 function updateContinentFilterUI() {
     const selectionText = continentFilter.getSelectionText();
-    document.getElementById('continent-selection-text').textContent = selectionText;
+    const continentSelectionText = document.getElementById('continent-selection-text');
+    if (continentSelectionText) {
+        continentSelectionText.textContent = selectionText;
+    }
     
     // Update continent options
     document.querySelectorAll('.continent-option').forEach(option => {
@@ -150,8 +248,10 @@ function updateContinentFilterUI() {
 
 function updateSelectionSummary() {
     const summary = document.getElementById('selection-summary');
-    const selectionText = continentFilter.getSelectionText();
-    summary.textContent = selectionText;
+    if (summary) {
+        const selectionText = continentFilter.getSelectionText();
+        summary.textContent = selectionText;
+    }
 }
 
 function selectContinent(continentId) {
@@ -165,23 +265,31 @@ function applyContinentFilter() {
 }
 
 function openContinentFilter() {
-    document.getElementById('continent-filter-modal').style.display = 'block';
+    const continentFilterModal = document.getElementById('continent-filter-modal');
+    if (continentFilterModal) {
+        continentFilterModal.style.display = 'block';
+    }
 }
 
 function closeContinentFilter() {
-    document.getElementById('continent-filter-modal').style.display = 'none';
+    const continentFilterModal = document.getElementById('continent-filter-modal');
+    if (continentFilterModal) {
+        continentFilterModal.style.display = 'none';
+    }
 }
 
 function updateSoundSettingUI() {
     const soundIcon = document.getElementById('sound-icon-setting');
     const soundStatus = document.getElementById('sound-status');
     
-    if (soundEffects.enabled) {
-        soundIcon.textContent = '🔊';
-        soundStatus.textContent = 'On';
-    } else {
-        soundIcon.textContent = '🔇';
-        soundStatus.textContent = 'Off';
+    if (soundIcon && soundStatus) {
+        if (soundEffects.enabled) {
+            soundIcon.textContent = '🔊';
+            soundStatus.textContent = 'On';
+        } else {
+            soundIcon.textContent = '🔇';
+            soundStatus.textContent = 'Off';
+        }
     }
 }
 
@@ -194,16 +302,20 @@ function updateDailyStreakDisplay() {
     const dailyStreakInfo = document.getElementById('daily-streak-info');
     const dailyStreakCount = document.getElementById('daily-streak-count');
     
-    if (dailyChallenge.dailyStats.streak > 0) {
-        dailyStreakInfo.style.display = 'block';
-        dailyStreakCount.textContent = dailyChallenge.dailyStats.streak;
-    } else {
-        dailyStreakInfo.style.display = 'none';
+    if (dailyStreakInfo && dailyStreakCount) {
+        if (dailyChallenge.dailyStats.streak > 0) {
+            dailyStreakInfo.style.display = 'block';
+            dailyStreakCount.textContent = dailyChallenge.dailyStats.streak;
+        } else {
+            dailyStreakInfo.style.display = 'none';
+        }
     }
 }
 
 function checkDailyStatus() {
     const dailyBtn = document.getElementById('daily-challenge-btn');
+    
+    if (!dailyBtn) return;
     
     console.log('🔍 Checking daily status...');
     console.log('📅 Has played today:', dailyChallenge.hasPlayedToday());
@@ -221,16 +333,30 @@ function checkDailyStatus() {
 
 function goHome() {
     // Hide all screens
-    document.getElementById('game-container').style.display = 'none';
-    document.getElementById('top-bar').style.display = 'none';
-    document.getElementById('game-over-screen').style.display = 'none';
-    document.getElementById('endless-game-over-screen').style.display = 'none';
-    document.getElementById('daily-complete-screen').style.display = 'none';
-    document.getElementById('multiplayer-lobby').style.display = 'none';
-    document.getElementById('multiplayer-results').style.display = 'none';
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) gameContainer.style.display = 'none';
+    
+    const topBar = document.getElementById('top-bar');
+    if (topBar) topBar.style.display = 'none';
+    
+    const gameOverScreen = document.getElementById('game-over-screen');
+    if (gameOverScreen) gameOverScreen.style.display = 'none';
+    
+    const endlessGameOverScreen = document.getElementById('endless-game-over-screen');
+    if (endlessGameOverScreen) endlessGameOverScreen.style.display = 'none';
+    
+    const dailyCompleteScreen = document.getElementById('daily-complete-screen');
+    if (dailyCompleteScreen) dailyCompleteScreen.style.display = 'none';
+    
+    const multiplayerLobby = document.getElementById('multiplayer-lobby');
+    if (multiplayerLobby) multiplayerLobby.style.display = 'none';
+    
+    const multiplayerResults = document.getElementById('multiplayer-results');
+    if (multiplayerResults) multiplayerResults.style.display = 'none';
     
     // Show mode selection
-    document.getElementById('mode-selection').style.display = 'flex';
+    const modeSelection = document.getElementById('mode-selection');
+    if (modeSelection) modeSelection.style.display = 'flex';
     
     // Reset game state
     resetGame();
@@ -266,10 +392,17 @@ function resetGame() {
     }
     
     // Reset UI
-    document.getElementById('message').textContent = '';
-    document.getElementById('facts').hidden = true;
-    document.getElementById('flag-trivia').hidden = true;
-    document.getElementById('next').hidden = true;
+    const message = document.getElementById('message');
+    if (message) message.textContent = '';
+    
+    const facts = document.getElementById('facts');
+    if (facts) facts.hidden = true;
+    
+    const flagTrivia = document.getElementById('flag-trivia');
+    if (flagTrivia) flagTrivia.hidden = true;
+    
+    const next = document.getElementById('next');
+    if (next) next.hidden = true;
     
     // Reset options
     const options = document.querySelectorAll('.option');
@@ -290,13 +423,21 @@ function startDailyChallenge() {
     lives = 2; // Daily challenge has 2 attempts
     
     // Hide mode selection and show game
-    document.getElementById('mode-selection').style.display = 'none';
-    document.getElementById('game-container').style.display = 'flex';
-    document.getElementById('top-bar').style.display = 'flex';
+    const modeSelection = document.getElementById('mode-selection');
+    if (modeSelection) modeSelection.style.display = 'none';
+    
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) gameContainer.style.display = 'flex';
+    
+    const topBar = document.getElementById('top-bar');
+    if (topBar) topBar.style.display = 'flex';
     
     // Update UI for daily challenge
-    document.getElementById('heading').textContent = 'Daily Challenge';
-    document.getElementById('subHeading').textContent = 'One flag, two chances. Can you guess it?';
+    const heading = document.getElementById('heading');
+    if (heading) heading.textContent = 'Daily Challenge';
+    
+    const subHeading = document.getElementById('subHeading');
+    if (subHeading) subHeading.textContent = 'One flag, two chances. Can you guess it?';
     
     // Get today's flag
     currentFlag = dailyChallenge.getTodaysCountry();
@@ -328,7 +469,10 @@ function startDailyTimer() {
         const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         
         // Update the streak display with timer
-        document.getElementById('streak-display-top').textContent = `⏱️ ${timeString}`;
+        const streakDisplayTop = document.getElementById('streak-display-top');
+        if (streakDisplayTop) {
+            streakDisplayTop.textContent = `⏱️ ${timeString}`;
+        }
     }, 1000);
 }
 
@@ -345,16 +489,30 @@ function startChallengeMode() {
     lives = 3;
     
     // Hide all screens and show game
-    document.getElementById('mode-selection').style.display = 'none';
-    document.getElementById('game-over-screen').style.display = 'none';
-    document.getElementById('endless-game-over-screen').style.display = 'none';
-    document.getElementById('daily-complete-screen').style.display = 'none';
-    document.getElementById('game-container').style.display = 'flex';
-    document.getElementById('top-bar').style.display = 'flex';
+    const modeSelection = document.getElementById('mode-selection');
+    if (modeSelection) modeSelection.style.display = 'none';
+    
+    const gameOverScreen = document.getElementById('game-over-screen');
+    if (gameOverScreen) gameOverScreen.style.display = 'none';
+    
+    const endlessGameOverScreen = document.getElementById('endless-game-over-screen');
+    if (endlessGameOverScreen) endlessGameOverScreen.style.display = 'none';
+    
+    const dailyCompleteScreen = document.getElementById('daily-complete-screen');
+    if (dailyCompleteScreen) dailyCompleteScreen.style.display = 'none';
+    
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) gameContainer.style.display = 'flex';
+    
+    const topBar = document.getElementById('top-bar');
+    if (topBar) topBar.style.display = 'flex';
     
     // Update UI for challenge mode
-    document.getElementById('heading').textContent = 'Challenge Mode';
-    document.getElementById('subHeading').textContent = 'How many can you get right?';
+    const heading = document.getElementById('heading');
+    if (heading) heading.textContent = 'Challenge Mode';
+    
+    const subHeading = document.getElementById('subHeading');
+    if (subHeading) subHeading.textContent = 'How many can you get right?';
     
     gameStartTime = Date.now();
     nextQuestion();
@@ -364,10 +522,17 @@ function nextQuestion() {
     if (isMultiplayerMode) return; // Don't interfere with multiplayer
     
     // Reset UI
-    document.getElementById('message').textContent = '';
-    document.getElementById('facts').hidden = true;
-    document.getElementById('flag-trivia').hidden = true;
-    document.getElementById('next').hidden = true;
+    const message = document.getElementById('message');
+    if (message) message.textContent = '';
+    
+    const facts = document.getElementById('facts');
+    if (facts) facts.hidden = true;
+    
+    const flagTrivia = document.getElementById('flag-trivia');
+    if (flagTrivia) flagTrivia.hidden = true;
+    
+    const next = document.getElementById('next');
+    if (next) next.hidden = true;
     
     // Reset options
     const options = document.querySelectorAll('.option');
@@ -417,7 +582,10 @@ function displayFlag() {
         return;
     }
     
-    document.getElementById('flag').src = currentFlag.flag.large;
+    const flagElement = document.getElementById('flag');
+    if (flagElement) {
+        flagElement.src = currentFlag.flag.large;
+    }
     updateOptions();
 }
 
@@ -527,14 +695,17 @@ function handleCorrectAnswer(selectedButton, timeSpent) {
         // Stop the timer
         stopDailyTimer();
         
-        document.getElementById('message').textContent = "🎉 Correct! Well done!";
+        const message = document.getElementById('message');
+        if (message) message.textContent = "🎉 Correct! Well done!";
         setTimeout(() => {
             completeDailyChallenge(true, 3 - lives, timeSpent);
         }, 2000);
     } else {
-        document.getElementById('message').textContent = "🎉 Correct!";
+        const message = document.getElementById('message');
+        if (message) message.textContent = "🎉 Correct!";
         setTimeout(() => {
-            document.getElementById('next').hidden = false;
+            const next = document.getElementById('next');
+            if (next) next.hidden = false;
         }, 1500);
     }
     
@@ -591,13 +762,15 @@ function handleWrongAnswer(selectedButton, timeSpent) {
                     button.classList.add('correct-answer');
                 }
             });
-            document.getElementById('message').textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
+            const message = document.getElementById('message');
+            if (message) message.textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
             setTimeout(() => {
                 completeDailyChallenge(false, 2, timeSpent);
             }, 3000);
         } else {
             // Don't show correct answer yet - they still have attempts left
-            document.getElementById('message').textContent = `❌ Wrong! You have ${lives} chance${lives === 1 ? '' : 's'} left.`;
+            const message = document.getElementById('message');
+            if (message) message.textContent = `❌ Wrong! You have ${lives} chance${lives === 1 ? '' : 's'} left.`;
             setTimeout(() => {
                 nextQuestion();
             }, 3000);
@@ -613,14 +786,17 @@ function handleWrongAnswer(selectedButton, timeSpent) {
         
         lives--;
         if (lives <= 0) {
-            document.getElementById('message').textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
+            const message = document.getElementById('message');
+            if (message) message.textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
             setTimeout(() => {
                 endChallengeMode();
             }, 3000);
         } else {
-            document.getElementById('message').textContent = `❌ Wrong! You have ${lives} life${lives === 1 ? '' : 'ves'} left.`;
+            const message = document.getElementById('message');
+            if (message) message.textContent = `❌ Wrong! You have ${lives} life${lives === 1 ? '' : 'ves'} left.`;
             setTimeout(() => {
-                document.getElementById('next').hidden = false;
+                const next = document.getElementById('next');
+                if (next) next.hidden = false;
             }, 2000);
         }
     }
@@ -646,29 +822,41 @@ function addXP(amount, element) {
 
 function showFacts() {
     const facts = document.getElementById('facts');
-    facts.innerHTML = `
-        <p class="fact-text"><strong>Capital:</strong> ${currentFlag.capital}</p>
-        <p class="fact-text"><strong>Region:</strong> ${currentFlag.subregion}</p>
-    `;
-    facts.hidden = false;
+    if (facts) {
+        facts.innerHTML = `
+            <p class="fact-text"><strong>Capital:</strong> ${currentFlag.capital}</p>
+            <p class="fact-text"><strong>Region:</strong> ${currentFlag.subregion}</p>
+        `;
+        facts.hidden = false;
+    }
     
     // Show flag trivia (removed as requested)
-    document.getElementById('flag-trivia').hidden = true;
+    const flagTrivia = document.getElementById('flag-trivia');
+    if (flagTrivia) flagTrivia.hidden = true;
 }
 
 function updateTopBar() {
     if (gameMode === 'daily') {
         // Timer is handled by startDailyTimer function
-        document.getElementById('lives-count').textContent = lives;
-        document.getElementById('score-display').textContent = `Attempts: ${3 - lives}/2`;
+        const livesCount = document.getElementById('lives-count');
+        if (livesCount) livesCount.textContent = lives;
+        
+        const scoreDisplay = document.getElementById('score-display');
+        if (scoreDisplay) scoreDisplay.textContent = `Attempts: ${3 - lives}/2`;
     } else if (gameMode === 'challenge') {
-        document.getElementById('streak-display-top').textContent = `${streak} Streak`;
-        document.getElementById('lives-count').textContent = lives;
-        document.getElementById('score-display').textContent = `Score: ${score}/${totalQuestions}`;
+        const streakDisplayTop = document.getElementById('streak-display-top');
+        if (streakDisplayTop) streakDisplayTop.textContent = `${streak} Streak`;
+        
+        const livesCount = document.getElementById('lives-count');
+        if (livesCount) livesCount.textContent = lives;
+        
+        const scoreDisplay = document.getElementById('score-display');
+        if (scoreDisplay) scoreDisplay.textContent = `Score: ${score}/${totalQuestions}`;
     }
     
     // Show lives display for both modes
-    document.getElementById('lives-display').style.display = 'flex';
+    const livesDisplay = document.getElementById('lives-display');
+    if (livesDisplay) livesDisplay.style.display = 'flex';
 }
 
 async function completeDailyChallenge(success, attempts, timeSpent) {
@@ -678,8 +866,11 @@ async function completeDailyChallenge(success, attempts, timeSpent) {
     await dailyChallenge.submitResult(success, attempts, timeSpent);
     
     // Hide game UI
-    document.getElementById('game-container').style.display = 'none';
-    document.getElementById('top-bar').style.display = 'none';
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) gameContainer.style.display = 'none';
+    
+    const topBar = document.getElementById('top-bar');
+    if (topBar) topBar.style.display = 'none';
     
     if (success) {
         // Show name input modal for successful completion
@@ -695,18 +886,27 @@ async function completeDailyChallenge(success, attempts, timeSpent) {
 }
 
 function showDailyNameModal(attempts, timeSpent) {
-    document.getElementById('daily-name-modal').style.display = 'block';
+    const dailyNameModal = document.getElementById('daily-name-modal');
+    if (dailyNameModal) {
+        dailyNameModal.style.display = 'block';
+    }
     
     // Store the completion data for later submission
     window.dailyCompletionData = { attempts, timeSpent };
 }
 
 function closeDailyNameModal() {
-    document.getElementById('daily-name-modal').style.display = 'none';
+    const dailyNameModal = document.getElementById('daily-name-modal');
+    if (dailyNameModal) {
+        dailyNameModal.style.display = 'none';
+    }
 }
 
 async function submitDailyName() {
-    const playerName = document.getElementById('daily-player-name').value.trim();
+    const playerNameInput = document.getElementById('daily-player-name');
+    if (!playerNameInput) return;
+    
+    const playerName = playerNameInput.value.trim();
     
     if (!playerName) {
         alert('Please enter your name');
@@ -742,21 +942,35 @@ function skipDailyName() {
 }
 
 function showDailyComplete(attempts, timeSpent, submittedToGlobal) {
-    document.getElementById('daily-complete-screen').style.display = 'block';
+    const dailyCompleteScreen = document.getElementById('daily-complete-screen');
+    if (dailyCompleteScreen) {
+        dailyCompleteScreen.style.display = 'block';
+    }
     
     // Update result display
-    document.getElementById('daily-result-heading').textContent = 'Well Done!';
-    document.getElementById('daily-result-flag').src = currentFlag.flag.large;
-    document.getElementById('daily-result-country').textContent = currentFlag.name;
-    document.getElementById('daily-attempts-display').textContent = `Solved in ${attempts} attempt${attempts === 1 ? '' : 's'}`;
-    document.getElementById('daily-streak-display').textContent = `🔥 Daily Flag Streak: ${dailyChallenge.dailyStats.streak}`;
+    const dailyResultHeading = document.getElementById('daily-result-heading');
+    if (dailyResultHeading) dailyResultHeading.textContent = 'Well Done!';
+    
+    const dailyResultFlag = document.getElementById('daily-result-flag');
+    if (dailyResultFlag) dailyResultFlag.src = currentFlag.flag.large;
+    
+    const dailyResultCountry = document.getElementById('daily-result-country');
+    if (dailyResultCountry) dailyResultCountry.textContent = currentFlag.name;
+    
+    const dailyAttemptsDisplay = document.getElementById('daily-attempts-display');
+    if (dailyAttemptsDisplay) dailyAttemptsDisplay.textContent = `Solved in ${attempts} attempt${attempts === 1 ? '' : 's'}`;
+    
+    const dailyStreakDisplay = document.getElementById('daily-streak-display');
+    if (dailyStreakDisplay) dailyStreakDisplay.textContent = `🔥 Daily Flag Streak: ${dailyChallenge.dailyStats.streak}`;
     
     // Show submission status
     const globalStatElement = document.getElementById('daily-global-stat');
-    if (submittedToGlobal) {
-        globalStatElement.textContent = '🌍 Score submitted to global leaderboard!';
-    } else {
-        globalStatElement.textContent = '📱 Score saved locally - global leaderboard unavailable';
+    if (globalStatElement) {
+        if (submittedToGlobal) {
+            globalStatElement.textContent = '🌍 Score submitted to global leaderboard!';
+        } else {
+            globalStatElement.textContent = '📱 Score saved locally - global leaderboard unavailable';
+        }
     }
     
     // Update countdown
@@ -765,35 +979,48 @@ function showDailyComplete(attempts, timeSpent, submittedToGlobal) {
 }
 
 function showDailyGameOver() {
-    document.getElementById('game-over-screen').style.display = 'block';
-    document.getElementById('flagem-logo-text').textContent = `The answer was ${currentFlag.name}`;
+    const gameOverScreen = document.getElementById('game-over-screen');
+    if (gameOverScreen) gameOverScreen.style.display = 'block';
+    
+    const flagemLogoText = document.getElementById('flagem-logo-text');
+    if (flagemLogoText) flagemLogoText.textContent = `The answer was ${currentFlag.name}`;
 }
 
 function updateCountdown() {
     const timeUntilNext = dailyChallenge.getTimeUntilNext();
-    document.getElementById('countdown-timer').textContent = timeUntilNext;
+    const countdownTimer = document.getElementById('countdown-timer');
+    if (countdownTimer) countdownTimer.textContent = timeUntilNext;
 }
 
 function endChallengeMode() {
     // Hide game UI
-    document.getElementById('game-container').style.display = 'none';
-    document.getElementById('top-bar').style.display = 'none';
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) gameContainer.style.display = 'none';
+    
+    const topBar = document.getElementById('top-bar');
+    if (topBar) topBar.style.display = 'none';
     
     // Show game over screen
-    document.getElementById('endless-game-over-screen').style.display = 'block';
+    const endlessGameOverScreen = document.getElementById('endless-game-over-screen');
+    if (endlessGameOverScreen) endlessGameOverScreen.style.display = 'block';
     
     // Update displays
-    document.getElementById('endless-score-display').textContent = `Final Score: ${score}/${totalQuestions}`;
+    const endlessScoreDisplay = document.getElementById('endless-score-display');
+    if (endlessScoreDisplay) endlessScoreDisplay.textContent = `Final Score: ${score}/${totalQuestions}`;
     
     const highestScore = parseInt(localStorage.getItem('challengeHighestScore') || '0');
-    if (score > highestScore) {
-        localStorage.setItem('challengeHighestScore', score.toString());
-        document.getElementById('endless-highest-score-display').textContent = `🎉 New High Score: ${score}!`;
-    } else {
-        document.getElementById('endless-highest-score-display').textContent = `Highest Score: ${highestScore}`;
+    const endlessHighestScoreDisplay = document.getElementById('endless-highest-score-display');
+    if (endlessHighestScoreDisplay) {
+        if (score > highestScore) {
+            localStorage.setItem('challengeHighestScore', score.toString());
+            endlessHighestScoreDisplay.textContent = `🎉 New High Score: ${score}!`;
+        } else {
+            endlessHighestScoreDisplay.textContent = `Highest Score: ${highestScore}`;
+        }
     }
     
-    document.getElementById('final-streak-display').textContent = `Best Streak: ${bestStreak}`;
+    const finalStreakDisplay = document.getElementById('final-streak-display');
+    if (finalStreakDisplay) finalStreakDisplay.textContent = `Best Streak: ${bestStreak}`;
     
     updateStats();
 }
@@ -811,79 +1038,94 @@ async function showDailyLeaderboard() {
         const title = document.getElementById('leaderboard-title');
         const scopeElement = document.getElementById('leaderboard-scope');
         
-        if (leaderboardData.isGlobal) {
-          //  title.innerHTML = '🏆 Daily Leaderboard <span class="global-status global">GLOBAL</span>';
-            if (scopeElement) {
-                scopeElement.textContent = '🌍 Global leaderboard - compete with players worldwide!';
-            }
-        } else {
-            title.innerHTML = '🏆 Daily Leaderboard <span class="global-status local">LOCAL</span>';
-            if (scopeElement) {
-                if (leaderboardData.error) {
-                    scopeElement.textContent = `❌ ${leaderboardData.error}`;
-                } else {
-                    scopeElement.textContent = '📱 Local leaderboard - global leaderboard unavailable';
+        if (title) {
+            if (leaderboardData.isGlobal) {
+              //  title.innerHTML = '🏆 Daily Leaderboard <span class="global-status global">GLOBAL</span>';
+                if (scopeElement) {
+                    scopeElement.textContent = '🌍 Global leaderboard - compete with players worldwide!';
+                }
+            } else {
+                title.innerHTML = '🏆 Daily Leaderboard <span class="global-status local">LOCAL</span>';
+                if (scopeElement) {
+                    if (leaderboardData.error) {
+                        scopeElement.textContent = `❌ ${leaderboardData.error}`;
+                    } else {
+                        scopeElement.textContent = '📱 Local leaderboard - global leaderboard unavailable';
+                    }
                 }
             }
         }
         
         // Clear existing entries
-        leaderboardList.innerHTML = '';
-        
-        if (leaderboardData.entries.length === 0) {
-            if (leaderboardData.error) {
-                leaderboardList.innerHTML = `<div class="leaderboard-empty">❌ ${leaderboardData.error}</div>`;
-            } else {
-                leaderboardList.innerHTML = '<div class="leaderboard-empty">No players yet - be the first! 🚀</div>';
-            }
-        } else {
-            console.log('📋 Displaying', leaderboardData.entries.length, 'leaderboard entries');
+        if (leaderboardList) {
+            leaderboardList.innerHTML = '';
             
-            leaderboardData.entries.slice(0, 10).forEach((entry, index) => {
-                const rank = index + 1;
-                const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+            if (leaderboardData.entries.length === 0) {
+                if (leaderboardData.error) {
+                    leaderboardList.innerHTML = `<div class="leaderboard-empty">❌ ${leaderboardData.error}</div>`;
+                } else {
+                    leaderboardList.innerHTML = '<div class="leaderboard-empty">No players yet - be the first! 🚀</div>';
+                }
+            } else {
+                console.log('📋 Displaying', leaderboardData.entries.length, 'leaderboard entries');
                 
-                const leaderboardItem = document.createElement('div');
-                leaderboardItem.className = 'leaderboard-item';
-                
-                // Show time and attempts for better context - ENHANCED DISPLAY
-                const attemptsDisplay = entry.attempts === 1 ? '1st try' : `${entry.attempts} tries`;
-                
-                console.log('⏱️ Leaderboard entry timing:', {
-                    name: entry.name,
-                    time: entry.time,
-                    timeMs: entry.timeMs,
-                    attempts: entry.attempts
+                leaderboardData.entries.slice(0, 10).forEach((entry, index) => {
+                    const rank = index + 1;
+                    const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+                    
+                    const leaderboardItem = document.createElement('div');
+                    leaderboardItem.className = 'leaderboard-item';
+                    
+                    // Show time and attempts for better context - ENHANCED DISPLAY
+                    const attemptsDisplay = entry.attempts === 1 ? '1st try' : `${entry.attempts} tries`;
+                    
+                    console.log('⏱️ Leaderboard entry timing:', {
+                        name: entry.name,
+                        time: entry.time,
+                        timeMs: entry.timeMs,
+                        attempts: entry.attempts
+                    });
+                    
+                    leaderboardItem.innerHTML = `
+                        <span class="rank">${rankEmoji}</span>
+                        <span class="player-name">${entry.name} (${entry.country})</span>
+                        <span class="player-time">${entry.time}s (${attemptsDisplay})</span>
+                    `;
+                    
+                    leaderboardList.appendChild(leaderboardItem);
                 });
-                
-                leaderboardItem.innerHTML = `
-                    <span class="rank">${rankEmoji}</span>
-                    <span class="player-name">${entry.name} (${entry.country})</span>
-                    <span class="player-time">${entry.time}s (${attemptsDisplay})</span>
-                `;
-                
-                leaderboardList.appendChild(leaderboardItem);
-            });
+            }
         }
         
         // Show the modal
         console.log('📊 Showing daily leaderboard modal');
-        document.getElementById('daily-leaderboard-modal').style.display = 'block';
+        const dailyLeaderboardModal = document.getElementById('daily-leaderboard-modal');
+        if (dailyLeaderboardModal) {
+            dailyLeaderboardModal.style.display = 'block';
+        }
         
     } catch (error) {
         console.error('❌ Error showing daily leaderboard:', error);
         
         // Show error in modal
         const leaderboardList = document.getElementById('daily-leaderboard-list');
-        leaderboardList.innerHTML = `<div class="leaderboard-empty">❌ Error loading leaderboard: ${error.message}</div>`;
+        if (leaderboardList) {
+            leaderboardList.innerHTML = `<div class="leaderboard-empty">❌ Error loading leaderboard: ${error.message}</div>`;
+        }
         
         // Still show the modal so user can see the error
-        document.getElementById('daily-leaderboard-modal').style.display = 'block';
+        const dailyLeaderboardModal = document.getElementById('daily-leaderboard-modal');
+        if (dailyLeaderboardModal) {
+            dailyLeaderboardModal.style.display = 'block';
+        }
     }
 }
 
 function closeDailyLeaderboard() {
-    document.getElementById('daily-leaderboard-modal').style.display = 'none';
+    const dailyLeaderboardModal = document.getElementById('daily-leaderboard-modal');
+    if (dailyLeaderboardModal) {
+        dailyLeaderboardModal.style.display = 'none';
+    }
 }
 
 async function copyLeaderboard() {
@@ -926,37 +1168,60 @@ function updateStats() {
 }
 
 function openSettings() {
-    document.getElementById('settings-modal').style.display = 'block';
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal) {
+        settingsModal.style.display = 'block';
+    }
 }
 
 function closeSettings() {
-    document.getElementById('settings-modal').style.display = 'none';
+    const settingsModal = document.getElementById('settings-modal');
+    if (settingsModal) {
+        settingsModal.style.display = 'none';
+    }
 }
 
 function openStats() {
     updateStatsDisplay();
-    document.getElementById('stats-modal').style.display = 'block';
+    const statsModal = document.getElementById('stats-modal');
+    if (statsModal) {
+        statsModal.style.display = 'block';
+    }
 }
 
 function closeStats() {
-    document.getElementById('stats-modal').style.display = 'none';
+    const statsModal = document.getElementById('stats-modal');
+    if (statsModal) {
+        statsModal.style.display = 'none';
+    }
 }
 
 function updateStatsDisplay() {
     // Challenge stats
-    document.getElementById('stats-best-streak').textContent = bestStreak;
-    document.getElementById('challenge-times-played-value').textContent = localStorage.getItem('challengeTimesPlayed') || '0';
-    document.getElementById('challenge-highest-score-value').textContent = localStorage.getItem('challengeHighestScore') || '0';
-    document.getElementById('challenge-total-score-value').textContent = localStorage.getItem('challengeTotalScore') || '0';
+    const statsBestStreak = document.getElementById('stats-best-streak');
+    if (statsBestStreak) statsBestStreak.textContent = bestStreak;
+    
+    const challengeTimesPlayedValue = document.getElementById('challenge-times-played-value');
+    if (challengeTimesPlayedValue) challengeTimesPlayedValue.textContent = localStorage.getItem('challengeTimesPlayed') || '0';
+    
+    const challengeHighestScoreValue = document.getElementById('challenge-highest-score-value');
+    if (challengeHighestScoreValue) challengeHighestScoreValue.textContent = localStorage.getItem('challengeHighestScore') || '0';
+    
+    const challengeTotalScoreValue = document.getElementById('challenge-total-score-value');
+    if (challengeTotalScoreValue) challengeTotalScoreValue.textContent = localStorage.getItem('challengeTotalScore') || '0';
     
     // Daily stats
-    document.getElementById('daily-current-streak').textContent = dailyChallenge.dailyStats.streak;
-    document.getElementById('daily-games-played').textContent = dailyChallenge.dailyStats.totalPlayed;
+    const dailyCurrentStreak = document.getElementById('daily-current-streak');
+    if (dailyCurrentStreak) dailyCurrentStreak.textContent = dailyChallenge.dailyStats.streak;
+    
+    const dailyGamesPlayed = document.getElementById('daily-games-played');
+    if (dailyGamesPlayed) dailyGamesPlayed.textContent = dailyChallenge.dailyStats.totalPlayed;
     
     const dailySuccessRate = dailyChallenge.dailyStats.totalPlayed > 0 
         ? Math.round((dailyChallenge.dailyStats.totalCorrect / dailyChallenge.dailyStats.totalPlayed) * 100)
         : 0;
-    document.getElementById('daily-success-rate').textContent = dailySuccessRate + '%';
+    const dailySuccessRateElement = document.getElementById('daily-success-rate');
+    if (dailySuccessRateElement) dailySuccessRateElement.textContent = dailySuccessRate + '%';
     
     // Achievements
     updateAchievementsDisplay();
@@ -967,29 +1232,34 @@ function updateStatsDisplay() {
 
 function updateAchievementsDisplay() {
     const progress = achievementSystem.getProgress();
-    document.getElementById('achievement-count').textContent = `${progress.unlocked}/${progress.total} Achievements`;
-    document.getElementById('achievement-progress-fill').style.width = progress.percentage + '%';
+    const achievementCount = document.getElementById('achievement-count');
+    if (achievementCount) achievementCount.textContent = `${progress.unlocked}/${progress.total} Achievements`;
+    
+    const achievementProgressFill = document.getElementById('achievement-progress-fill');
+    if (achievementProgressFill) achievementProgressFill.style.width = progress.percentage + '%';
     
     const achievementsList = document.getElementById('achievements-list');
-    achievementsList.innerHTML = '';
-    
-    achievementSystem.achievementsList.forEach(achievement => {
-        const isUnlocked = achievementSystem.achievements[achievement.id];
+    if (achievementsList) {
+        achievementsList.innerHTML = '';
         
-        const achievementDiv = document.createElement('div');
-        achievementDiv.className = `achievement-item ${isUnlocked ? 'unlocked' : 'locked'}`;
-        
-        achievementDiv.innerHTML = `
-            <div class="achievement-icon">${achievement.icon}</div>
-            <div class="achievement-info">
-                <div class="achievement-name">${achievement.name}</div>
-                <div class="achievement-description">${achievement.description}</div>
-            </div>
-            ${isUnlocked ? '<div class="achievement-check">✓</div>' : ''}
-        `;
-        
-        achievementsList.appendChild(achievementDiv);
-    });
+        achievementSystem.achievementsList.forEach(achievement => {
+            const isUnlocked = achievementSystem.achievements[achievement.id];
+            
+            const achievementDiv = document.createElement('div');
+            achievementDiv.className = `achievement-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+            
+            achievementDiv.innerHTML = `
+                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-info">
+                    <div class="achievement-name">${achievement.name}</div>
+                    <div class="achievement-description">${achievement.description}</div>
+                </div>
+                ${isUnlocked ? '<div class="achievement-check">✓</div>' : ''}
+            `;
+            
+            achievementsList.appendChild(achievementDiv);
+        });
+    }
 }
 
 function updatePassportDisplay() {
@@ -1000,71 +1270,76 @@ function updatePassportDisplay() {
     console.log('Correctly answered countries:', correctlyAnsweredCountries);
     console.log('Country details:', countryDetails);
     
-    document.getElementById('countries-unlocked').textContent = `${correctlyAnsweredCountries.length} Countries Discovered`;
+    const countriesUnlocked = document.getElementById('countries-unlocked');
+    if (countriesUnlocked) countriesUnlocked.textContent = `${correctlyAnsweredCountries.length} Countries Discovered`;
     
     // Update continent progress
     const continentProgress = document.getElementById('continent-progress');
-    continentProgress.innerHTML = '';
-    
-    const continents = ['Africa', 'Asia', 'Europe', 'Americas', 'Oceania'];
-    
-    continents.forEach(continent => {
-        const continentCountries = Object.values(countries).filter(c => c.region === continent);
+    if (continentProgress) {
+        continentProgress.innerHTML = '';
         
-        // Count correctly answered countries in this continent
-        const unlockedInContinent = correctlyAnsweredCountries.filter(countryCode => {
-            const countryData = countryDetails[countryCode];
-            return countryData && countryData.region === continent;
-        }).length;
+        const continents = ['Africa', 'Asia', 'Europe', 'Americas', 'Oceania'];
         
-        const percentage = Math.round((unlockedInContinent / continentCountries.length) * 100);
-        
-        const progressDiv = document.createElement('div');
-        progressDiv.className = 'continent-progress-item';
-        progressDiv.innerHTML = `
-            <div class="continent-progress-name">
-                <span>${continent}</span>
-            </div>
-            <div class="continent-progress-bar">
-                <div class="continent-progress-fill" style="width: ${percentage}%"></div>
-            </div>
-            <span>${unlockedInContinent}/${continentCountries.length}</span>
-        `;
-        
-        continentProgress.appendChild(progressDiv);
-    });
+        continents.forEach(continent => {
+            const continentCountries = Object.values(countries).filter(c => c.region === continent);
+            
+            // Count correctly answered countries in this continent
+            const unlockedInContinent = correctlyAnsweredCountries.filter(countryCode => {
+                const countryData = countryDetails[countryCode];
+                return countryData && countryData.region === continent;
+            }).length;
+            
+            const percentage = Math.round((unlockedInContinent / continentCountries.length) * 100);
+            
+            const progressDiv = document.createElement('div');
+            progressDiv.className = 'continent-progress-item';
+            progressDiv.innerHTML = `
+                <div class="continent-progress-name">
+                    <span>${continent}</span>
+                </div>
+                <div class="continent-progress-bar">
+                    <div class="continent-progress-fill" style="width: ${percentage}%"></div>
+                </div>
+                <span>${unlockedInContinent}/${continentCountries.length}</span>
+            `;
+            
+            continentProgress.appendChild(progressDiv);
+        });
+    }
     
     // Update passport grid - show correctly answered countries with flags and names
     const passportGrid = document.getElementById('passport-grid');
-    passportGrid.innerHTML = '';
-    
-    // Show correctly answered countries
-    correctlyAnsweredCountries.forEach(countryCode => {
-        const countryData = countryDetails[countryCode];
+    if (passportGrid) {
+        passportGrid.innerHTML = '';
         
-        if (countryData && countryData.flag && countryData.flag.large) {
-            const countryDiv = document.createElement('div');
-            countryDiv.className = 'passport-country';
-            countryDiv.innerHTML = `
-                <img src="${countryData.flag.large}" alt="${countryData.name}" loading="lazy">
-                <span>${countryData.name}</span>
+        // Show correctly answered countries
+        correctlyAnsweredCountries.forEach(countryCode => {
+            const countryData = countryDetails[countryCode];
+            
+            if (countryData && countryData.flag && countryData.flag.large) {
+                const countryDiv = document.createElement('div');
+                countryDiv.className = 'passport-country';
+                countryDiv.innerHTML = `
+                    <img src="${countryData.flag.large}" alt="${countryData.name}" loading="lazy">
+                    <span>${countryData.name}</span>
+                `;
+                passportGrid.appendChild(countryDiv);
+            }
+        });
+        
+        // If no countries in passport yet, show a message
+        if (passportGrid.children.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'passport-empty';
+            emptyMessage.innerHTML = `
+                <div class="passport-empty-content">
+                    <span class="passport-empty-icon">🗺️</span>
+                    <p>Start playing to discover countries!</p>
+                    <p class="passport-empty-hint">Correctly answered flags will appear here</p>
+                </div>
             `;
-            passportGrid.appendChild(countryDiv);
+            passportGrid.appendChild(emptyMessage);
         }
-    });
-    
-    // If no countries in passport yet, show a message
-    if (passportGrid.children.length === 0) {
-        const emptyMessage = document.createElement('div');
-        emptyMessage.className = 'passport-empty';
-        emptyMessage.innerHTML = `
-            <div class="passport-empty-content">
-                <span class="passport-empty-icon">🗺️</span>
-                <p>Start playing to discover countries!</p>
-                <p class="passport-empty-hint">Correctly answered flags will appear here</p>
-            </div>
-        `;
-        passportGrid.appendChild(emptyMessage);
     }
 }
 
@@ -1080,10 +1355,12 @@ function switchTab(tabName) {
     });
     
     // Show selected tab content
-    document.getElementById(tabName + '-stats').classList.add('active');
+    const tabContent = document.getElementById(tabName + '-stats');
+    if (tabContent) tabContent.classList.add('active');
     
     // Add active class to selected tab button
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+    if (tabButton) tabButton.classList.add('active');
 }
 
 async function shareDailyResult() {
@@ -1173,10 +1450,12 @@ function fallbackCopyToClipboard(text) {
 
 function showToast(message) {
     const toast = document.getElementById('resultsToast');
-    toast.textContent = message;
-    toast.className = 'show';
-    
-    setTimeout(() => {
-        toast.className = toast.className.replace('show', '');
-    }, 3000);
+    if (toast) {
+        toast.textContent = message;
+        toast.className = 'show';
+        
+        setTimeout(() => {
+            toast.className = toast.className.replace('show', '');
+        }, 3000);
+    }
 }
