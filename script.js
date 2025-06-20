@@ -185,21 +185,18 @@ function setupEventListeners() {
         shareEndlessResultBtn.addEventListener('click', shareEndlessResult);
     }
     
-    // FIXED: See stats from gameover button
     const seeStatsFromGameoverBtn = document.getElementById('see-stats-from-gameover');
     if (seeStatsFromGameoverBtn) {
         seeStatsFromGameoverBtn.addEventListener('click', openStats);
     }
 
     // Tab switching in stats
-    const tabButtons = document.querySelectorAll('.tab-button');
-    tabButtons.forEach(button => {
+    document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
     });
 
     // Continent filter options
-    const continentOptions = document.querySelectorAll('.continent-option');
-    continentOptions.forEach(option => {
+    document.querySelectorAll('.continent-option').forEach(option => {
         option.addEventListener('click', (e) => selectContinent(e.currentTarget.dataset.continent));
     });
 
@@ -379,15 +376,15 @@ function resetGame() {
     }
     
     // Reset UI
-    const messageEl = document.getElementById('message');
-    const factsEl = document.getElementById('facts');
-    const flagTriviaEl = document.getElementById('flag-trivia');
-    const nextEl = document.getElementById('next');
+    const message = document.getElementById('message');
+    const facts = document.getElementById('facts');
+    const flagTrivia = document.getElementById('flag-trivia');
+    const nextBtn = document.getElementById('next');
     
-    if (messageEl) messageEl.textContent = '';
-    if (factsEl) factsEl.hidden = true;
-    if (flagTriviaEl) flagTriviaEl.hidden = true;
-    if (nextEl) nextEl.hidden = true;
+    if (message) message.textContent = '';
+    if (facts) facts.hidden = true;
+    if (flagTrivia) flagTrivia.hidden = true;
+    if (nextBtn) nextBtn.hidden = true;
     
     // Reset options
     const options = document.querySelectorAll('.option');
@@ -501,15 +498,15 @@ function nextQuestion() {
     if (isMultiplayerMode) return; // Don't interfere with multiplayer
     
     // Reset UI
-    const messageEl = document.getElementById('message');
-    const factsEl = document.getElementById('facts');
-    const flagTriviaEl = document.getElementById('flag-trivia');
-    const nextEl = document.getElementById('next');
+    const message = document.getElementById('message');
+    const facts = document.getElementById('facts');
+    const flagTrivia = document.getElementById('flag-trivia');
+    const nextBtn = document.getElementById('next');
     
-    if (messageEl) messageEl.textContent = '';
-    if (factsEl) factsEl.hidden = true;
-    if (flagTriviaEl) flagTriviaEl.hidden = true;
-    if (nextEl) nextEl.hidden = true;
+    if (message) message.textContent = '';
+    if (facts) facts.hidden = true;
+    if (flagTrivia) flagTrivia.hidden = true;
+    if (nextBtn) nextBtn.hidden = true;
     
     // Reset options
     const options = document.querySelectorAll('.option');
@@ -555,9 +552,9 @@ function displayFlag() {
         return;
     }
     
-    const flagEl = document.getElementById('flag');
-    if (flagEl) {
-        flagEl.src = currentFlag.flag.large;
+    const flagImg = document.getElementById('flag');
+    if (flagImg) {
+        flagImg.src = currentFlag.flag.large;
     }
     updateOptions();
 }
@@ -657,22 +654,22 @@ function handleCorrectAnswer(selectedButton, timeSpent) {
         // Stop the timer
         stopDailyTimer();
         
-        const messageEl = document.getElementById('message');
-        if (messageEl) {
-            messageEl.textContent = "🎉 Correct! Well done!";
+        const message = document.getElementById('message');
+        if (message) {
+            message.textContent = "🎉 Correct! Well done!";
         }
         setTimeout(() => {
             completeDailyChallenge(true, 3 - lives, timeSpent);
         }, 2000);
     } else {
-        const messageEl = document.getElementById('message');
-        if (messageEl) {
-            messageEl.textContent = "🎉 Correct!";
+        const message = document.getElementById('message');
+        if (message) {
+            message.textContent = "🎉 Correct!";
         }
         setTimeout(() => {
-            const nextEl = document.getElementById('next');
-            if (nextEl) {
-                nextEl.hidden = false;
+            const nextBtn = document.getElementById('next');
+            if (nextBtn) {
+                nextBtn.hidden = false;
             }
         }, 1500);
     }
@@ -730,18 +727,18 @@ function handleWrongAnswer(selectedButton, timeSpent) {
                     button.classList.add('correct-answer');
                 }
             });
-            const messageEl = document.getElementById('message');
-            if (messageEl) {
-                messageEl.textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
+            const message = document.getElementById('message');
+            if (message) {
+                message.textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
             }
             setTimeout(() => {
                 completeDailyChallenge(false, 2, timeSpent);
             }, 3000);
         } else {
             // Don't show correct answer yet - they still have attempts left
-            const messageEl = document.getElementById('message');
-            if (messageEl) {
-                messageEl.textContent = `❌ Wrong! You have ${lives} chance${lives === 1 ? '' : 's'} left.`;
+            const message = document.getElementById('message');
+            if (message) {
+                message.textContent = `❌ Wrong! You have ${lives} chance${lives === 1 ? '' : 's'} left.`;
             }
             setTimeout(() => {
                 nextQuestion();
@@ -758,22 +755,22 @@ function handleWrongAnswer(selectedButton, timeSpent) {
         
         lives--;
         if (lives <= 0) {
-            const messageEl = document.getElementById('message');
-            if (messageEl) {
-                messageEl.textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
+            const message = document.getElementById('message');
+            if (message) {
+                message.textContent = "❌ Game Over! The correct answer was " + currentFlag.name;
             }
             setTimeout(() => {
                 endChallengeMode();
             }, 3000);
         } else {
-            const messageEl = document.getElementById('message');
-            if (messageEl) {
-                messageEl.textContent = `❌ Wrong! You have ${lives} life${lives === 1 ? '' : 'ves'} left.`;
+            const message = document.getElementById('message');
+            if (message) {
+                message.textContent = `❌ Wrong! You have ${lives} life${lives === 1 ? '' : 'ves'} left.`;
             }
             setTimeout(() => {
-                const nextEl = document.getElementById('next');
-                if (nextEl) {
-                    nextEl.hidden = false;
+                const nextBtn = document.getElementById('next');
+                if (nextBtn) {
+                    nextBtn.hidden = false;
                 }
             }, 2000);
         }
@@ -800,7 +797,7 @@ function addXP(amount, element) {
 
 function showFacts() {
     const facts = document.getElementById('facts');
-    if (facts) {
+    if (facts && currentFlag) {
         facts.innerHTML = `
             <p class="fact-text"><strong>Capital:</strong> ${currentFlag.capital}</p>
             <p class="fact-text"><strong>Region:</strong> ${currentFlag.subregion}</p>
@@ -892,8 +889,8 @@ async function submitDailyName() {
         return;
     }
     
-    if (playerName.length > 20) {
-        alert('Name must be 20 characters or less');
+    if (playerName.length > 6) {
+        alert('Name must be 6 characters or less');
         return;
     }
     
@@ -933,8 +930,8 @@ function showDailyComplete(attempts, timeSpent, submittedToGlobal) {
     const globalStat = document.getElementById('daily-global-stat');
     
     if (resultHeading) resultHeading.textContent = 'Well Done!';
-    if (resultFlag) resultFlag.src = currentFlag.flag.large;
-    if (resultCountry) resultCountry.textContent = currentFlag.name;
+    if (resultFlag && currentFlag) resultFlag.src = currentFlag.flag.large;
+    if (resultCountry && currentFlag) resultCountry.textContent = currentFlag.name;
     if (attemptsDisplay) attemptsDisplay.textContent = `Solved in ${attempts} attempt${attempts === 1 ? '' : 's'}`;
     if (streakDisplay) streakDisplay.textContent = `🔥 Daily Streak: ${dailyChallenge.dailyStats.streak}`;
     
@@ -957,7 +954,7 @@ function showDailyGameOver() {
     const logoText = document.getElementById('flagem-logo-text');
     
     if (gameOverScreen) gameOverScreen.style.display = 'block';
-    if (logoText) logoText.textContent = `The answer was ${currentFlag.name}`;
+    if (logoText && currentFlag) logoText.textContent = `The answer was ${currentFlag.name}`;
 }
 
 function updateCountdown() {
@@ -985,7 +982,7 @@ function endChallengeMode() {
     // Update displays
     const scoreDisplay = document.getElementById('endless-score-display');
     const highestScoreDisplay = document.getElementById('endless-highest-score-display');
-    const streakDisplay = document.getElementById('final-streak-display');
+    const finalStreakDisplay = document.getElementById('final-streak-display');
     
     if (scoreDisplay) {
         scoreDisplay.textContent = `Final Score: ${score}/${totalQuestions}`;
@@ -1003,8 +1000,8 @@ function endChallengeMode() {
         }
     }
     
-    if (streakDisplay) {
-        streakDisplay.textContent = `Best Streak: ${bestStreak}`;
+    if (finalStreakDisplay) {
+        finalStreakDisplay.textContent = `Best Streak: ${bestStreak}`;
     }
     
     updateStats();
@@ -1159,28 +1156,28 @@ function closeStats() {
 
 function updateStatsDisplay() {
     // Challenge stats
-    const bestStreakEl = document.getElementById('stats-best-streak');
-    const timesPlayedEl = document.getElementById('challenge-times-played-value');
-    const highestScoreEl = document.getElementById('challenge-highest-score-value');
-    const totalScoreEl = document.getElementById('challenge-total-score-value');
+    const bestStreakElement = document.getElementById('stats-best-streak');
+    const timesPlayedElement = document.getElementById('challenge-times-played-value');
+    const highestScoreElement = document.getElementById('challenge-highest-score-value');
+    const totalScoreElement = document.getElementById('challenge-total-score-value');
     
-    if (bestStreakEl) bestStreakEl.textContent = bestStreak;
-    if (timesPlayedEl) timesPlayedEl.textContent = localStorage.getItem('challengeTimesPlayed') || '0';
-    if (highestScoreEl) highestScoreEl.textContent = localStorage.getItem('challengeHighestScore') || '0';
-    if (totalScoreEl) totalScoreEl.textContent = localStorage.getItem('challengeTotalScore') || '0';
+    if (bestStreakElement) bestStreakElement.textContent = bestStreak;
+    if (timesPlayedElement) timesPlayedElement.textContent = localStorage.getItem('challengeTimesPlayed') || '0';
+    if (highestScoreElement) highestScoreElement.textContent = localStorage.getItem('challengeHighestScore') || '0';
+    if (totalScoreElement) totalScoreElement.textContent = localStorage.getItem('challengeTotalScore') || '0';
     
     // Daily stats
-    const currentStreakEl = document.getElementById('daily-current-streak');
-    const gamesPlayedEl = document.getElementById('daily-games-played');
-    const successRateEl = document.getElementById('daily-success-rate');
+    const currentStreakElement = document.getElementById('daily-current-streak');
+    const gamesPlayedElement = document.getElementById('daily-games-played');
+    const successRateElement = document.getElementById('daily-success-rate');
     
-    if (currentStreakEl) currentStreakEl.textContent = dailyChallenge.dailyStats.streak;
-    if (gamesPlayedEl) gamesPlayedEl.textContent = dailyChallenge.dailyStats.totalPlayed;
+    if (currentStreakElement) currentStreakElement.textContent = dailyChallenge.dailyStats.streak;
+    if (gamesPlayedElement) gamesPlayedElement.textContent = dailyChallenge.dailyStats.totalPlayed;
     
     const dailySuccessRate = dailyChallenge.dailyStats.totalPlayed > 0 
         ? Math.round((dailyChallenge.dailyStats.totalCorrect / dailyChallenge.dailyStats.totalPlayed) * 100)
         : 0;
-    if (successRateEl) successRateEl.textContent = dailySuccessRate + '%';
+    if (successRateElement) successRateElement.textContent = dailySuccessRate + '%';
     
     // Achievements
     updateAchievementsDisplay();
@@ -1192,13 +1189,13 @@ function updateStatsDisplay() {
 function updateAchievementsDisplay() {
     const progress = achievementSystem.getProgress();
     const achievementCount = document.getElementById('achievement-count');
-    const progressFill = document.getElementById('achievement-progress-fill');
+    const achievementProgressFill = document.getElementById('achievement-progress-fill');
     
     if (achievementCount) {
         achievementCount.textContent = `${progress.unlocked}/${progress.total} Achievements`;
     }
-    if (progressFill) {
-        progressFill.style.width = progress.percentage + '%';
+    if (achievementProgressFill) {
+        achievementProgressFill.style.width = progress.percentage + '%';
     }
     
     const achievementsList = document.getElementById('achievements-list');
@@ -1233,9 +1230,9 @@ function updatePassportDisplay() {
     console.log('Correctly answered countries:', correctlyAnsweredCountries);
     console.log('Country details:', countryDetails);
     
-    const countriesUnlocked = document.getElementById('countries-unlocked');
-    if (countriesUnlocked) {
-        countriesUnlocked.textContent = `${correctlyAnsweredCountries.length} Countries Discovered`;
+    const countriesUnlockedElement = document.getElementById('countries-unlocked');
+    if (countriesUnlockedElement) {
+        countriesUnlockedElement.textContent = `${correctlyAnsweredCountries.length} Countries Discovered`;
     }
     
     // Update continent progress
