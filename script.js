@@ -18,16 +18,19 @@ let dailyTimer = null; // Timer for daily challenge
 // Initialize classes
 let continentFilter, flagFacts, dailyChallenge, achievementSystem, soundEffects, animationEffects, multiplayerGame;
 
-// Load countries data and initialize the game
-fetch('countries.json')
-    .then(response => response.json())
-    .then(data => {
-        countries = data;
-        initializeGame();
-    })
-    .catch(error => {
-        console.error('Error loading countries:', error);
-    });
+// Wait for DOM to be fully loaded before initializing
+document.addEventListener('DOMContentLoaded', function() {
+    // Load countries data and initialize the game
+    fetch('countries.json')
+        .then(response => response.json())
+        .then(data => {
+            countries = data;
+            initializeGame();
+        })
+        .catch(error => {
+            console.error('Error loading countries:', error);
+        });
+});
 
 function initializeGame() {
     // Initialize all systems
