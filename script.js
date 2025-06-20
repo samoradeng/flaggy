@@ -746,7 +746,7 @@ function showDailyComplete(attempts, timeSpent, submittedToGlobal) {
     document.getElementById('daily-result-flag').src = currentFlag.flag.large;
     document.getElementById('daily-result-country').textContent = currentFlag.name;
     document.getElementById('daily-attempts-display').textContent = `Solved in ${attempts} attempt${attempts === 1 ? '' : 's'}`;
-    document.getElementById('daily-streak-display').textContent = `🔥 Daily Challenge Streak: ${dailyChallenge.dailyStats.streak}`;
+    document.getElementById('daily-streak-display').textContent = `🔥 Daily Flag Streak: ${dailyChallenge.dailyStats.streak}`;
     
     // Show submission status
     const globalStatElement = document.getElementById('daily-global-stat');
