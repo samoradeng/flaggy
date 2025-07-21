@@ -729,7 +729,6 @@ class MultiplayerGame {
                 console.log('✅ Using alternative results:', fallbackResults);
                 this.displayResults(fallbackResults);
                 return;
-                }
             }
         }
         
