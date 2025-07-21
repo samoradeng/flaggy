@@ -738,21 +738,22 @@ class MultiplayerGame {
     }
 
     displayResults(results) {
-        console.log('🎯 Displaying results with', results.length, 'players');
-        
         const myPlayer = results.find(p => p.id === this.multiplayerSync.playerId);
         if (!myPlayer) {
             console.error('❌ Could not find current player in results');
-            console.log('🔍 Available player IDs:', results.map(p => p.id));
-            console.log('🔍 Looking for player ID:', this.multiplayerSync.playerId);
-            
-            // Use first player as fallback but still show all results
-            const fallbackPlayer = results[0];
-            this.displayResultsWithPlayer(results, fallbackPlayer, 1);
-        } else {
-            const myRank = results.indexOf(myPlayer) + 1;
-            this.displayResultsWithPlayer(results, myPlayer, myRank);
+            // Try to find by any available identifier
+            const fallbackPlayer = results[0]; // Use first player as fallback
+            if (fallbackPlayer) {
+                console.warn('⚠️ Using fallback player for results display');
+                this.displayResultsWithPlayer(results, fallbackPlayer, results.length);
+                return;
+            }
+            this.playAgain();
+            return;
         }
+        
+        const myRank = results.indexOf(myPlayer) + 1;
+        this.displayResultsWithPlayer(results, myPlayer, myRank);
     }
 
     displayResultsWithPlayer(results, myPlayer, myRank) {
