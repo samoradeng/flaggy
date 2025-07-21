@@ -665,11 +665,47 @@ class MultiplayerGame {
         // Reset multiplayer mode flag
         window.isMultiplayerMode = false;
         
-        // Capture final game state BEFORE stopping sync
-        const finalGameState = this.multiplayerSync.useRealBackend ? 
-            this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
-        
-        // Stop syncing after capturing state
+        // Fetch the latest game state before stopping sync
+        this.fetchLatestGameStateAndShowResults();
+    }
+
+    async fetchLatestGameStateAndShowResults() {
+        try {
+            console.log('🔄 Fetching latest game state for results...');
+            
+            // Fetch fresh game state with all player data
+            const latestGameState = await this.multiplayerSync.fetchGameState();
+            
+            if (latestGameState && latestGameState.players && Object.keys(latestGameState.players).length > 0) {
+                console.log('✅ Got latest game state with players:', Object.keys(latestGameState.players).length);
+                
+                // Stop syncing after we have the data
+                this.multiplayerSync.stopSync();
+                
+                // Remove timer element
+                if (this.timerElement) {
+                    this.timerElement.remove();
+                    this.timerElement = null;
+                }
+                
+                // Hide game UI
+                document.getElementById('game-container').style.display = 'none';
+                document.getElementById('top-bar').style.display = 'none';
+                
+                // Show results with fresh data
+                this.showMultiplayerResults(latestGameState);
+            } else {
+                console.warn('⚠️ Latest game state has no players, using fallback');
+                this.handleResultsFallback();
+            }
+        } catch (error) {
+            console.error('❌ Failed to fetch latest game state:', error);
+            this.handleResultsFallback();
+        }
+    }
+
+    handleResultsFallback() {
+        // Stop syncing
         this.multiplayerSync.stopSync();
         
         // Remove timer element
@@ -682,8 +718,16 @@ class MultiplayerGame {
         document.getElementById('game-container').style.display = 'none';
         document.getElementById('top-bar').style.display = 'none';
         
-        // Show results immediately with captured state
-        this.showMultiplayerResults(finalGameState);
+        // Try to show results with current state or go back to menu
+        const currentGameState = this.multiplayerSync.useRealBackend ? 
+            this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+            
+        if (currentGameState && currentGameState.players && Object.keys(currentGameState.players).length > 0) {
+            this.showMultiplayerResults(currentGameState);
+        } else {
+            console.warn('⚠️ No valid game state available, returning to main menu');
+            this.playAgain();
+        }
     }
 
     showMultiplayerResults(finalGameState = null) {
