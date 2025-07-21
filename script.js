@@ -643,7 +643,6 @@ function handleWrongAnswer() {
 
 function showFacts() {
     const factsDiv = document.getElementById('facts');
-    const triviaDiv = document.getElementById('flag-trivia');
     
     // Show country facts
     factsDiv.innerHTML = `
@@ -652,15 +651,6 @@ function showFacts() {
         <p class="fact-text"><strong>Region:</strong> ${currentCountry.subregion || currentCountry.region}</p>
     `;
     factsDiv.hidden = false;
-    
-    // Show flag trivia (only for challenge mode)
-    if (gameMode === 'challenge') {
-        const flagFact = flagFacts.getFact(currentCountry.alpha2Code);
-        triviaDiv.innerHTML = `<p class="trivia-text">${flagFact}</p>`;
-        triviaDiv.hidden = false;
-    } else {
-        triviaDiv.hidden = true;
-    }
 }
 
 function nextQuestion() {
@@ -684,7 +674,6 @@ function nextQuestion() {
 function resetQuestionUI() {
     document.getElementById('message').textContent = '';
     document.getElementById('facts').hidden = true;
-    document.getElementById('flag-trivia').hidden = true;
     document.getElementById('next').hidden = true;
     
     const optionButtons = document.querySelectorAll('.option');
