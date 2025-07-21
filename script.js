@@ -750,9 +750,6 @@ function showDailyComplete() {
     const currentStreak = dailyChallenge.dailyStats.streak || 0;
     document.getElementById('daily-streak-display').textContent = `🔥 Current streak: ${currentStreak} days`;
     
-    // Show global stat
-    document.getElementById('daily-global-stat').textContent = flagFacts.getRandomGlobalStat();
-    
     // Show countdown to next challenge
     document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
     

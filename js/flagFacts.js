@@ -244,21 +244,6 @@ class FlagFacts {
         const randomIndex = Math.floor(Math.random() * countryFacts.length);
         return countryFacts[randomIndex];
     }
-
-    getRandomGlobalStat() {
-        const stats = [
-            'Only 23% of players got this right today!',
-            '67% of players confused this with a neighboring country!',
-            'This flag stumps 45% of geography experts!',
-            '78% of players got this correct - well done!',
-            'Only 1 in 3 players recognize this flag immediately!',
-            'This is one of the most challenging flags - 34% success rate!',
-            '89% of players who got this right are from this region!',
-            'Fun fact: 56% of players guess this wrong on first try!'
-        ];
-        
-        return stats[Math.floor(Math.random() * stats.length)];
-    }
 }
 
 window.FlagFacts = FlagFacts;
