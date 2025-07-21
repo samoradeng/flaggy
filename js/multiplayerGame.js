@@ -665,7 +665,11 @@ class MultiplayerGame {
         // Reset multiplayer mode flag
         window.isMultiplayerMode = false;
         
-        // Stop syncing
+        // Capture final game state BEFORE stopping sync
+        const finalGameState = this.multiplayerSync.useRealBackend ? 
+            this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+        
+        // Stop syncing after capturing state
         this.multiplayerSync.stopSync();
         
         // Remove timer element
@@ -678,34 +682,30 @@ class MultiplayerGame {
         document.getElementById('game-container').style.display = 'none';
         document.getElementById('top-bar').style.display = 'none';
         
-        // Small delay to ensure all data is synced
-        setTimeout(() => {
-            this.showMultiplayerResults();
-        }, 1000);
+        // Show results immediately with captured state
+        this.showMultiplayerResults(finalGameState);
     }
 
-    showMultiplayerResults() {
+    showMultiplayerResults(finalGameState = null) {
         console.log('🏆 Showing multiplayer results...');
         
-        // Wait a moment for final sync, then get results
-        setTimeout(() => {
-            const results = this.multiplayerSync.getFinalResults();
-            console.log('📊 Final results:', results);
-            
-            if (!results || results.length === 0) {
-                console.error('❌ No results available, trying alternative approach');
-                this.tryAlternativeResults();
-                return;
-            }
-            
-            this.displayResults(results);
-        }, 2000); // Wait 2 seconds for final data sync
+        // Use provided final game state or try to get current results
+        const results = this.multiplayerSync.getFinalResults(finalGameState);
+        console.log('📊 Final results:', results);
+        
+        if (!results || results.length === 0) {
+            console.error('❌ No results available, trying alternative approach');
+            this.tryAlternativeResults(finalGameState);
+            return;
+        }
+        
+        this.displayResults(results);
     }
 
-    tryAlternativeResults() {
+    tryAlternativeResults(finalGameState = null) {
         // Try to get results from current game state
-        const gameState = this.multiplayerSync.useRealBackend ? 
-            this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+        const gameState = finalGameState || (this.multiplayerSync.useRealBackend ? 
+            this.multiplayerSync.gameState : this.multiplayerSync.localGameState);
         
         console.log('🔄 Trying alternative results from game state:', gameState);
         

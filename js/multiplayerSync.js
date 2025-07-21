@@ -366,6 +366,12 @@ class MultiplayerSync {
 
     // Fetch current game state from Supabase
     async fetchGameState() {
+        // Prevent fetching with null game ID
+        if (!this.gameId) {
+            console.warn('⚠️ Cannot fetch game state: gameId is null');
+            return null;
+        }
+
         if (!this.validateSupabaseConnection()) {
             return this.localGameState;
         }
@@ -850,11 +856,12 @@ class MultiplayerSync {
     }
 
     // Get final results
-    getFinalResults() {
-        const gameState = this.useRealBackend ? this.gameState : this.localGameState;
+    getFinalResults(providedGameState = null) {
+        // Use provided game state if available, otherwise use internal state
+        const gameState = providedGameState || (this.useRealBackend ? this.gameState : this.localGameState);
         
         if (!gameState || !gameState.players) {
-            console.error('❌ No game state or players available for final results');
+            console.warn('⚠️ No game state or players available for final results');
             return [];
         }
         
