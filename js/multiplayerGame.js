@@ -469,7 +469,11 @@ class MultiplayerGame {
         }
         
         this.currentFlag = this.gameFlags[this.currentFlagIndex];
-        this.roundStartTime = Date.now();
+        
+        // Set round start time for timer calculation
+        const now = Date.now();
+        this.roundStartTime = now;
+        this.multiplayerSync.currentRoundStartTime = now;
         
         // Safety check: ensure currentFlag is valid
         if (!this.currentFlag || !this.currentFlag.flag || !this.currentFlag.flag.large) {
@@ -620,15 +624,15 @@ class MultiplayerGame {
     updateTimerDisplay(timeRemaining) {
         if (this.timerElement) {
             if (timeRemaining > 0) {
-                this.timerElement.innerHTML = `${timeRemaining}s`;
+                this.timerElement.textContent = `${timeRemaining}s`;
                 this.timerElement.className = 'multiplayer-timer-display';
                 
                 // Add urgency styling when time is low
-                if (timeRemaining <= 2) {
+                if (timeRemaining <= 3) {
                     this.timerElement.classList.add('timer-urgent');
                 }
             } else {
-                this.timerElement.innerHTML = '0s';
+                this.timerElement.textContent = '0s';
                 this.timerElement.classList.add('timer-expired');
             }
         }
@@ -683,59 +687,73 @@ class MultiplayerGame {
     showMultiplayerResults() {
         console.log('🏆 Showing multiplayer results...');
         
-        const results = this.multiplayerSync.getFinalResults();
-        console.log('📊 Final results:', results);
-        
-        if (!results || results.length === 0) {
-            console.error('❌ No results available');
-            // Fallback - try to get results from current game state
-            const gameState = this.multiplayerSync.useRealBackend ? 
-                this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+        // Wait a moment for final sync, then get results
+        setTimeout(() => {
+            const results = this.multiplayerSync.getFinalResults();
+            console.log('📊 Final results:', results);
             
-            if (gameState && gameState.players) {
-                const fallbackResults = Object.values(gameState.players);
-                fallbackResults.sort((a, b) => {
-                    if (b.score !== a.score) {
-                        return b.score - a.score;
-                    }
-                    
-                    const aTime = a.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
-                    const bTime = b.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
-                    return aTime - bTime;
-                });
-                
-                if (fallbackResults.length > 0) {
-                    this.displayResults(fallbackResults);
-                    return;
-                }
+            if (!results || results.length === 0) {
+                console.error('❌ No results available, trying alternative approach');
+                this.tryAlternativeResults();
+                return;
             }
             
-            // Final fallback - go back to main menu
-            console.warn('⚠️ No results available, returning to main menu');
-            this.playAgain();
-            return;
+            this.displayResults(results);
+        }, 2000); // Wait 2 seconds for final data sync
+    }
+
+    tryAlternativeResults() {
+        // Try to get results from current game state
+        const gameState = this.multiplayerSync.useRealBackend ? 
+            this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+        
+        console.log('🔄 Trying alternative results from game state:', gameState);
+        
+        if (gameState && gameState.players) {
+            const fallbackResults = Object.values(gameState.players);
+            
+            // Sort by score, then by time
+            fallbackResults.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                
+                const aAnswers = a.answers || [];
+                const bAnswers = b.answers || [];
+                const aTime = aAnswers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+                const bTime = bAnswers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+                return aTime - bTime;
+            });
+            
+            if (fallbackResults.length > 0) {
+                console.log('✅ Using alternative results:', fallbackResults);
+                this.displayResults(fallbackResults);
+                return;
+                }
+            }
         }
         
-        this.displayResults(results);
+        // Final fallback - go back to main menu
+        console.warn('⚠️ No results available, returning to main menu');
+        this.playAgain();
     }
 
     displayResults(results) {
+        console.log('🎯 Displaying results with', results.length, 'players');
+        
         const myPlayer = results.find(p => p.id === this.multiplayerSync.playerId);
         if (!myPlayer) {
             console.error('❌ Could not find current player in results');
-            // Try to find by any available identifier
-            const fallbackPlayer = results[0]; // Use first player as fallback
-            if (fallbackPlayer) {
-                console.warn('⚠️ Using fallback player for results display');
-                this.displayResultsWithPlayer(results, fallbackPlayer, results.length);
-                return;
-            }
-            this.playAgain();
-            return;
+            console.log('🔍 Available player IDs:', results.map(p => p.id));
+            console.log('🔍 Looking for player ID:', this.multiplayerSync.playerId);
+            
+            // Use first player as fallback but still show all results
+            const fallbackPlayer = results[0];
+            this.displayResultsWithPlayer(results, fallbackPlayer, 1);
+        } else {
+            const myRank = results.indexOf(myPlayer) + 1;
+            this.displayResultsWithPlayer(results, myPlayer, myRank);
         }
-        
-        const myRank = results.indexOf(myPlayer) + 1;
-        this.displayResultsWithPlayer(results, myPlayer, myRank);
     }
 
     displayResultsWithPlayer(results, myPlayer, myRank) {

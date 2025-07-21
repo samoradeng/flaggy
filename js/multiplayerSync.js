@@ -617,12 +617,12 @@ class MultiplayerSync {
             return 0;
         }
 
-        // Use the stored round start time from the game state - handle both timestamp formats
-        let roundStartTime;
-        if (typeof gameState.roundStartTime === 'string') {
-            roundStartTime = new Date(gameState.roundStartTime).getTime();
-        } else {
-            roundStartTime = gameState.roundStartTime;
+        // Use current round start time if available, otherwise use game state
+        let roundStartTime = this.currentRoundStartTime || gameState.roundStartTime;
+        
+        // Handle string timestamps from database
+        if (typeof roundStartTime === 'string') {
+            roundStartTime = new Date(roundStartTime).getTime();
         }
         
         const elapsed = Date.now() - roundStartTime;
@@ -705,12 +705,14 @@ class MultiplayerSync {
                         })
                         .eq('game_id', this.gameId);
                     
+                    // Update local timing
+                    this.currentRoundStartTime = now;
+                    
                     // Start timer for next round
                     this.startRoundTimer();
                 }
                 
                 this.lastAdvanceTime = now;
-                this.currentRoundStartTime = now;
             } else {
                 // Local fallback
                 const nextFlag = this.localGameState.currentFlag + 1;
