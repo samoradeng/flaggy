@@ -623,8 +623,8 @@ class MultiplayerSync {
             return 0;
         }
 
-        // Use current round start time if available, otherwise use game state
-        let roundStartTime = this.currentRoundStartTime || gameState.roundStartTime;
+        // Always use the round start time from game state for consistency
+        let roundStartTime = gameState.roundStartTime;
         
         // Handle string timestamps from database
         if (typeof roundStartTime === 'string') {

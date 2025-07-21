@@ -422,8 +422,8 @@ class MultiplayerGame {
             totalFlags: gameState.totalFlags
         });
         
-        // Update timer display
-        const timeRemaining = this.multiplayerSync.getTimeRemaining();
+        // Update timer display using game state timing
+        const timeRemaining = this.calculateTimeRemaining(gameState);
         this.updateTimerDisplay(timeRemaining);
         
         // Check if game finished
@@ -470,10 +470,8 @@ class MultiplayerGame {
         
         this.currentFlag = this.gameFlags[this.currentFlagIndex];
         
-        // Set round start time for timer calculation
-        const now = Date.now();
-        this.roundStartTime = now;
-        this.multiplayerSync.currentRoundStartTime = now;
+        // Set round start time for local timer calculation
+        this.roundStartTime = Date.now();
         
         // Safety check: ensure currentFlag is valid
         if (!this.currentFlag || !this.currentFlag.flag || !this.currentFlag.flag.large) {
@@ -497,6 +495,25 @@ class MultiplayerGame {
         document.getElementById('streak-display-top').textContent = progress;
         
         console.log('📊 Updated progress display:', progress);
+    }
+
+    // Calculate time remaining using game state data
+    calculateTimeRemaining(gameState) {
+        if (!gameState || !gameState.roundStartTime || gameState.status !== 'playing') {
+            return 0;
+        }
+
+        let roundStartTime = gameState.roundStartTime;
+        
+        // Handle string timestamps from database
+        if (typeof roundStartTime === 'string') {
+            roundStartTime = new Date(roundStartTime).getTime();
+        }
+        
+        const elapsed = Date.now() - roundStartTime;
+        const remaining = Math.max(0, gameState.roundDuration - elapsed);
+        
+        return Math.ceil(remaining / 1000);
     }
 
     updateMultiplayerOptions() {
