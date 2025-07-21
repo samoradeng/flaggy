@@ -617,8 +617,14 @@ class MultiplayerSync {
             return 0;
         }
 
-        // Use the stored round start time from the game state
-        const roundStartTime = gameState.roundStartTime;
+        // Use the stored round start time from the game state - handle both timestamp formats
+        let roundStartTime;
+        if (typeof gameState.roundStartTime === 'string') {
+            roundStartTime = new Date(gameState.roundStartTime).getTime();
+        } else {
+            roundStartTime = gameState.roundStartTime;
+        }
+        
         const elapsed = Date.now() - roundStartTime;
         const remaining = Math.max(0, gameState.roundDuration - elapsed);
         
@@ -844,15 +850,26 @@ class MultiplayerSync {
     // Get final results
     getFinalResults() {
         const gameState = this.useRealBackend ? this.gameState : this.localGameState;
+        
+        if (!gameState || !gameState.players) {
+            console.error('❌ No game state or players available for final results');
+            return [];
+        }
+        
         const players = Object.values(gameState.players);
+        
+        console.log('📊 Processing final results for', players.length, 'players');
         
         players.sort((a, b) => {
             if (b.score !== a.score) {
                 return b.score - a.score;
             }
             
-            const aTime = a.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
-            const bTime = b.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+            // Handle missing answers arrays
+            const aAnswers = a.answers || [];
+            const bAnswers = b.answers || [];
+            const aTime = aAnswers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+            const bTime = bAnswers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
             return aTime - bTime;
         });
 

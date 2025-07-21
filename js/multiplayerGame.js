@@ -620,7 +620,7 @@ class MultiplayerGame {
     updateTimerDisplay(timeRemaining) {
         if (this.timerElement) {
             if (timeRemaining > 0) {
-                this.timerElement.innerHTML = `⏱️ ${timeRemaining}s`;
+                this.timerElement.innerHTML = `${timeRemaining}s`;
                 this.timerElement.className = 'multiplayer-timer-display';
                 
                 // Add urgency styling when time is low
@@ -628,7 +628,7 @@ class MultiplayerGame {
                     this.timerElement.classList.add('timer-urgent');
                 }
             } else {
-                this.timerElement.innerHTML = '⏱️ 0s';
+                this.timerElement.innerHTML = '0s';
                 this.timerElement.classList.add('timer-expired');
             }
         }
@@ -688,19 +688,58 @@ class MultiplayerGame {
         
         if (!results || results.length === 0) {
             console.error('❌ No results available');
-            // Fallback - go back to main menu
+            // Fallback - try to get results from current game state
+            const gameState = this.multiplayerSync.useRealBackend ? 
+                this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+            
+            if (gameState && gameState.players) {
+                const fallbackResults = Object.values(gameState.players);
+                fallbackResults.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+                    
+                    const aTime = a.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+                    const bTime = b.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+                    return aTime - bTime;
+                });
+                
+                if (fallbackResults.length > 0) {
+                    this.displayResults(fallbackResults);
+                    return;
+                }
+            }
+            
+            // Final fallback - go back to main menu
+            console.warn('⚠️ No results available, returning to main menu');
             this.playAgain();
             return;
         }
         
+        this.displayResults(results);
+    }
+
+    displayResults(results) {
         const myPlayer = results.find(p => p.id === this.multiplayerSync.playerId);
         if (!myPlayer) {
             console.error('❌ Could not find current player in results');
+            // Try to find by any available identifier
+            const fallbackPlayer = results[0]; // Use first player as fallback
+            if (fallbackPlayer) {
+                console.warn('⚠️ Using fallback player for results display');
+                this.displayResultsWithPlayer(results, fallbackPlayer, results.length);
+                return;
+            }
             this.playAgain();
             return;
         }
         
         const myRank = results.indexOf(myPlayer) + 1;
+        this.displayResultsWithPlayer(results, myPlayer, myRank);
+    }
+
+    displayResultsWithPlayer(results, myPlayer, myRank) {
+        console.log('🎯 Displaying results for player:', myPlayer.nickname, 'Rank:', myRank);
         
         // Show results screen
         document.getElementById('multiplayer-results').style.display = 'block';
@@ -719,7 +758,8 @@ class MultiplayerGame {
         }
         
         // Update final stats
-        const correctAnswers = this.playerAnswers.filter(a => a && a.isCorrect).length;
+        const playerAnswers = myPlayer.answers || this.playerAnswers || [];
+        const correctAnswers = playerAnswers.filter(a => a && a.isCorrect).length;
         const accuracy = Math.round((correctAnswers / this.totalFlagsInGame) * 100);
         
         document.getElementById('final-score').textContent = `${correctAnswers}/${this.totalFlagsInGame}`;
@@ -740,6 +780,8 @@ class MultiplayerGame {
         const leaderboardList = document.getElementById('leaderboard-list');
         leaderboardList.innerHTML = '';
         
+        console.log('📊 Updating leaderboard with results:', results);
+        
         results.forEach((player, index) => {
             const playerDiv = document.createElement('div');
             playerDiv.className = 'player-result';
@@ -752,18 +794,20 @@ class MultiplayerGame {
             const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
             
             // Calculate total time for display
-            const totalTime = player.answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
-            const avgTime = Math.round(totalTime / this.totalFlagsInGame / 1000);
+            const answers = player.answers || [];
+            const totalTime = answers.reduce((sum, answer) => sum + (answer?.timeSpent || 0), 0);
+            const avgTime = answers.length > 0 ? Math.round(totalTime / answers.length / 1000) : 0;
+            const score = player.score || 0;
             
-            console.log('🏆 Displaying player in results:', player.nickname, 'Score:', player.score);
+            console.log('🏆 Displaying player in results:', player.nickname, 'Score:', score, 'Avg time:', avgTime);
             
             playerDiv.innerHTML = `
                 <div class="player-rank">${rankEmoji}</div>
                 <div class="player-info">
                     <div class="player-name">${player.nickname}</div>
-                    <div class="player-stats">${player.score}/${this.totalFlagsInGame} • ${avgTime}s avg</div>
+                    <div class="player-stats">${score}/${this.totalFlagsInGame} • ${avgTime}s avg</div>
                 </div>
-                <div class="player-score">${player.score}</div>
+                <div class="player-score">${score}</div>
             `;
             
             leaderboardList.appendChild(playerDiv);
