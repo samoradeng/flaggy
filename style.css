@@ -629,7 +629,8 @@ body {
     justify-content: center;
     padding: 0;
     border: none;
-    background: transparent;
+    background: #f0f0f0;
+    z-index: 10;
 }
 
 .close-btn:hover {
@@ -2115,4 +2116,201 @@ body {
         font-size: 12px;
         min-width: 60px;
     }
+}
+
+/* How to Play Overlay */
+#how-to-play-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.how-to-play-content {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.how-to-play-content h2 {
+    font-size: 28px;
+    margin-bottom: 24px;
+    color: #333;
+}
+
+.how-to-play-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.step-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.step p {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.game-modes-intro {
+    text-align: left;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.game-modes-intro p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: white;
+}
+
+.game-modes-intro strong {
+    color: #fff;
+}
+
+#how-to-play-close {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 16px 48px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#how-to-play-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Passport Preview on Home Screen */
+#passport-preview {
+    margin-top: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+#passport-preview:hover {
+    background: rgba(255, 255, 255, 1);
+    cursor: pointer;
+}
+
+#main-menu-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* Difficulty Select */
+.setting-select {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    font-size: 14px;
+    font-family: 'Roboto', arial, sans-serif;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.setting-select:hover {
+    border-color: #667eea;
+}
+
+.setting-select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* Timer Display for Hard Mode */
+#timer-display {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+#timer-display.warning {
+    background: linear-gradient(135deg, #ff4757, #ff3838);
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+#timer-count {
+    min-width: 24px;
+    text-align: center;
+}
+
+/* Extra options for medium difficulty */
+.extra-option {
+    display: none;
+}
+
+#options.medium-mode .extra-option {
+    display: block;
+}
+
+#options.medium-mode {
+    grid-template-columns: repeat(2, 1fr);
 }

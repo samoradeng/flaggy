@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Flagtriv">
     <link rel="icon" type="image/svg+xml" href="images/FLAGTRIV LOGO.svg">
+    <link rel="apple-touch-icon" href="images/FLAGTRIV LOGO.svg">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,6 +84,18 @@
             </button>
             <h2>Settings</h2>
             
+            <div class="settings-section">
+                <h3>🎯 Difficulty</h3>
+                <div class="setting-item">
+                    <span>Game Difficulty:</span>
+                    <select id="difficulty-select" class="setting-select">
+                        <option value="easy">Easy (4 options)</option>
+                        <option value="medium">Medium (6 options)</option>
+                        <option value="hard">Hard (timed)</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="settings-section">
                 <h3>🌍 Continent Filter</h3>
                 <div class="setting-item">
@@ -384,6 +402,33 @@
         </div>
     </div>
 
+    <!-- How to Play Overlay (First-time users) -->
+    <div id="how-to-play-overlay" style="display: none;">
+        <div class="how-to-play-content">
+            <h2>Welcome to Flagtriv!</h2>
+            <div class="how-to-play-steps">
+                <div class="step">
+                    <span class="step-icon">🏳️</span>
+                    <p>Look at the flag displayed</p>
+                </div>
+                <div class="step">
+                    <span class="step-icon">🤔</span>
+                    <p>Choose the correct country from 4 options</p>
+                </div>
+                <div class="step">
+                    <span class="step-icon">🏆</span>
+                    <p>Build streaks, unlock achievements, compete globally!</p>
+                </div>
+            </div>
+            <div class="game-modes-intro">
+                <p><strong>Daily Flag</strong> - One flag per day, compete on leaderboard</p>
+                <p><strong>Flag Master</strong> - Endless practice mode</p>
+                <p><strong>Flag Duel</strong> - Challenge friends in real-time</p>
+            </div>
+            <button id="how-to-play-close">Let's Play!</button>
+        </div>
+    </div>
+
     <div id="mode-selection" style="display: flex;">
         <div id="logo-container">
             <img id="flagtriv-logo-long" src="images/FLAGTRIV_LOGO_LONG.svg" alt="Flagtriv">
@@ -398,6 +443,9 @@
             <div id="daily-streak-info" style="display: none;">
                 <span>🔥 Daily Flag Streak: <span id="daily-streak-count">0</span></span>
             </div>
+            <div id="passport-preview" style="display: none;">
+                <span>🗺️ <span id="passport-preview-count">0</span> countries discovered</span>
+            </div>
         </div>
     </div>
 
@@ -405,11 +453,17 @@
         <h1 id="heading">Guess the Flag</h1>
         <p id="subHeading">Can you identify which country or territory this is?</p>
         <img id="flag" src="" alt="Country Flag">
+        <div id="timer-display" style="display: none;">
+            <span id="timer-icon">⏱️</span>
+            <span id="timer-count">10</span>
+        </div>
         <div id="options">
             <button class="option" disabled>Option 1</button>
             <button class="option" disabled>Option 2</button>
             <button class="option" disabled>Option 3</button>
             <button class="option" disabled>Option 4</button>
+            <button class="option extra-option" disabled style="display: none;">Option 5</button>
+            <button class="option extra-option" disabled style="display: none;">Option 6</button>
         </div>
         <p id="message"></p>
         <div id="facts" hidden>
@@ -504,5 +558,16 @@
     <script src="js/multiplayerSync.js"></script>
     <script src="js/multiplayerGame.js"></script>
     <script src="script.js"></script>
+
+    <!-- Register Service Worker for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
 </body>
 </html>

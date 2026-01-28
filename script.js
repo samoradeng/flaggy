@@ -21,6 +21,9 @@ let usedCountries = [];
 let totalXP = parseInt(localStorage.getItem('totalXP')) || 0;
 let isMultiplayerMode = false; // Global flag for multiplayer mode
 let countdownIntervalId = null; // Track countdown interval to prevent memory leaks
+let difficulty = localStorage.getItem('difficulty') || 'easy'; // easy, medium, hard
+let questionTimerId = null; // Timer for hard mode
+let questionTimeLeft = 10; // Seconds for hard mode
 
 // Initialize classes
 let continentFilter;
@@ -58,9 +61,51 @@ function initializeGame() {
     initializeSettings();
     initializeStats();
     updateMainMenuStats();
-    
-    // Show mode selection by default
-    showModeSelection();
+
+    // Validate and fix any stale streak data
+    validateStreakData();
+
+    // Show how to play for first-time users
+    if (!localStorage.getItem('hasSeenTutorial')) {
+        showHowToPlay();
+    } else {
+        // Show mode selection by default
+        showModeSelection();
+    }
+}
+
+function validateStreakData() {
+    // Fix stale streak data that might show incorrect values
+    if (dailyChallenge) {
+        const stats = dailyChallenge.dailyStats;
+        const today = dailyChallenge.today;
+
+        // If there's a streak but user hasn't played today and didn't play yesterday, reset it
+        if (stats.streak > 0 && stats.lastPlayedDate) {
+            const yesterday = new Date();
+            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+            const yesterdayStr = dailyChallenge.getStandardizedDateFromDate(yesterday);
+
+            // If last played is not today and not yesterday, streak should be 0
+            if (stats.lastPlayedDate !== today && stats.lastPlayedDate !== yesterdayStr) {
+                console.log('Resetting stale streak from', stats.streak, 'to 0');
+                dailyChallenge.dailyStats.streak = 0;
+                dailyChallenge.saveDailyStats();
+            }
+        }
+
+        // If no games have been played, ensure streak is 0
+        if (stats.totalPlayed === 0 && stats.streak > 0) {
+            console.log('Resetting invalid streak (no games played)');
+            dailyChallenge.dailyStats.streak = 0;
+            dailyChallenge.saveDailyStats();
+        }
+    }
+}
+
+function showHowToPlay() {
+    document.getElementById('how-to-play-overlay').style.display = 'flex';
+    document.getElementById('mode-selection').style.display = 'none';
 }
 
 function initializeEventListeners() {
@@ -79,6 +124,25 @@ function initializeEventListeners() {
     
     if (homeLogo) {
         homeLogo.addEventListener('click', showModeSelection);
+    }
+
+    // How to Play overlay
+    const howToPlayClose = document.getElementById('how-to-play-close');
+    if (howToPlayClose) {
+        howToPlayClose.addEventListener('click', () => {
+            localStorage.setItem('hasSeenTutorial', 'true');
+            document.getElementById('how-to-play-overlay').style.display = 'none';
+            showModeSelection();
+        });
+    }
+
+    // Passport preview click - opens stats modal to passport tab
+    const passportPreview = document.getElementById('passport-preview');
+    if (passportPreview) {
+        passportPreview.addEventListener('click', () => {
+            showStatsModal();
+            switchTab('passport');
+        });
     }
 
     // Game controls
@@ -217,6 +281,16 @@ function initializeEventListeners() {
         soundToggle.addEventListener('click', toggleSound);
     }
 
+    // Difficulty select
+    const difficultySelect = document.getElementById('difficulty-select');
+    if (difficultySelect) {
+        difficultySelect.value = difficulty;
+        difficultySelect.addEventListener('change', (e) => {
+            difficulty = e.target.value;
+            localStorage.setItem('difficulty', difficulty);
+        });
+    }
+
     // Daily name modal
     const submitDailyName = document.getElementById('submit-daily-name');
     const skipDailyName = document.getElementById('skip-daily-name');
@@ -262,7 +336,9 @@ function initializeEventListeners() {
     // Daily complete screen close button
     const dailyCompleteClose = document.querySelector('.daily-complete-close');
     if (dailyCompleteClose) {
-        dailyCompleteClose.addEventListener('click', () => {
+        dailyCompleteClose.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             document.getElementById('daily-complete-screen').style.display = 'none';
             showModeSelection();
         });
@@ -348,6 +424,9 @@ function toggleSound() {
 }
 
 function showModeSelection() {
+    // Stop any running timers
+    stopQuestionTimer();
+
     // Hide all game screens
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('top-bar').style.display = 'none';
@@ -356,20 +435,22 @@ function showModeSelection() {
     document.getElementById('endless-game-over-screen').style.display = 'none';
     document.getElementById('multiplayer-lobby').style.display = 'none';
     document.getElementById('multiplayer-results').style.display = 'none';
-    
+
     // Show mode selection
     document.getElementById('mode-selection').style.display = 'flex';
-    
+
     // Reset multiplayer mode flag
     isMultiplayerMode = false;
-    
+
     updateMainMenuStats();
 }
 
 function updateMainMenuStats() {
     const dailyStreakInfo = document.getElementById('daily-streak-info');
     const dailyStreakCount = document.getElementById('daily-streak-count');
-    
+    const passportPreview = document.getElementById('passport-preview');
+    const passportPreviewCount = document.getElementById('passport-preview-count');
+
     if (dailyChallenge && dailyStreakInfo && dailyStreakCount) {
         const streak = dailyChallenge.dailyStats.streak || 0;
         if (streak > 0) {
@@ -377,6 +458,17 @@ function updateMainMenuStats() {
             dailyStreakInfo.style.display = 'block';
         } else {
             dailyStreakInfo.style.display = 'none';
+        }
+    }
+
+    // Update passport preview
+    if (achievementSystem && passportPreview && passportPreviewCount) {
+        const countriesDiscovered = achievementSystem.getCorrectlyAnsweredCountries().size;
+        if (countriesDiscovered > 0) {
+            passportPreviewCount.textContent = countriesDiscovered;
+            passportPreview.style.display = 'block';
+        } else {
+            passportPreview.style.display = 'none';
         }
     }
 }
@@ -499,42 +591,139 @@ function displayQuestion() {
 function generateOptions() {
     const filteredCountries = getFilteredCountries();
     const allCountries = Object.values(filteredCountries);
-    
-    // Get 3 random incorrect answers from the same filtered set
+
+    // Determine number of options based on difficulty
+    const numOptions = difficulty === 'medium' ? 6 : 4;
+    const numIncorrect = numOptions - 1;
+
+    // Get random incorrect answers from the same filtered set
     const incorrectAnswers = [];
-    const otherCountries = allCountries.filter(country => 
+    const otherCountries = allCountries.filter(country =>
         country.alpha2Code !== currentCountry.alpha2Code
     );
-    
-    while (incorrectAnswers.length < 3 && otherCountries.length > 0) {
+
+    while (incorrectAnswers.length < numIncorrect && otherCountries.length > 0) {
         const randomIndex = Math.floor(Math.random() * otherCountries.length);
         incorrectAnswers.push(otherCountries[randomIndex].name);
         otherCountries.splice(randomIndex, 1);
     }
-    
+
     // Combine correct and incorrect answers
     options = [...incorrectAnswers, currentCountry.name];
-    
+
     // Shuffle the options
     for (let i = options.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [options[i], options[j]] = [options[j], options[i]];
     }
-    
+
+    // Update option buttons visibility based on difficulty
+    const optionsContainer = document.getElementById('options');
+    const extraOptions = document.querySelectorAll('.extra-option');
+
+    if (difficulty === 'medium') {
+        optionsContainer.classList.add('medium-mode');
+        extraOptions.forEach(btn => btn.style.display = 'block');
+    } else {
+        optionsContainer.classList.remove('medium-mode');
+        extraOptions.forEach(btn => btn.style.display = 'none');
+    }
+
     // Update option buttons
     const optionButtons = document.querySelectorAll('.option');
     optionButtons.forEach((button, index) => {
-        button.textContent = options[index];
-        button.onclick = () => selectAnswer(options[index]);
-        button.disabled = false;
-        button.classList.remove('correct-answer', 'wrong-answer', 'disabled');
+        if (index < options.length) {
+            button.textContent = options[index];
+            button.onclick = () => selectAnswer(options[index]);
+            button.disabled = false;
+            button.classList.remove('correct-answer', 'wrong-answer', 'disabled');
+        }
     });
+
+    // Start timer for hard mode
+    if (difficulty === 'hard' && gameMode !== 'daily') {
+        startQuestionTimer();
+    }
+}
+
+function startQuestionTimer() {
+    const timerDisplay = document.getElementById('timer-display');
+    const timerCount = document.getElementById('timer-count');
+
+    // Clear any existing timer
+    if (questionTimerId) {
+        clearInterval(questionTimerId);
+    }
+
+    questionTimeLeft = 10;
+    timerDisplay.style.display = 'flex';
+    timerDisplay.classList.remove('warning');
+    timerCount.textContent = questionTimeLeft;
+
+    questionTimerId = setInterval(() => {
+        questionTimeLeft--;
+        timerCount.textContent = questionTimeLeft;
+
+        if (questionTimeLeft <= 3) {
+            timerDisplay.classList.add('warning');
+        }
+
+        if (questionTimeLeft <= 0) {
+            clearInterval(questionTimerId);
+            questionTimerId = null;
+            // Time's up - treat as wrong answer
+            handleTimeUp();
+        }
+    }, 1000);
+}
+
+function stopQuestionTimer() {
+    if (questionTimerId) {
+        clearInterval(questionTimerId);
+        questionTimerId = null;
+    }
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) {
+        timerDisplay.style.display = 'none';
+    }
+}
+
+function handleTimeUp() {
+    const optionButtons = document.querySelectorAll('.option');
+
+    // Disable all buttons
+    optionButtons.forEach(button => {
+        button.disabled = true;
+        button.classList.add('disabled');
+        // Highlight correct answer
+        if (button.textContent === currentCountry.name) {
+            button.classList.add('correct-answer');
+        }
+    });
+
+    soundEffects.playWrong();
+    lives--;
+    updateUI();
+
+    document.getElementById('message').textContent = `⏱️ Time's up! The answer was ${currentCountry.name}`;
+
+    if (lives <= 0) {
+        endChallengeMode();
+    } else {
+        showFacts();
+        const nextButton = document.getElementById('next');
+        nextButton.hidden = false;
+        nextButton.textContent = 'Next Flag';
+    }
 }
 
 function selectAnswer(selectedAnswer) {
+    // Stop timer if running
+    stopQuestionTimer();
+
     const isCorrect = selectedAnswer === currentCountry.name;
     const optionButtons = document.querySelectorAll('.option');
-    
+
     // Disable all buttons
     optionButtons.forEach(button => {
         button.disabled = true;
@@ -695,7 +884,10 @@ function resetQuestionUI() {
     document.getElementById('message').textContent = '';
     document.getElementById('facts').hidden = true;
     document.getElementById('next').hidden = true;
-    
+
+    // Stop any running timer
+    stopQuestionTimer();
+
     const optionButtons = document.querySelectorAll('.option');
     optionButtons.forEach(button => {
         button.disabled = false;
