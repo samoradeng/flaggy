@@ -1,0 +1,11 @@
+# Flagtriv - Flag Quiz Game
+# https://flagtriv.com
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://flagtriv.com/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1
