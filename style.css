@@ -2196,24 +2196,25 @@ body {
 .game-modes-intro {
     text-align: left;
     padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f8f9fa;
     border-radius: 12px;
     margin-bottom: 24px;
+    border: 1px solid #e0e0e0;
 }
 
 .game-modes-intro p {
     margin: 8px 0;
     font-size: 14px;
-    color: white;
+    color: #333;
 }
 
 .game-modes-intro strong {
-    color: #fff;
+    color: #333;
 }
 
 #how-to-play-close {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: #FFCC00;
+    color: #333;
     border: none;
     padding: 16px 48px;
     font-size: 18px;
@@ -2225,7 +2226,8 @@ body {
 
 #how-to-play-close:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 20px rgba(255, 204, 0, 0.4);
+    background: #FFD633;
 }
 
 /* Passport Preview on Home Screen */

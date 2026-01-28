@@ -106,6 +106,25 @@ function validateStreakData() {
 function showHowToPlay() {
     document.getElementById('how-to-play-overlay').style.display = 'flex';
     document.getElementById('mode-selection').style.display = 'none';
+
+    // Try to get user's country flag for personalization
+    fetchUserFlag();
+}
+
+async function fetchUserFlag() {
+    try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        if (data.country_code) {
+            const flagEmoji = countryCodeToFlag(data.country_code);
+            const flagIcon = document.getElementById('user-flag-icon');
+            if (flagIcon && flagEmoji) {
+                flagIcon.textContent = flagEmoji;
+            }
+        }
+    } catch (error) {
+        console.log('Could not fetch user location for flag');
+    }
 }
 
 function initializeEventListeners() {
@@ -523,7 +542,7 @@ function startChallengeMode() {
     usedCountries = [];
     
     // Update UI
-    document.getElementById('heading').textContent = 'Flag Master';
+    document.getElementById('heading').textContent = 'Practice Mode';
     document.getElementById('subHeading').textContent = 'How many flags can you identify?';
     document.getElementById('lives-display').style.display = 'flex';
     updateUI();
@@ -1082,7 +1101,7 @@ async function showDailyLeaderboard() {
 }
 
 function shareEndlessResultHandler() {
-    const shareText = `🌍 I scored ${score} points in Flagtriv Flag Master!\n🔥 Best streak: ${bestStreak}\n\nCan you beat my score? Play at flagtriv.com`;
+    const shareText = `🌍 I scored ${score} points in Flagtriv Practice Mode!\n🔥 Best streak: ${bestStreak}\n\nCan you beat my score? Play at flagtriv.com`;
     
     if (navigator.share) {
         navigator.share({
