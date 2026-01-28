@@ -1,8 +1,9 @@
 {
-  "name": "Flagtriv - Guess the World Flags",
+  "name": "Flagtriv - #1 Flag Quiz Game",
   "short_name": "Flagtriv",
-  "description": "Test your flag knowledge with daily challenges, endless mode, and multiplayer!",
+  "description": "Guess flags from 195 countries! Daily challenges, practice mode, and multiplayer. The best free flag quiz game.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
@@ -15,6 +16,26 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["games", "education"],
-  "lang": "en"
+  "categories": ["games", "education", "trivia"],
+  "lang": "en",
+  "dir": "ltr",
+  "iarc_rating_id": "",
+  "prefer_related_applications": false,
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Daily Flag",
+      "short_name": "Daily",
+      "description": "Play today's daily flag challenge",
+      "url": "/?mode=daily",
+      "icons": [{ "src": "images/FLAGTRIV LOGO.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Practice Mode",
+      "short_name": "Practice",
+      "description": "Practice with unlimited flags",
+      "url": "/?mode=practice",
+      "icons": [{ "src": "images/FLAGTRIV LOGO.svg", "sizes": "96x96" }]
+    }
+  ]
 }

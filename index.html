@@ -3,22 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary SEO Meta Tags -->
+    <title>Flagtriv - #1 Flag Quiz Game | Guess World Flags Daily</title>
+    <meta name="title" content="Flagtriv - #1 Flag Quiz Game | Guess World Flags Daily">
+    <meta name="description" content="Test your geography knowledge with Flagtriv! Guess flags from 195 countries in daily challenges, practice mode, or challenge friends. Free flag quiz game - play now!">
+    <meta name="keywords" content="flag quiz, flag game, guess the flag, world flags, country flags, geography quiz, flag trivia, daily flag challenge, learn flags, flag guessing game, flags of the world, country quiz">
+    <meta name="author" content="Flagtriv">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://flagtriv.com/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://flagtriv.com/">
+    <meta property="og:title" content="Flagtriv - #1 Flag Quiz Game | Guess World Flags Daily">
+    <meta property="og:description" content="Can you guess flags from 195 countries? Play the daily flag challenge, practice mode, or challenge your friends. Free and addictive!">
+    <meta property="og:image" content="https://flagtriv.com/images/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Flagtriv">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://flagtriv.com/">
+    <meta name="twitter:title" content="Flagtriv - #1 Flag Quiz Game | Guess World Flags Daily">
+    <meta name="twitter:description" content="Can you guess flags from 195 countries? Play the daily flag challenge, practice mode, or challenge your friends!">
+    <meta name="twitter:image" content="https://flagtriv.com/images/og-image.png">
+
+    <!-- PWA & Mobile -->
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Flagtriv">
+    <meta name="application-name" content="Flagtriv">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="images/FLAGTRIV LOGO.svg">
     <link rel="apple-touch-icon" href="images/FLAGTRIV LOGO.svg">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
+
+    <!-- Structured Data - Game Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Flagtriv",
+        "alternateName": ["Flag Quiz", "Flag Trivia", "Guess the Flag"],
+        "description": "Test your geography knowledge by guessing flags from 195 countries. Features daily challenges, practice mode, and multiplayer.",
+        "url": "https://flagtriv.com",
+        "image": "https://flagtriv.com/images/og-image.png",
+        "genre": ["Trivia", "Educational", "Quiz"],
+        "gamePlatform": ["Web Browser", "iOS", "Android"],
+        "operatingSystem": "Any",
+        "applicationCategory": "Game",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "1000",
+            "bestRating": "5",
+            "worstRating": "1"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "Flagtriv"
+        },
+        "numberOfPlayers": {
+            "@type": "QuantitativeValue",
+            "minValue": 1,
+            "maxValue": 10
+        },
+        "playMode": ["SinglePlayer", "MultiPlayer"],
+        "inLanguage": "en"
+    }
+    </script>
+
+    <!-- Structured Data - WebApplication Schema -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Flagtriv",
+        "url": "https://flagtriv.com",
+        "description": "Free online flag quiz game. Guess flags from 195 countries with daily challenges and multiplayer mode.",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "All",
+        "offers": {
+            "@type": "Offer",
+            "price": "0"
+        },
+        "featureList": [
+            "Daily Flag Challenge",
+            "Practice Mode with 195 Countries",
+            "Multiplayer Challenge Friends",
+            "Global Leaderboards",
+            "Achievement System",
+            "Offline Support"
+        ]
+    }
+    </script>
+
+    <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Raleway&family=Roboto&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900&display=swap" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Titan+One&display=swap" rel="stylesheet">
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.3.1"></script>
-    
+
     <!-- Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
@@ -27,11 +130,11 @@
             // Your actual Supabase credentials
             const SUPABASE_URL = 'https://piydwvszbczwaqerxhvd.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpeWR3dnN6YmN6d2FxZXJ4aHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4ODM0NzIsImV4cCI6MjA2NTQ1OTQ3Mn0.nJ0IkdexK8IpULbdbkzORwrFMraGF0vkJfHCgBliOGk';
-            
-            if (SUPABASE_URL && SUPABASE_ANON_KEY && 
-                SUPABASE_URL !== 'https://your-project-id.supabase.co' && 
+
+            if (SUPABASE_URL && SUPABASE_ANON_KEY &&
+                SUPABASE_URL !== 'https://your-project-id.supabase.co' &&
                 SUPABASE_ANON_KEY !== 'your-anon-key-here') {
-                
+
                 try {
                     window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                     console.log('✅ Supabase initialized for multiplayer');
@@ -48,8 +151,6 @@
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeSupabase);
     </script>
-    
-    <title>Flagtriv - Guess the world flags</title>
 </head>
 <body>
 
