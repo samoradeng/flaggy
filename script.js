@@ -426,30 +426,92 @@ function showModeSelection() {
 }
 
 function updateMainMenuStats() {
-    const dailyStreakInfo = document.getElementById('daily-streak-info');
-    const dailyStreakCount = document.getElementById('daily-streak-count');
-    const passportPreview = document.getElementById('passport-preview');
-    const passportPreviewCount = document.getElementById('passport-preview-count');
+    // Update Day number (days since launch: Jan 1, 2025)
+    const dayNumberEl = document.getElementById('daily-day-number');
+    if (dayNumberEl) {
+        const launchDate = new Date('2025-01-01');
+        const today = new Date();
+        const dayNumber = Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
+        dayNumberEl.textContent = `Day #${dayNumber}`;
+    }
 
-    if (dailyChallenge && dailyStreakInfo && dailyStreakCount) {
+    // Update streak badge (prominent display)
+    const streakBadge = document.getElementById('daily-streak-badge');
+    const streakCount = document.getElementById('streak-count');
+    if (dailyChallenge && streakBadge && streakCount) {
         const streak = dailyChallenge.dailyStats.streak || 0;
         if (streak > 0) {
-            dailyStreakCount.textContent = streak;
-            dailyStreakInfo.style.display = 'block';
+            streakCount.textContent = streak;
+            streakBadge.style.display = 'inline';
         } else {
-            dailyStreakInfo.style.display = 'none';
+            streakBadge.style.display = 'none';
         }
     }
 
     // Update passport preview
+    const passportPreview = document.getElementById('passport-preview');
+    const passportPreviewCount = document.getElementById('passport-preview-count');
     if (achievementSystem && passportPreview && passportPreviewCount) {
         const countriesDiscovered = achievementSystem.getCorrectlyAnsweredCountries().size;
-        if (countriesDiscovered > 0) {
-            passportPreviewCount.textContent = countriesDiscovered;
-            passportPreview.style.display = 'block';
-        } else {
-            passportPreview.style.display = 'none';
-        }
+        passportPreviewCount.textContent = countriesDiscovered;
+        passportPreview.style.display = 'block';
+    }
+
+    // Update social proof (track and display player count)
+    updateSocialProof();
+}
+
+function updateSocialProof() {
+    const socialProof = document.getElementById('social-proof');
+    const socialProofText = document.getElementById('social-proof-text');
+
+    if (!socialProof || !socialProofText) return;
+
+    // Track this session if not already tracked today
+    const today = new Date().toISOString().split('T')[0];
+    const lastTracked = localStorage.getItem('lastSessionTracked');
+
+    if (lastTracked !== today) {
+        localStorage.setItem('lastSessionTracked', today);
+        // Increment local play count
+        const totalPlays = parseInt(localStorage.getItem('totalLocalPlays') || '0') + 1;
+        localStorage.setItem('totalLocalPlays', totalPlays.toString());
+
+        // Track to Supabase if available
+        trackPlaySession();
+    }
+
+    // For now, show encouraging text based on their progress
+    const gamesPlayed = parseInt(localStorage.getItem('challengeTimesPlayed') || '0');
+    const dailyPlayed = dailyChallenge?.dailyStats?.totalPlayed || 0;
+    const totalPlays = gamesPlayed + dailyPlayed;
+
+    if (totalPlays > 0) {
+        socialProofText.textContent = `🌍 You've played ${totalPlays} ${totalPlays === 1 ? 'game' : 'games'}`;
+        socialProof.style.display = 'block';
+    } else {
+        socialProof.style.display = 'none';
+    }
+}
+
+async function trackPlaySession() {
+    // Track play session to Supabase for social proof
+    if (!window.supabase) return;
+
+    try {
+        // Try to increment global play counter
+        await window.supabase
+            .from('play_stats')
+            .upsert({
+                id: 'global',
+                total_plays: 1
+            }, {
+                onConflict: 'id',
+                ignoreDuplicates: false
+            });
+    } catch (error) {
+        // Silently fail - social proof is not critical
+        console.log('Social proof tracking not available');
     }
 }
 

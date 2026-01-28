@@ -2118,6 +2118,48 @@ body {
     }
 }
 
+/* Daily Info Bar (Day # and Streak) */
+#daily-info-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+#daily-day-number {
+    color: #666;
+}
+
+#daily-streak-badge {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Challenge Friends Wrapper */
+#challenge-friends-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+#challenge-friends-wrapper #challenge-friends-btn {
+    width: 100%;
+}
+
+#challenge-friends-subtitle {
+    font-size: 12px;
+    color: #888;
+    margin-top: 4px;
+}
+
 /* Passport Preview on Home Screen */
 #passport-preview {
     margin-top: 8px;
@@ -2126,6 +2168,13 @@ body {
     border-radius: 20px;
     font-size: 14px;
     color: #666;
+}
+
+/* Social Proof */
+#social-proof {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #888;
 }
 
 #passport-preview:hover {

@@ -407,17 +407,24 @@
             <img id="flagtriv-logo-long" src="images/FLAGTRIV_LOGO_LONG.svg" alt="Flagtriv">
         </div>
         <span id="Welcome-module_SubHeading">Guess the world flags!</span>
+        <div id="daily-info-bar">
+            <span id="daily-day-number">Day #1</span>
+            <span id="daily-streak-badge" style="display: none;">🔥 <span id="streak-count">0</span></span>
+        </div>
         <div id="mode-buttons">
             <button id="daily-challenge-btn">Daily Flag</button>
             <button id="challenge-mode-btn">🎮 Practice Mode</button>
-            <button id="challenge-friends-btn">⚔️ Challenge Friends</button>
+            <div id="challenge-friends-wrapper">
+                <button id="challenge-friends-btn">⚔️ Challenge Friends</button>
+                <span id="challenge-friends-subtitle">Play the same flags & compare scores</span>
+            </div>
         </div>
         <div id="main-menu-stats">
-            <div id="daily-streak-info" style="display: none;">
-                <span>🔥 Daily Flag Streak: <span id="daily-streak-count">0</span></span>
-            </div>
             <div id="passport-preview" style="display: none;">
-                <span>🗺️ <span id="passport-preview-count">0</span> countries discovered</span>
+                <span>🗺️ <span id="passport-preview-count">0</span>/195 flags discovered</span>
+            </div>
+            <div id="social-proof" style="display: none;">
+                <span id="social-proof-text"></span>
             </div>
         </div>
     </div>
