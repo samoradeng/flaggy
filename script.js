@@ -1,6 +1,16 @@
 // Global variables
 let countries = {};
 let currentCountry = null;
+
+// Convert country code to flag emoji (e.g., "PH" → "🇵🇭")
+function countryCodeToFlag(countryCode) {
+    if (!countryCode || countryCode.length !== 2) return '';
+    const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+}
 let options = [];
 let score = 0;
 let streak = 0;
@@ -10,6 +20,7 @@ let gameMode = 'challenge'; // 'daily' or 'challenge' or 'multiplayer'
 let usedCountries = [];
 let totalXP = parseInt(localStorage.getItem('totalXP')) || 0;
 let isMultiplayerMode = false; // Global flag for multiplayer mode
+let countdownIntervalId = null; // Track countdown interval to prevent memory leaks
 
 // Initialize classes
 let continentFilter;
@@ -132,11 +143,11 @@ function initializeEventListeners() {
     }
 
     if (shareEndlessResult) {
-        shareEndlessResult.addEventListener('click', shareEndlessResult);
+        shareEndlessResult.addEventListener('click', shareEndlessResultHandler);
     }
 
     if (shareDailyResult) {
-        shareDailyResult.addEventListener('click', shareDailyResult);
+        shareDailyResult.addEventListener('click', shareDailyResultHandler);
     }
 
     // Tab switching
@@ -245,6 +256,15 @@ function initializeEventListeners() {
     if (closeLeaderboard) {
         closeLeaderboard.addEventListener('click', () => {
             document.getElementById('daily-leaderboard-modal').style.display = 'none';
+        });
+    }
+
+    // Daily complete screen close button
+    const dailyCompleteClose = document.querySelector('.daily-complete-close');
+    if (dailyCompleteClose) {
+        dailyCompleteClose.addEventListener('click', () => {
+            document.getElementById('daily-complete-screen').style.display = 'none';
+            showModeSelection();
         });
     }
 
@@ -752,9 +772,14 @@ function showDailyComplete() {
     
     // Show countdown to next challenge
     document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
-    
+
+    // Clear any existing countdown interval to prevent memory leaks
+    if (countdownIntervalId) {
+        clearInterval(countdownIntervalId);
+    }
+
     // Update countdown every minute
-    setInterval(() => {
+    countdownIntervalId = setInterval(() => {
         document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
     }, 60000);
 }
@@ -839,10 +864,11 @@ async function showDailyLeaderboard() {
                 const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
                 const timeDisplay = `${entry.time}s`;
                 const attemptsDisplay = entry.attempts === 1 ? '(1st try!)' : `(${entry.attempts} tries)`;
-                
+                const flagEmoji = entry.country !== 'Unknown' ? countryCodeToFlag(entry.country) : '';
+
                 entryDiv.innerHTML = `
                     <div class="rank">${rankEmoji}</div>
-                    <div class="player-name">${entry.name} ${entry.country !== 'Unknown' ? entry.country : ''}</div>
+                    <div class="player-name">${entry.name} ${flagEmoji}</div>
                     <div class="player-time">${timeDisplay} ${attemptsDisplay}</div>
                 `;
                 
@@ -863,7 +889,7 @@ async function showDailyLeaderboard() {
     }
 }
 
-function shareEndlessResult() {
+function shareEndlessResultHandler() {
     const shareText = `🌍 I scored ${score} points in Flagtriv Flag Master!\n🔥 Best streak: ${bestStreak}\n\nCan you beat my score? Play at flagtriv.com`;
     
     if (navigator.share) {
@@ -878,7 +904,7 @@ function shareEndlessResult() {
     }
 }
 
-function shareDailyResult() {
+function shareDailyResultHandler() {
     const result = dailyChallenge.dailyStats.results[dailyChallenge.today];
     const shareText = dailyChallenge.getShareText(result);
     

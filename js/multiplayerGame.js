@@ -248,14 +248,30 @@ class MultiplayerGame {
 
     copyLobbyLink() {
         const linkInput = document.getElementById('lobby-challenge-link');
+        const link = linkInput.value;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(() => {
+                this.showToast('🔗 Link copied! Share it with your friends.');
+            }).catch((err) => {
+                console.error('Failed to copy link:', err);
+                this.fallbackCopyLink(linkInput);
+            });
+        } else {
+            this.fallbackCopyLink(linkInput);
+        }
+    }
+
+    fallbackCopyLink(linkInput) {
+        // Fallback for older browsers
         linkInput.select();
         linkInput.setSelectionRange(0, 99999);
-        
         try {
             document.execCommand('copy');
             this.showToast('🔗 Link copied! Share it with your friends.');
         } catch (err) {
-            console.error('Failed to copy link:', err);
+            console.error('Fallback copy failed:', err);
+            this.showToast('❌ Unable to copy link');
         }
     }
 
@@ -621,19 +637,23 @@ class MultiplayerGame {
 
     showMultiplayerFacts() {
         const facts = document.getElementById('facts');
-        
+
         // Safety check: ensure we have a valid current flag
-        if (!this.currentFlag || !this.currentFlag.capital || !this.currentFlag.subregion) {
-            console.error('❌ Invalid current flag for facts display:', this.currentFlag);
+        if (!this.currentFlag) {
+            console.error('❌ No current flag for facts display');
             return;
         }
-        
+
+        // Build facts with available data, using fallbacks for missing fields
+        const capital = this.currentFlag.capital || 'Unknown';
+        const location = this.currentFlag.subregion || this.currentFlag.region || 'Unknown';
+
         facts.innerHTML = `
-            <p class="fact-text"><strong>Capital:</strong> ${this.currentFlag.capital}</p>
-            <p class="fact-text"><strong>Location:</strong> ${this.currentFlag.subregion}</p>
+            <p class="fact-text"><strong>Capital:</strong> ${capital}</p>
+            <p class="fact-text"><strong>Location:</strong> ${location}</p>
         `;
         facts.hidden = false;
-        
+
         // Hide trivia section
         document.getElementById('flag-trivia').hidden = true;
     }
