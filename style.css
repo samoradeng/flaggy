@@ -17,7 +17,7 @@
 #Welcome-module_SubHeading {
     font-size: 24px;
     margin-top: 0px;
-    margin-bottom: 32px;
+    margin-bottom: 16px;
     font-weight: normal;
     color: #3c4043;
 }
@@ -1363,7 +1363,7 @@ body {
 #logo-container {
     position: relative;
     height: 120px;
-    margin-bottom: 24px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
