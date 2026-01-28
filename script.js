@@ -58,9 +58,51 @@ function initializeGame() {
     initializeSettings();
     initializeStats();
     updateMainMenuStats();
-    
-    // Show mode selection by default
-    showModeSelection();
+
+    // Validate and fix any stale streak data
+    validateStreakData();
+
+    // Show how to play for first-time users
+    if (!localStorage.getItem('hasSeenTutorial')) {
+        showHowToPlay();
+    } else {
+        // Show mode selection by default
+        showModeSelection();
+    }
+}
+
+function validateStreakData() {
+    // Fix stale streak data that might show incorrect values
+    if (dailyChallenge) {
+        const stats = dailyChallenge.dailyStats;
+        const today = dailyChallenge.today;
+
+        // If there's a streak but user hasn't played today and didn't play yesterday, reset it
+        if (stats.streak > 0 && stats.lastPlayedDate) {
+            const yesterday = new Date();
+            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+            const yesterdayStr = dailyChallenge.getStandardizedDateFromDate(yesterday);
+
+            // If last played is not today and not yesterday, streak should be 0
+            if (stats.lastPlayedDate !== today && stats.lastPlayedDate !== yesterdayStr) {
+                console.log('Resetting stale streak from', stats.streak, 'to 0');
+                dailyChallenge.dailyStats.streak = 0;
+                dailyChallenge.saveDailyStats();
+            }
+        }
+
+        // If no games have been played, ensure streak is 0
+        if (stats.totalPlayed === 0 && stats.streak > 0) {
+            console.log('Resetting invalid streak (no games played)');
+            dailyChallenge.dailyStats.streak = 0;
+            dailyChallenge.saveDailyStats();
+        }
+    }
+}
+
+function showHowToPlay() {
+    document.getElementById('how-to-play-overlay').style.display = 'flex';
+    document.getElementById('mode-selection').style.display = 'none';
 }
 
 function initializeEventListeners() {
@@ -79,6 +121,25 @@ function initializeEventListeners() {
     
     if (homeLogo) {
         homeLogo.addEventListener('click', showModeSelection);
+    }
+
+    // How to Play overlay
+    const howToPlayClose = document.getElementById('how-to-play-close');
+    if (howToPlayClose) {
+        howToPlayClose.addEventListener('click', () => {
+            localStorage.setItem('hasSeenTutorial', 'true');
+            document.getElementById('how-to-play-overlay').style.display = 'none';
+            showModeSelection();
+        });
+    }
+
+    // Passport preview click - opens stats modal to passport tab
+    const passportPreview = document.getElementById('passport-preview');
+    if (passportPreview) {
+        passportPreview.addEventListener('click', () => {
+            showStatsModal();
+            switchTab('passport');
+        });
     }
 
     // Game controls
@@ -371,7 +432,9 @@ function showModeSelection() {
 function updateMainMenuStats() {
     const dailyStreakInfo = document.getElementById('daily-streak-info');
     const dailyStreakCount = document.getElementById('daily-streak-count');
-    
+    const passportPreview = document.getElementById('passport-preview');
+    const passportPreviewCount = document.getElementById('passport-preview-count');
+
     if (dailyChallenge && dailyStreakInfo && dailyStreakCount) {
         const streak = dailyChallenge.dailyStats.streak || 0;
         if (streak > 0) {
@@ -379,6 +442,17 @@ function updateMainMenuStats() {
             dailyStreakInfo.style.display = 'block';
         } else {
             dailyStreakInfo.style.display = 'none';
+        }
+    }
+
+    // Update passport preview
+    if (achievementSystem && passportPreview && passportPreviewCount) {
+        const countriesDiscovered = achievementSystem.getCorrectlyAnsweredCountries().size;
+        if (countriesDiscovered > 0) {
+            passportPreviewCount.textContent = countriesDiscovered;
+            passportPreview.style.display = 'block';
+        } else {
+            passportPreview.style.display = 'none';
         }
     }
 }
