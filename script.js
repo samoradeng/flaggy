@@ -10,6 +10,7 @@ let gameMode = 'challenge'; // 'daily' or 'challenge' or 'multiplayer'
 let usedCountries = [];
 let totalXP = parseInt(localStorage.getItem('totalXP')) || 0;
 let isMultiplayerMode = false; // Global flag for multiplayer mode
+let countdownIntervalId = null; // Track countdown interval to prevent memory leaks
 
 // Initialize classes
 let continentFilter;
@@ -132,11 +133,11 @@ function initializeEventListeners() {
     }
 
     if (shareEndlessResult) {
-        shareEndlessResult.addEventListener('click', shareEndlessResult);
+        shareEndlessResult.addEventListener('click', shareEndlessResultHandler);
     }
 
     if (shareDailyResult) {
-        shareDailyResult.addEventListener('click', shareDailyResult);
+        shareDailyResult.addEventListener('click', shareDailyResultHandler);
     }
 
     // Tab switching
@@ -752,9 +753,14 @@ function showDailyComplete() {
     
     // Show countdown to next challenge
     document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
-    
+
+    // Clear any existing countdown interval to prevent memory leaks
+    if (countdownIntervalId) {
+        clearInterval(countdownIntervalId);
+    }
+
     // Update countdown every minute
-    setInterval(() => {
+    countdownIntervalId = setInterval(() => {
         document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
     }, 60000);
 }
@@ -863,7 +869,7 @@ async function showDailyLeaderboard() {
     }
 }
 
-function shareEndlessResult() {
+function shareEndlessResultHandler() {
     const shareText = `🌍 I scored ${score} points in Flagtriv Flag Master!\n🔥 Best streak: ${bestStreak}\n\nCan you beat my score? Play at flagtriv.com`;
     
     if (navigator.share) {
@@ -878,7 +884,7 @@ function shareEndlessResult() {
     }
 }
 
-function shareDailyResult() {
+function shareDailyResultHandler() {
     const result = dailyChallenge.dailyStats.results[dailyChallenge.today];
     const shareText = dailyChallenge.getShareText(result);
     
