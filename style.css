@@ -2250,3 +2250,67 @@ body {
     gap: 8px;
     margin-top: 16px;
 }
+
+/* Difficulty Select */
+.setting-select {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    font-size: 14px;
+    font-family: 'Roboto', arial, sans-serif;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.setting-select:hover {
+    border-color: #667eea;
+}
+
+.setting-select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* Timer Display for Hard Mode */
+#timer-display {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+#timer-display.warning {
+    background: linear-gradient(135deg, #ff4757, #ff3838);
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+#timer-count {
+    min-width: 24px;
+    text-align: center;
+}
+
+/* Extra options for medium difficulty */
+.extra-option {
+    display: none;
+}
+
+#options.medium-mode .extra-option {
+    display: block;
+}
+
+#options.medium-mode {
+    grid-template-columns: repeat(2, 1fr);
+}

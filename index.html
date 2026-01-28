@@ -85,6 +85,18 @@
             <h2>Settings</h2>
             
             <div class="settings-section">
+                <h3>🎯 Difficulty</h3>
+                <div class="setting-item">
+                    <span>Game Difficulty:</span>
+                    <select id="difficulty-select" class="setting-select">
+                        <option value="easy">Easy (4 options)</option>
+                        <option value="medium">Medium (6 options)</option>
+                        <option value="hard">Hard (timed)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-section">
                 <h3>🌍 Continent Filter</h3>
                 <div class="setting-item">
                     <span>Current Selection:</span>
@@ -441,11 +453,17 @@
         <h1 id="heading">Guess the Flag</h1>
         <p id="subHeading">Can you identify which country or territory this is?</p>
         <img id="flag" src="" alt="Country Flag">
+        <div id="timer-display" style="display: none;">
+            <span id="timer-icon">⏱️</span>
+            <span id="timer-count">10</span>
+        </div>
         <div id="options">
             <button class="option" disabled>Option 1</button>
             <button class="option" disabled>Option 2</button>
             <button class="option" disabled>Option 3</button>
             <button class="option" disabled>Option 4</button>
+            <button class="option extra-option" disabled style="display: none;">Option 5</button>
+            <button class="option extra-option" disabled style="display: none;">Option 6</button>
         </div>
         <p id="message"></p>
         <div id="facts" hidden>
