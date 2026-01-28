@@ -262,7 +262,9 @@ function initializeEventListeners() {
     // Daily complete screen close button
     const dailyCompleteClose = document.querySelector('.daily-complete-close');
     if (dailyCompleteClose) {
-        dailyCompleteClose.addEventListener('click', () => {
+        dailyCompleteClose.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             document.getElementById('daily-complete-screen').style.display = 'none';
             showModeSelection();
         });
