@@ -189,8 +189,8 @@
             
             <div class="name-input-section">
                 <label for="daily-player-name">Your Name:</label>
-                <input type="text" id="daily-player-name" placeholder="Enter your name" maxlength="6">
-                <div class="name-input-hint">Maximum 6 characters - will be visible to players worldwide</div>
+                <input type="text" id="daily-player-name" placeholder="Enter your name" maxlength="12">
+                <div class="name-input-hint">Maximum 12 characters - will be visible to players worldwide</div>
             </div>
             
             <div class="daily-name-actions">
@@ -376,7 +376,7 @@
             <div class="daily-complete-actions">
                 <button id="view-leaderboard-btn">🏆 Daily Flag Leaderboard</button>
                 <button id="share-daily-result">📤 Share Result</button>
-                <button id="play-endless-from-daily">🎮 Flag Master</button>
+                <button id="play-endless-from-daily">🎮 Practice Mode</button>
             </div>
         </div>
     </div>
@@ -386,7 +386,7 @@
             <img id="flagem-logo" src="images/Flagtriv_logo.svg">
             <p id="flagem-logo-text"></p>
             <p class="center-text-paragraph">See you tomorrow for our next challenge</p>
-            <button id="play-endless-from-gameover">Play Challenge Mode</button>
+            <button id="play-endless-from-gameover">🎮 Practice Mode</button>
         </div>
     </div>
 
@@ -408,7 +408,7 @@
             <h2>Welcome to Flagtriv!</h2>
             <div class="how-to-play-steps">
                 <div class="step">
-                    <span class="step-icon">🏳️</span>
+                    <span class="step-icon" id="user-flag-icon">🏳️</span>
                     <p>Look at the flag displayed</p>
                 </div>
                 <div class="step">
@@ -422,8 +422,8 @@
             </div>
             <div class="game-modes-intro">
                 <p><strong>Daily Flag</strong> - One flag per day, compete on leaderboard</p>
-                <p><strong>Flag Master</strong> - Endless practice mode</p>
-                <p><strong>Flag Duel</strong> - Challenge friends in real-time</p>
+                <p><strong>🎮 Practice Mode</strong> - Endless practice mode</p>
+                <p><strong>⚔️ Challenge Friends</strong> - Challenge friends in real-time</p>
             </div>
             <button id="how-to-play-close">Let's Play!</button>
         </div>
@@ -436,8 +436,8 @@
         <span id="Welcome-module_SubHeading">Guess the world flags!</span>
         <div id="mode-buttons">
             <button id="daily-challenge-btn">Daily Flag</button>
-            <button id="challenge-mode-btn">🧠 Flag Master</button>
-            <button id="challenge-friends-btn">⚔️ Flag Duel</button>
+            <button id="challenge-mode-btn">🎮 Practice Mode</button>
+            <button id="challenge-friends-btn">⚔️ Challenge Friends</button>
         </div>
         <div id="main-menu-stats">
             <div id="daily-streak-info" style="display: none;">
@@ -483,7 +483,7 @@
             <h2 id="stats-header">Statistics</h2>
             
             <div class="tabs">
-                <button class="tab-button active" data-tab="challenge">Challenge</button>
+                <button class="tab-button active" data-tab="challenge">Practice</button>
                 <button class="tab-button" data-tab="daily">Daily</button>
                 <button class="tab-button" data-tab="achievements">Achievements</button>
                 <button class="tab-button" data-tab="passport">Passport</button>
