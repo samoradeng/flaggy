@@ -1490,6 +1490,7 @@ body {
     padding: 32px;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
 #endless-game-over-heading,
@@ -1541,23 +1542,26 @@ body {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-top: 16px;
+    margin-top: 24px;
 }
 
-.view-leaderboard-btn {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    color: white;
-    border: none;
-    padding: 12px 24px;
+.daily-complete-actions button {
+    padding: 14px 24px;
     border-radius: 25px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+#view-leaderboard-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
     box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
-.view-leaderboard-btn:hover {
+#view-leaderboard-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
 }
@@ -1565,8 +1569,6 @@ body {
 #try-again,
 #see-stats-from-gameover,
 #share-endless-result,
-#share-daily-result,
-#play-endless-from-daily,
 #play-endless-from-gameover {
     padding: 12px 24px;
     margin: 8px;
@@ -1579,31 +1581,50 @@ body {
 }
 
 #try-again,
-#play-endless-from-daily,
 #play-endless-from-gameover {
     background-color: #0052FF;
     color: white;
 }
 
 #try-again:hover,
-#play-endless-from-daily:hover,
 #play-endless-from-gameover:hover {
     background-color: #014cec;
 }
 
 #see-stats-from-gameover,
-#share-endless-result,
-#share-daily-result {
+#share-endless-result {
     background-color: white;
     color: #333;
     border: 2px solid #e0e0e0;
 }
 
 #see-stats-from-gameover:hover,
-#share-endless-result:hover,
+#share-endless-result:hover {
+    background-color: #f0f0f0;
+    border-color: #333;
+}
+
+/* Daily complete screen buttons - consistent styling */
+#share-daily-result {
+    background-color: white;
+    color: #333;
+    border: 2px solid #e0e0e0;
+}
+
 #share-daily-result:hover {
     background-color: #f0f0f0;
     border-color: #333;
+    transform: translateY(-2px);
+}
+
+#play-endless-from-daily {
+    background-color: #0052FF;
+    color: white;
+}
+
+#play-endless-from-daily:hover {
+    background-color: #014cec;
+    transform: translateY(-2px);
 }
 
 #share-button {

@@ -1,6 +1,16 @@
 // Global variables
 let countries = {};
 let currentCountry = null;
+
+// Convert country code to flag emoji (e.g., "PH" → "🇵🇭")
+function countryCodeToFlag(countryCode) {
+    if (!countryCode || countryCode.length !== 2) return '';
+    const codePoints = countryCode
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+}
 let options = [];
 let score = 0;
 let streak = 0;
@@ -246,6 +256,15 @@ function initializeEventListeners() {
     if (closeLeaderboard) {
         closeLeaderboard.addEventListener('click', () => {
             document.getElementById('daily-leaderboard-modal').style.display = 'none';
+        });
+    }
+
+    // Daily complete screen close button
+    const dailyCompleteClose = document.querySelector('.daily-complete-close');
+    if (dailyCompleteClose) {
+        dailyCompleteClose.addEventListener('click', () => {
+            document.getElementById('daily-complete-screen').style.display = 'none';
+            showModeSelection();
         });
     }
 
@@ -845,10 +864,11 @@ async function showDailyLeaderboard() {
                 const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
                 const timeDisplay = `${entry.time}s`;
                 const attemptsDisplay = entry.attempts === 1 ? '(1st try!)' : `(${entry.attempts} tries)`;
-                
+                const flagEmoji = entry.country !== 'Unknown' ? countryCodeToFlag(entry.country) : '';
+
                 entryDiv.innerHTML = `
                     <div class="rank">${rankEmoji}</div>
-                    <div class="player-name">${entry.name} ${entry.country !== 'Unknown' ? entry.country : ''}</div>
+                    <div class="player-name">${entry.name} ${flagEmoji}</div>
                     <div class="player-time">${timeDisplay} ${attemptsDisplay}</div>
                 `;
                 
