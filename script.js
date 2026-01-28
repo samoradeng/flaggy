@@ -65,13 +65,8 @@ function initializeGame() {
     // Validate and fix any stale streak data
     validateStreakData();
 
-    // Show how to play for first-time users
-    if (!localStorage.getItem('hasSeenTutorial')) {
-        showHowToPlay();
-    } else {
-        // Show mode selection by default
-        showModeSelection();
-    }
+    // Show mode selection by default
+    showModeSelection();
 }
 
 function validateStreakData() {
@@ -103,30 +98,6 @@ function validateStreakData() {
     }
 }
 
-function showHowToPlay() {
-    document.getElementById('how-to-play-overlay').style.display = 'flex';
-    document.getElementById('mode-selection').style.display = 'none';
-
-    // Try to get user's country flag for personalization
-    fetchUserFlag();
-}
-
-async function fetchUserFlag() {
-    try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        if (data.country_code) {
-            const flagEmoji = countryCodeToFlag(data.country_code);
-            const flagIcon = document.getElementById('user-flag-icon');
-            if (flagIcon && flagEmoji) {
-                flagIcon.textContent = flagEmoji;
-            }
-        }
-    } catch (error) {
-        console.log('Could not fetch user location for flag');
-    }
-}
-
 function initializeEventListeners() {
     // Mode selection buttons
     const dailyChallengeBtn = document.getElementById('daily-challenge-btn');
@@ -143,16 +114,6 @@ function initializeEventListeners() {
     
     if (homeLogo) {
         homeLogo.addEventListener('click', showModeSelection);
-    }
-
-    // How to Play overlay
-    const howToPlayClose = document.getElementById('how-to-play-close');
-    if (howToPlayClose) {
-        howToPlayClose.addEventListener('click', () => {
-            localStorage.setItem('hasSeenTutorial', 'true');
-            document.getElementById('how-to-play-overlay').style.display = 'none';
-            showModeSelection();
-        });
     }
 
     // Passport preview click - opens stats modal to passport tab
