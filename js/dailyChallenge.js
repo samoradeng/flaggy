@@ -54,10 +54,10 @@ class DailyChallenge {
     }
 
     hasPlayedToday() {
-        // Check both the detailed results and the simple flag
-        const hasDetailedResult = this.dailyStats.results[this.today] !== undefined;
-        const hasSimpleFlag = localStorage.getItem('dailyPlayedToday') === this.today;
-        return hasDetailedResult || hasSimpleFlag;
+        // Only check for actual result data - the simple flag can get out of sync
+        const result = this.dailyStats.results[this.today];
+        // Make sure we have a valid result object with required fields
+        return result !== undefined && result !== null && typeof result === 'object' && 'correct' in result;
     }
 
     getTodaysCountry() {
