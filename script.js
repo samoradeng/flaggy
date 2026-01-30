@@ -982,15 +982,23 @@ function endChallengeMode() {
 function showDailyComplete() {
     const result = dailyChallenge.dailyStats.results[dailyChallenge.today];
     const country = dailyChallenge.getTodaysCountry();
-    
+
+    // Safety check: if no valid result, clear stale data and let user play
+    if (!result || typeof result !== 'object' || !('correct' in result)) {
+        console.warn('No valid daily result found, clearing stale data');
+        localStorage.removeItem('dailyPlayedToday');
+        startDailyChallenge();
+        return;
+    }
+
     // Hide other screens
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('top-bar').style.display = 'none';
     document.getElementById('mode-selection').style.display = 'none';
-    
+
     // Show daily complete screen
     document.getElementById('daily-complete-screen').style.display = 'block';
-    
+
     // Update content
     document.getElementById('daily-result-heading').textContent = result.correct ? 'Well Done!' : 'Better Luck Tomorrow!';
     document.getElementById('daily-result-flag').src = country.flag.large;
