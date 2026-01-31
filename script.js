@@ -1267,7 +1267,7 @@ function updateAchievementsDisplay() {
 
 function updatePassportDisplay() {
     const correctlyAnsweredCountries = achievementSystem.getCorrectlyAnsweredCountries();
-    document.getElementById('countries-unlocked').textContent = `${correctlyAnsweredCountries.size} Countries Discovered`;
+    document.getElementById('countries-unlocked').textContent = `${correctlyAnsweredCountries.size} Flags Discovered`;
     
     // Update continent progress
     updateContinentProgress();
@@ -1335,8 +1335,8 @@ function updatePassportGrid() {
         emptyDiv.innerHTML = `
             <div class="passport-empty-content">
                 <span class="passport-empty-icon">🗺️</span>
-                <p>No countries discovered yet!</p>
-                <p class="passport-empty-hint">Play the game to unlock countries and build your passport</p>
+                <p>No flags discovered yet!</p>
+                <p class="passport-empty-hint">Play the game to unlock flags and build your passport</p>
             </div>
         `;
         passportGrid.appendChild(emptyDiv);
@@ -1383,7 +1383,7 @@ function shareStats() {
     const countriesCount = achievementSystem.getCorrectlyAnsweredCountries().size;
     const achievementsCount = achievementSystem.getProgress().unlocked;
     
-    const shareText = `🌍 My Flagtriv Stats:\n🏆 Level ${level}\n🗺️ ${countriesCount} countries discovered\n🎯 ${achievementsCount} achievements unlocked\n🔥 Best streak: ${bestStreak}\n\nPlay at flagtriv.com`;
+    const shareText = `🌍 My Flagtriv Stats:\n🏆 Level ${level}\n🗺️ ${countriesCount} flags discovered\n🎯 ${achievementsCount} achievements unlocked\n🔥 Best streak: ${bestStreak}\n\nPlay at flagtriv.com`;
     
     if (navigator.share) {
         navigator.share({

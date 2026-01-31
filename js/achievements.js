@@ -63,7 +63,7 @@ class AchievementSystem {
             {
                 id: 'world_traveler',
                 name: 'World Traveler',
-                description: 'Unlock 100 countries',
+                description: 'Unlock 100 flags',
                 icon: '🌎',
                 condition: () => this.correctlyAnsweredCountries.size >= 100
             },
