@@ -1027,8 +1027,41 @@ body {
 }
 
 #share-multiplayer-result:hover,
-#play-again-multiplayer:hover {
+#play-again-multiplayer:hover,
+#rematch-btn:hover,
+#join-rematch-btn:hover {
     transform: translateY(-2px);
+}
+
+#rematch-btn {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+}
+
+#rematch-notification {
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f0f4ff, #e8efff);
+    border-radius: 12px;
+    text-align: center;
+}
+
+#rematch-status {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+#join-rematch-btn {
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    animation: pulse 2s ease-in-out infinite;
 }
 
 /* Game Finished Modal (for late joiners) */
