@@ -66,6 +66,13 @@ class AchievementSystem {
                 description: 'Unlock 100 countries',
                 icon: '🌎',
                 condition: () => this.correctlyAnsweredCountries.size >= 100
+            },
+            {
+                id: 'flag_master',
+                name: 'Flag Master',
+                description: 'Correctly guess all 250 flags',
+                icon: '👑',
+                condition: () => this.correctlyAnsweredCountries.size >= 250
             }
         ];
     }

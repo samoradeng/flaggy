@@ -20,6 +20,46 @@ class AnimationEffects {
         }
     }
 
+    static showPerfectRoundCelebration() {
+        if (typeof confetti !== 'undefined') {
+            // Big burst from center
+            confetti({
+                particleCount: 200,
+                spread: 120,
+                origin: { y: 0.5 },
+                colors: ['#FFD700', '#FFA500', '#FF6347', '#00CED1', '#9370DB']
+            });
+
+            // Delayed bursts from sides
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    angle: 60,
+                    spread: 80,
+                    origin: { x: 0, y: 0.6 },
+                    colors: ['#FFD700', '#FFA500', '#FF6347']
+                });
+                confetti({
+                    particleCount: 100,
+                    angle: 120,
+                    spread: 80,
+                    origin: { x: 1, y: 0.6 },
+                    colors: ['#00CED1', '#9370DB', '#32CD32']
+                });
+            }, 250);
+
+            // Another burst
+            setTimeout(() => {
+                confetti({
+                    particleCount: 150,
+                    spread: 100,
+                    origin: { y: 0.7 },
+                    colors: ['#FFD700', '#FF69B4', '#00FF7F', '#87CEEB']
+                });
+            }, 500);
+        }
+    }
+
     static showLevelUpAnimation(level) {
         const levelUpDiv = document.createElement('div');
         levelUpDiv.className = 'level-up-animation';
