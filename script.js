@@ -541,10 +541,9 @@ function startDailyChallenge() {
     document.getElementById('lives-display').style.display = 'flex';
     updateUI();
     
-    // Get today's country and start timing
+    // Get today's country (timing starts when flag loads in displayQuestion)
     currentCountry = dailyChallenge.getTodaysCountry();
-    dailyChallenge.startTiming();
-    
+
     displayQuestion();
 }
 
@@ -614,13 +613,22 @@ function displayQuestion() {
     
     // Update flag image
     const flagImg = document.getElementById('flag');
+
+    // For daily challenge, start timing when flag is actually visible
+    if (gameMode === 'daily') {
+        flagImg.onload = () => {
+            dailyChallenge.startTiming();
+            console.log('⏱️ Daily timer started after flag loaded');
+        };
+    }
+
     if (currentCountry.flag && currentCountry.flag.large) {
         flagImg.src = currentCountry.flag.large;
     } else {
         console.error('Flag image not found for:', currentCountry.name);
         flagImg.src = 'flags/' + currentCountry.alpha2Code.toLowerCase() + '.svg';
     }
-    
+
     // Generate options
     generateOptions();
     
@@ -1067,10 +1075,11 @@ async function submitDailyNameHandler() {
         return;
     }
     
-    // Submit to leaderboard
-    const attempts = 3 - lives;
-    const timeSpent = Math.round(dailyChallenge.getElapsedTime() / 1000);
-    
+    // Submit to leaderboard - use saved time from result, not current elapsed time
+    const todayResult = dailyChallenge.dailyStats.results[dailyChallenge.today];
+    const attempts = todayResult?.attempts || (3 - lives);
+    const timeSpent = todayResult?.timeSpent || Math.round(dailyChallenge.getElapsedTime() / 1000);
+
     const result = await dailyChallenge.submitToLeaderboard(playerName, timeSpent, attempts);
     
     if (result.success) {
