@@ -1709,9 +1709,8 @@ body {
     font-family: 'Roboto', arial, sans-serif;
     cursor: pointer;
     padding: 12px 24px;
-    position: absolute;
-    bottom: 24px;
-    right: 24px;
+    margin-top: 20px;
+    width: 100%;
     transition: background-color 0.3s ease;
 }
 
@@ -2082,14 +2081,6 @@ body {
     .stat-row {
         padding: 8px 0;
         font-size: 14px;
-    }
-    
-    #share-button {
-        position: relative;
-        bottom: auto;
-        right: auto;
-        margin-top: 16px;
-        width: 100%;
     }
     
     /* Mobile multiplayer results */
