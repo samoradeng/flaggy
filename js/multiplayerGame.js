@@ -141,10 +141,13 @@ class MultiplayerGame {
         
         if (result.success) {
             document.getElementById('join-challenge-modal').style.display = 'none';
-            
+
             // Check if game is already finished
             if (result.gameState.status === 'finished') {
                 this.showGameFinishedModal(result.gameState);
+            } else if (result.gameState.status === 'playing') {
+                // Game already started - join in progress
+                this.startGameplay(result.gameState);
             } else {
                 this.showLobby(gameId, result.gameState.continent, result.gameState.totalFlags);
             }
@@ -893,6 +896,10 @@ class MultiplayerGame {
         const rematchBtn = document.getElementById('rematch-btn');
         const rematchNotification = document.getElementById('rematch-notification');
 
+        // Reset rematch button state
+        rematchBtn.textContent = '🔄 Rematch';
+        rematchBtn.disabled = false;
+
         if (this.multiplayerSync.isHost) {
             rematchBtn.style.display = 'inline-block';
             rematchNotification.style.display = 'none';
@@ -900,7 +907,10 @@ class MultiplayerGame {
             rematchBtn.style.display = 'none';
             rematchNotification.style.display = 'block';
             document.getElementById('rematch-status').textContent = '⏳ Waiting for host to start rematch...';
-            document.getElementById('join-rematch-btn').style.display = 'none';
+            const joinRematchBtn = document.getElementById('join-rematch-btn');
+            joinRematchBtn.style.display = 'none';
+            joinRematchBtn.textContent = '🎮 Join Rematch';
+            joinRematchBtn.disabled = false;
             // Start listening for rematch
             this.startRematchListener();
         }
@@ -1204,18 +1214,26 @@ class MultiplayerGame {
             if (result.success) {
                 console.log('✅ Joined rematch successfully');
 
-                // Hide results and show lobby
+                // Hide results
                 document.getElementById('multiplayer-results').style.display = 'none';
-                this.showLobby(
-                    this.pendingRematchGameId,
-                    result.gameState.continent,
-                    result.gameState.totalFlags
-                );
+
+                // Check if game already started
+                if (result.gameState.status === 'playing') {
+                    // Game already started - join in progress
+                    this.startGameplay(result.gameState);
+                    this.showToast('🎮 Joined game in progress!');
+                } else {
+                    // Show lobby
+                    this.showLobby(
+                        this.pendingRematchGameId,
+                        result.gameState.continent,
+                        result.gameState.totalFlags
+                    );
+                    this.showToast('🎮 Joined rematch!');
+                }
 
                 // Reset rematch state
                 this.pendingRematchGameId = null;
-
-                this.showToast('🎮 Joined rematch!');
             } else {
                 throw new Error(result.error);
             }
