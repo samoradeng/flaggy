@@ -130,6 +130,13 @@ class MultiplayerSync {
                         throw new Error(playerError.message);
                     }
 
+                    // Also update localGameState so generateGameFlags works correctly
+                    this.localGameState.gameId = this.gameId;
+                    this.localGameState.totalFlags = flagCount;
+                    this.localGameState.continent = continent;
+                    this.localGameState.hostId = this.playerId;
+                    this.localGameState.status = 'waiting';
+
                     console.log('✅ Game created successfully with Supabase:', this.gameId);
                     
                     return {
