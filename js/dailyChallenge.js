@@ -8,6 +8,21 @@ class DailyChallenge {
         this.globalLeaderboard = new GlobalLeaderboard();
         this.startTime = null; // Track when question started for precise timing
         this.questionStartTime = null; // Track when current question started
+        this.finalTime = null; // Lock in the time when answer is given
+    }
+
+    // Lock in the final time when answer is given (correct or game over)
+    lockFinalTime() {
+        if (!this.finalTime) {
+            this.finalTime = this.getElapsedTime();
+            console.log('⏱️ Final time locked:', this.finalTime, 'ms');
+        }
+        return this.finalTime;
+    }
+
+    // Get the locked final time, or current elapsed if not locked
+    getFinalTime() {
+        return this.finalTime || this.getElapsedTime();
     }
 
     getStandardizedDate() {
@@ -97,6 +112,7 @@ class DailyChallenge {
     startTiming() {
         this.startTime = performance.now();
         this.questionStartTime = performance.now();
+        this.finalTime = null; // Reset final time for new game
         console.log('⏱️ Started precise timing at:', this.startTime);
     }
 
@@ -133,13 +149,13 @@ class DailyChallenge {
     async submitResult(correct, attempts, timeSpent = 0) {
         if (this.hasPlayedToday()) return false;
 
-        // Use precise timing if available
-        const preciseTime = this.getElapsedTime();
+        // Use locked final time (recorded when answer was given)
+        const preciseTime = this.getFinalTime();
         const finalTimeMs = preciseTime > 0 ? preciseTime : (timeSpent * 1000);
         const finalTimeSeconds = Math.round(finalTimeMs / 1000);
 
         console.log('⏱️ Submitting result with timing:', {
-            preciseTimeMs: preciseTime,
+            lockedTimeMs: preciseTime,
             fallbackTimeMs: timeSpent * 1000,
             finalTimeMs: finalTimeMs,
             finalTimeSeconds: finalTimeSeconds,
