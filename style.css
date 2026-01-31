@@ -1929,7 +1929,6 @@ body {
         max-width: calc(100vw - 32px);
         padding: 20px;
         max-height: calc(100vh - 64px);
-        margin: 16px;
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
@@ -2169,7 +2168,6 @@ body {
         width: calc(100vw - 24px);
         max-width: calc(100vw - 24px);
         padding: 16px;
-        margin: 12px;
     }
     
     /* Very small mobile timer */
