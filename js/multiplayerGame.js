@@ -311,14 +311,23 @@ class MultiplayerGame {
 
     async startMultiplayerGame() {
         if (!this.multiplayerSync.isHost) return;
-        
+
         // Generate flags for the game
         this.generateGameFlags();
-        
+
         const result = await this.multiplayerSync.startGame(this.gameFlags);
-        
+
         if (result.success) {
-            // Game will start automatically via sync
+            // Host starts gameplay directly - don't wait for sync callback
+            const gameState = {
+                status: 'playing',
+                flags: this.gameFlags,
+                currentFlag: 0,
+                totalFlags: this.multiplayerSync.localGameState.totalFlags,
+                roundStartTime: Date.now(),
+                players: this.multiplayerSync.localGameState.players
+            };
+            this.startGameplay(gameState);
         } else {
             alert('Failed to start game: ' + result.error);
         }
@@ -424,7 +433,10 @@ class MultiplayerGame {
         
         // Start the first flag
         this.displayCurrentFlag();
-        
+
+        // Update lastFlagIndex to prevent sync from re-displaying the same flag
+        this.lastFlagIndex = this.currentFlagIndex;
+
         // Continue syncing for game updates
         this.multiplayerSync.startSync((gameState) => {
             this.handleGameStateUpdate(gameState);
