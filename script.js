@@ -583,19 +583,32 @@ function getFilteredCountries() {
 function getRandomCountry() {
     const filteredCountries = getFilteredCountries();
     const countryCodes = Object.keys(filteredCountries);
-    
+
     // Filter out used countries
     const availableCountries = countryCodes.filter(code => !usedCountries.includes(code));
-    
-    // If all countries have been used, reset the used list
+
+    // If all countries have been used, celebrate and reset!
     if (availableCountries.length === 0) {
+        // Only celebrate in Practice Mode
+        if (gameMode === 'challenge') {
+            const totalFlags = countryCodes.length;
+            console.log(`🏆 Perfect Round! All ${totalFlags} flags completed!`);
+
+            // Show celebration
+            showToast(`🏆 Perfect Round! All ${totalFlags} flags completed!`);
+            if (typeof AnimationEffects !== 'undefined') {
+                AnimationEffects.showPerfectRoundCelebration();
+            }
+        }
+
+        // Reset and continue
         usedCountries = [];
         return getRandomCountry();
     }
-    
+
     const randomIndex = Math.floor(Math.random() * availableCountries.length);
     const selectedCode = availableCountries[randomIndex];
-    
+
     return filteredCountries[selectedCode];
 }
 

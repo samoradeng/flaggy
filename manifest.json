@@ -1,7 +1,7 @@
 {
   "name": "Flagtriv - #1 Flag Quiz Game",
   "short_name": "Flagtriv",
-  "description": "Guess flags from 195 countries! Daily challenges, practice mode, and multiplayer. The best free flag quiz game.",
+  "description": "Guess 250 flags from around the world! Daily challenges, practice mode, and multiplayer. The best free flag quiz game.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
