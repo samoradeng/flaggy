@@ -73,6 +73,13 @@ class AchievementSystem {
                 description: 'Correctly guess all 250 flags',
                 icon: '👑',
                 condition: () => this.correctlyAnsweredCountries.size >= 250
+            },
+            {
+                id: 'perfect_run',
+                name: 'Perfect Run',
+                description: 'Complete all 250 flags in one session',
+                icon: '💎',
+                condition: () => localStorage.getItem('perfectRunCompleted') === 'true'
             }
         ];
     }
