@@ -827,9 +827,14 @@ function selectAnswer(selectedAnswer) {
 }
 
 function handleCorrectAnswer() {
+    // Lock in the time for daily challenge when correct answer is given
+    if (gameMode === 'daily') {
+        dailyChallenge.lockFinalTime();
+    }
+
     score++;
     streak++;
-    
+
     // Update best streak
     if (streak > bestStreak) {
         bestStreak = streak;
@@ -905,8 +910,9 @@ function handleWrongAnswer() {
     updateUI();
     
     if (lives <= 0) {
-        // Game over
+        // Game over - lock the time before ending
         if (gameMode === 'daily') {
+            dailyChallenge.lockFinalTime();
             endDailyChallenge(false);
         } else {
             endChallengeMode();
