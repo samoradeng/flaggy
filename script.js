@@ -910,12 +910,19 @@ function handleWrongAnswer() {
     updateUI();
     
     if (lives <= 0) {
-        // Game over - lock the time before ending
+        // Game over - but show the correct answer first
         if (gameMode === 'daily') {
             dailyChallenge.lockFinalTime();
             endDailyChallenge(false);
         } else {
-            endChallengeMode();
+            // Show the correct answer before game over
+            showFacts();
+            const nextButton = document.getElementById('next');
+            nextButton.hidden = false;
+            nextButton.textContent = 'See Results';
+            nextButton.dataset.gameOver = 'true'; // Mark for game over handling
+
+            document.getElementById('message').textContent = `❌ Game Over! The answer was ${currentCountry.name}.`;
         }
     } else {
         // Show facts and next button for another attempt
@@ -923,7 +930,8 @@ function handleWrongAnswer() {
         const nextButton = document.getElementById('next');
         nextButton.hidden = false;
         nextButton.textContent = gameMode === 'daily' ? 'Try Again' : 'Next Flag';
-        
+        nextButton.dataset.gameOver = 'false';
+
         // Update message
         document.getElementById('message').textContent = `❌ Incorrect. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
     }
@@ -942,6 +950,19 @@ function showFacts() {
 }
 
 function nextQuestion() {
+    const nextButton = document.getElementById('next');
+
+    // Check if this is a game over situation (player saw the answer, now go to results)
+    if (nextButton.dataset.gameOver === 'true') {
+        nextButton.dataset.gameOver = 'false'; // Reset the flag
+        if (gameMode === 'daily') {
+            endDailyChallenge(false);
+        } else {
+            endChallengeMode();
+        }
+        return;
+    }
+
     if (gameMode === 'daily') {
         if (lives <= 0) {
             endDailyChallenge(false);
