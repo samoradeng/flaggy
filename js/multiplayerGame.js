@@ -5,7 +5,7 @@ class MultiplayerGame {
         this.flagFacts = flagFacts;
         this.soundEffects = soundEffects;
         this.multiplayerSync = new MultiplayerSync();
-        
+
         this.currentFlag = null;
         this.gameFlags = [];
         this.currentFlagIndex = 0;
@@ -16,7 +16,12 @@ class MultiplayerGame {
         this.gameEnded = false; // Track if game has ended
         this.lastFlagIndex = -1; // Track last displayed flag to prevent skipping
         this.totalFlagsInGame = 10; // Track total flags for UI display
-        
+
+        // Rematch settings
+        this.lastGameSettings = null;
+        this.lastGameId = null;
+        this.rematchCheckInterval = null;
+
         this.initializeEventListeners();
     }
 
@@ -60,6 +65,15 @@ class MultiplayerGame {
 
         document.getElementById('play-again-multiplayer').addEventListener('click', () => {
             this.playAgain();
+        });
+
+        // Rematch actions
+        document.getElementById('rematch-btn').addEventListener('click', () => {
+            this.createRematch();
+        });
+
+        document.getElementById('join-rematch-btn').addEventListener('click', () => {
+            this.joinRematch();
         });
 
         // Handle URL parameters for joining games
@@ -839,10 +853,37 @@ class MultiplayerGame {
 
     displayResultsWithPlayer(results, myPlayer, myRank) {
         console.log('🎯 Displaying results for player:', myPlayer.nickname, 'Rank:', myRank);
-        
+
+        // Store game settings for potential rematch
+        const gameState = this.multiplayerSync.useRealBackend ?
+            this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+        if (gameState) {
+            this.lastGameSettings = {
+                flagCount: gameState.totalFlags,
+                continent: gameState.continent
+            };
+            this.lastGameId = gameState.gameId;
+        }
+
         // Show results screen
         document.getElementById('multiplayer-results').style.display = 'block';
-        
+
+        // Show/hide rematch button based on host status
+        const rematchBtn = document.getElementById('rematch-btn');
+        const rematchNotification = document.getElementById('rematch-notification');
+
+        if (this.multiplayerSync.isHost) {
+            rematchBtn.style.display = 'inline-block';
+            rematchNotification.style.display = 'none';
+        } else {
+            rematchBtn.style.display = 'none';
+            rematchNotification.style.display = 'block';
+            document.getElementById('rematch-status').textContent = '⏳ Waiting for host to start rematch...';
+            document.getElementById('join-rematch-btn').style.display = 'none';
+            // Start listening for rematch
+            this.startRematchListener();
+        }
+
         // Update result message
         const resultMessage = document.getElementById('result-message');
         if (myRank === 1) {
@@ -855,18 +896,18 @@ class MultiplayerGame {
             resultMessage.textContent = `🎯 Good Game! You Placed ${myRank}${this.getOrdinalSuffix(myRank)}`;
             resultMessage.style.color = '#666';
         }
-        
+
         // Update final stats
         const playerAnswers = myPlayer.answers || this.playerAnswers || [];
         const correctAnswers = playerAnswers.filter(a => a && a.isCorrect).length;
         const accuracy = Math.round((correctAnswers / this.totalFlagsInGame) * 100);
-        
+
         document.getElementById('final-score').textContent = `${correctAnswers}/${this.totalFlagsInGame}`;
         document.getElementById('final-accuracy').textContent = `${accuracy}%`;
-        
+
         // Update leaderboard
         this.updateLeaderboard(results);
-        
+
         // Show confetti for winner
         if (myRank === 1 && typeof AnimationEffects !== 'undefined') {
             setTimeout(() => {
@@ -957,20 +998,231 @@ class MultiplayerGame {
         }
     }
 
+    showToast(message) {
+        const toast = document.getElementById('resultsToast');
+        toast.textContent = message;
+        toast.className = 'show';
+
+        setTimeout(() => {
+            toast.className = toast.className.replace('show', '');
+        }, 3000);
+    }
+
+    // Rematch functionality
+    async createRematch() {
+        if (!this.multiplayerSync.isHost) {
+            console.log('Only host can create rematch');
+            return;
+        }
+
+        if (!this.lastGameSettings) {
+            console.error('No game settings stored for rematch');
+            this.showToast('❌ Unable to create rematch');
+            return;
+        }
+
+        console.log('🔄 Creating rematch with settings:', this.lastGameSettings);
+
+        // Update button to show loading state
+        const rematchBtn = document.getElementById('rematch-btn');
+        rematchBtn.textContent = '⏳ Creating...';
+        rematchBtn.disabled = true;
+
+        try {
+            // Get host nickname from previous game
+            const gameState = this.multiplayerSync.useRealBackend ?
+                this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+            const hostPlayer = gameState?.players?.[this.multiplayerSync.playerId];
+            const hostNickname = hostPlayer?.nickname || 'Host';
+
+            // Store old game ID before cleanup
+            const oldGameId = this.lastGameId;
+
+            // Clean up current sync but keep settings
+            this.multiplayerSync.stopSync();
+
+            // Create new game with same settings
+            const result = await this.multiplayerSync.createGame(
+                this.lastGameSettings.flagCount,
+                this.lastGameSettings.continent,
+                hostNickname
+            );
+
+            if (result.success) {
+                console.log('✅ Rematch game created:', result.gameId);
+
+                // Store rematch game ID on old game for other players to find
+                await this.storeRematchGameId(oldGameId, result.gameId);
+
+                // Hide results and show lobby
+                document.getElementById('multiplayer-results').style.display = 'none';
+                this.showLobby(result.gameId, this.lastGameSettings.continent, this.lastGameSettings.flagCount);
+
+                this.showToast('🔄 Rematch created! Waiting for players...');
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Failed to create rematch:', error);
+            rematchBtn.textContent = '🔄 Rematch';
+            rematchBtn.disabled = false;
+            this.showToast('❌ Failed to create rematch');
+        }
+    }
+
+    async storeRematchGameId(oldGameId, newGameId) {
+        if (!oldGameId || !newGameId) return;
+
+        try {
+            if (this.multiplayerSync.validateSupabaseConnection()) {
+                await this.multiplayerSync.supabase
+                    .from('multiplayer_games')
+                    .update({ rematch_game_id: newGameId })
+                    .eq('game_id', oldGameId);
+                console.log('✅ Stored rematch game ID in Supabase');
+            } else {
+                // localStorage fallback
+                const storageKey = 'multiplayerGame_' + oldGameId;
+                const gameData = localStorage.getItem(storageKey);
+                if (gameData) {
+                    const state = JSON.parse(gameData);
+                    state.rematchGameId = newGameId;
+                    localStorage.setItem(storageKey, JSON.stringify(state));
+                    console.log('✅ Stored rematch game ID in localStorage');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to store rematch game ID:', error);
+        }
+    }
+
+    startRematchListener() {
+        // Clear any existing listener
+        this.stopRematchListener();
+
+        if (!this.lastGameId) {
+            console.warn('No game ID to listen for rematch');
+            return;
+        }
+
+        console.log('👂 Starting rematch listener for game:', this.lastGameId);
+
+        // Poll for rematch game ID
+        this.rematchCheckInterval = setInterval(async () => {
+            try {
+                let rematchGameId = null;
+
+                if (this.multiplayerSync.validateSupabaseConnection()) {
+                    const { data, error } = await this.multiplayerSync.supabase
+                        .from('multiplayer_games')
+                        .select('rematch_game_id')
+                        .eq('game_id', this.lastGameId)
+                        .single();
+
+                    if (!error && data?.rematch_game_id) {
+                        rematchGameId = data.rematch_game_id;
+                    }
+                } else {
+                    // localStorage fallback
+                    const storageKey = 'multiplayerGame_' + this.lastGameId;
+                    const gameData = localStorage.getItem(storageKey);
+                    if (gameData) {
+                        const state = JSON.parse(gameData);
+                        rematchGameId = state.rematchGameId;
+                    }
+                }
+
+                if (rematchGameId) {
+                    console.log('🎮 Rematch found:', rematchGameId);
+                    this.pendingRematchGameId = rematchGameId;
+                    this.stopRematchListener();
+
+                    // Update UI to show join button
+                    document.getElementById('rematch-status').textContent = '🎮 Host started a rematch!';
+                    document.getElementById('join-rematch-btn').style.display = 'inline-block';
+                }
+            } catch (error) {
+                console.error('Error checking for rematch:', error);
+            }
+        }, 2000); // Check every 2 seconds
+    }
+
+    stopRematchListener() {
+        if (this.rematchCheckInterval) {
+            clearInterval(this.rematchCheckInterval);
+            this.rematchCheckInterval = null;
+        }
+    }
+
+    async joinRematch() {
+        if (!this.pendingRematchGameId) {
+            console.error('No rematch game ID to join');
+            return;
+        }
+
+        console.log('🎮 Joining rematch:', this.pendingRematchGameId);
+
+        // Update button to show loading state
+        const joinBtn = document.getElementById('join-rematch-btn');
+        joinBtn.textContent = '⏳ Joining...';
+        joinBtn.disabled = true;
+
+        try {
+            // Get player nickname from previous game
+            const gameState = this.multiplayerSync.useRealBackend ?
+                this.multiplayerSync.gameState : this.multiplayerSync.localGameState;
+            const myPlayer = gameState?.players?.[this.multiplayerSync.playerId];
+            const nickname = myPlayer?.nickname || '';
+
+            // Clean up current state
+            this.multiplayerSync.cleanup();
+
+            // Join the rematch game
+            const result = await this.multiplayerSync.joinGame(this.pendingRematchGameId, nickname);
+
+            if (result.success) {
+                console.log('✅ Joined rematch successfully');
+
+                // Hide results and show lobby
+                document.getElementById('multiplayer-results').style.display = 'none';
+                this.showLobby(
+                    this.pendingRematchGameId,
+                    result.gameState.continent,
+                    result.gameState.totalFlags
+                );
+
+                // Reset rematch state
+                this.pendingRematchGameId = null;
+
+                this.showToast('🎮 Joined rematch!');
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Failed to join rematch:', error);
+            joinBtn.textContent = '🎮 Join Rematch';
+            joinBtn.disabled = false;
+            this.showToast('❌ Failed to join rematch');
+        }
+    }
+
     playAgain() {
+        // Stop rematch listener if running
+        this.stopRematchListener();
+
         // Clean up current game
         this.multiplayerSync.cleanup();
-        
+
         // Remove timer element
         if (this.timerElement) {
             this.timerElement.remove();
             this.timerElement = null;
         }
-        
+
         // Return to main menu
         document.getElementById('multiplayer-results').style.display = 'none';
         document.getElementById('mode-selection').style.display = 'flex';
-        
+
         // Reset game state
         this.currentFlag = null;
         this.gameFlags = [];
@@ -981,19 +1233,17 @@ class MultiplayerGame {
         this.gameEnded = false;
         this.lastFlagIndex = -1;
         this.totalFlagsInGame = 10; // Reset to default
-        
+        this.lastGameSettings = null;
+        this.lastGameId = null;
+        this.pendingRematchGameId = null;
+
         // Reset multiplayer mode flag
         window.isMultiplayerMode = false;
-    }
 
-    showToast(message) {
-        const toast = document.getElementById('resultsToast');
-        toast.textContent = message;
-        toast.className = 'show';
-        
-        setTimeout(() => {
-            toast.className = toast.className.replace('show', '');
-        }, 3000);
+        // Reset rematch UI
+        document.getElementById('rematch-btn').style.display = 'none';
+        document.getElementById('rematch-notification').style.display = 'none';
+        document.getElementById('join-rematch-btn').style.display = 'none';
     }
 }
 
