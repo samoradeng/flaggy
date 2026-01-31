@@ -735,7 +735,10 @@ class MultiplayerGame {
             
             if (latestGameState && latestGameState.players && Object.keys(latestGameState.players).length > 0) {
                 console.log('✅ Got latest game state with players:', Object.keys(latestGameState.players).length);
-                
+
+                // Store the latest game state so it's available for rematch settings
+                this.multiplayerSync.gameState = latestGameState;
+
                 // Stop syncing after we have the data
                 this.multiplayerSync.stopSync();
                 
