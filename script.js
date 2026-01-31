@@ -599,6 +599,16 @@ function getRandomCountry() {
             if (typeof AnimationEffects !== 'undefined') {
                 AnimationEffects.showPerfectRoundCelebration();
             }
+
+            // Mark Perfect Run achievement if they completed all 250 flags
+            if (totalFlags >= 250) {
+                localStorage.setItem('perfectRunCompleted', 'true');
+                // Check for new achievements
+                const newAchievements = achievementSystem.checkAchievements();
+                newAchievements.forEach(achievement => {
+                    AnimationEffects.showAchievementUnlock(achievement);
+                });
+            }
         }
 
         // Reset and continue
