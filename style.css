@@ -696,6 +696,44 @@ body {
     box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
 }
 
+.challenge-divider {
+    display: flex;
+    align-items: center;
+    margin: 16px 0;
+    color: #888;
+    font-size: 14px;
+}
+
+.challenge-divider::before,
+.challenge-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #ddd;
+}
+
+.challenge-divider span {
+    padding: 0 12px;
+}
+
+.join-challenge-btn {
+    background: transparent;
+    color: #0052FF;
+    border: 2px solid #0052FF;
+    padding: 12px 32px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.join-challenge-btn:hover {
+    background: #0052FF;
+    color: white;
+}
+
 .link-container {
     display: flex;
     gap: 8px;

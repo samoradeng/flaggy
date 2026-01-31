@@ -35,6 +35,12 @@ class MultiplayerGame {
             this.createChallenge();
         });
 
+        // Open join modal from create modal
+        document.getElementById('open-join-modal-btn').addEventListener('click', () => {
+            document.getElementById('create-challenge-modal').style.display = 'none';
+            document.getElementById('join-challenge-modal').style.display = 'block';
+        });
+
         // Join Challenge
         document.getElementById('join-challenge-btn').addEventListener('click', () => {
             this.joinChallenge();
