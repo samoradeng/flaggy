@@ -197,18 +197,18 @@ class DailyChallenge {
 
     // Submit to global leaderboard with precise timing - ENHANCED
     async submitToLeaderboard(playerName, timeSpent, attempts) {
-        // Use precise timing if available
-        const preciseTime = this.getElapsedTime();
+        // Use locked final time (not current elapsed time)
+        const preciseTime = this.getFinalTime();
         const finalTimeSeconds = preciseTime > 0 ? Math.round(preciseTime / 1000) : timeSpent;
-        
-        console.log('⏱️ Submitting to leaderboard with enhanced timing:', {
+
+        console.log('⏱️ Submitting to leaderboard with locked timing:', {
             originalTime: timeSpent,
-            preciseTimeMs: preciseTime,
+            lockedTimeMs: preciseTime,
             finalTimeSeconds: finalTimeSeconds,
             attempts: attempts,
-            timingSource: preciseTime > 0 ? 'performance.now()' : 'fallback'
+            timingSource: preciseTime > 0 ? 'locked' : 'fallback'
         });
-        
+
         return await this.globalLeaderboard.submitScore(playerName, finalTimeSeconds, attempts, this.today);
     }
 
