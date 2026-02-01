@@ -390,6 +390,7 @@ body {
     font-size: 16px;
     font-family: 'Roboto', arial, sans-serif;
     transition: border-color 0.2s;
+    box-sizing: border-box;
 }
 
 #daily-player-name:focus {
