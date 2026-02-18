@@ -1,3 +1,9 @@
+// ==============================
+// Feature Flag: V2 Daily Challenge (hint-based)
+// Set to false to revert to original multiple-choice daily
+// ==============================
+const DAILY_V2 = true;
+
 // Global variables
 let countries = {};
 let currentCountry = null;
@@ -32,6 +38,8 @@ let dailyChallenge;
 let achievementSystem;
 let soundEffects;
 let multiplayerGame;
+let dailyChallengeV2;
+let v2TimerInterval = null;
 
 // Load countries and initialize the game
 async function loadCountries() {
@@ -46,7 +54,10 @@ async function loadCountries() {
         achievementSystem = new AchievementSystem();
         soundEffects = new SoundEffects();
         multiplayerGame = new MultiplayerGame(countries, continentFilter, flagFacts, soundEffects);
-        
+        if (DAILY_V2) {
+            dailyChallengeV2 = new DailyChallengeV2(countries, dailyChallenge);
+        }
+
         console.log('Countries loaded:', Object.keys(countries).length);
         initializeGame();
     } catch (error) {
@@ -415,6 +426,8 @@ function showModeSelection() {
     document.getElementById('endless-game-over-screen').style.display = 'none';
     document.getElementById('multiplayer-lobby').style.display = 'none';
     document.getElementById('multiplayer-results').style.display = 'none';
+    document.getElementById('daily-v2-container').style.display = 'none';
+    if (v2TimerInterval) { clearInterval(v2TimerInterval); v2TimerInterval = null; }
 
     // Show mode selection
     document.getElementById('mode-selection').style.display = 'flex';
@@ -517,30 +530,39 @@ async function trackPlaySession() {
 
 function startDailyChallenge() {
     if (dailyChallenge.hasPlayedToday()) {
-        showDailyComplete();
+        if (DAILY_V2) {
+            showDailyCompleteV2();
+        } else {
+            showDailyComplete();
+        }
         return;
     }
-    
+
+    if (DAILY_V2) {
+        startDailyChallengeV2();
+        return;
+    }
+
     gameMode = 'daily';
     isMultiplayerMode = false;
-    
+
     // Hide mode selection and show game
     document.getElementById('mode-selection').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
     document.getElementById('top-bar').style.display = 'flex';
-    
+
     // Reset game state
     score = 0;
     streak = 0;
     lives = 2; // Daily challenge has 2 attempts
     usedCountries = [];
-    
+
     // Update UI
     document.getElementById('heading').textContent = 'Daily Flag Challenge';
     document.getElementById('subHeading').textContent = 'One flag per day - can you guess it?';
     document.getElementById('lives-display').style.display = 'flex';
     updateUI();
-    
+
     // Get today's country (timing starts when flag loads in displayQuestion)
     currentCountry = dailyChallenge.getTodaysCountry();
 
@@ -1422,6 +1444,474 @@ function shareStats() {
             showToast('📋 Stats copied to clipboard!');
         });
     }
+}
+
+// ============================================
+// Daily Challenge V2 Functions (hint-based)
+// ============================================
+
+function startDailyChallengeV2() {
+    gameMode = 'daily';
+    isMultiplayerMode = false;
+
+    // Hide everything, show V2 container
+    document.getElementById('mode-selection').style.display = 'none';
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('top-bar').style.display = 'none';
+    document.getElementById('daily-v2-container').style.display = 'flex';
+
+    // Start the game
+    const country = dailyChallengeV2.startGame();
+
+    // Load the flag (timer starts when flag loads)
+    const flagImg = document.getElementById('v2-flag');
+    flagImg.onload = () => {
+        // Start the visual timer
+        v2StartVisualTimer();
+    };
+    flagImg.src = country.flag?.large || `flags/${country.alpha2Code.toLowerCase()}.svg`;
+
+    // Reset UI
+    document.getElementById('v2-hints').innerHTML = '';
+    document.getElementById('v2-message').textContent = '';
+    document.getElementById('v2-message').className = 'v2-message';
+    document.getElementById('v2-country-input').value = '';
+    document.getElementById('v2-country-input').disabled = false;
+    document.getElementById('v2-submit-btn').disabled = true;
+    document.getElementById('v2-autocomplete').classList.remove('active');
+    document.getElementById('v2-input-area').style.display = 'block';
+    document.getElementById('v2-result-area').style.display = 'none';
+
+    // Render guess tracker
+    v2RenderGuessTracker();
+
+    // Set up event listeners (only once)
+    v2SetupInputListeners();
+}
+
+let v2InputListenersSet = false;
+
+function v2SetupInputListeners() {
+    if (v2InputListenersSet) return;
+    v2InputListenersSet = true;
+
+    const input = document.getElementById('v2-country-input');
+    const submitBtn = document.getElementById('v2-submit-btn');
+    const autocomplete = document.getElementById('v2-autocomplete');
+    let selectedIndex = -1;
+
+    input.addEventListener('input', () => {
+        const query = input.value.trim();
+        const matches = dailyChallengeV2.filterCountries(query);
+
+        // Enable/disable submit button
+        submitBtn.disabled = !query;
+
+        if (matches.length > 0 && query.length >= 1) {
+            autocomplete.innerHTML = '';
+            selectedIndex = -1;
+            matches.forEach((name, i) => {
+                const item = document.createElement('div');
+                item.className = 'v2-autocomplete-item';
+                // Highlight matching portion
+                const idx = name.toLowerCase().indexOf(query.toLowerCase());
+                if (idx >= 0) {
+                    item.innerHTML = name.substring(0, idx) +
+                        '<mark>' + name.substring(idx, idx + query.length) + '</mark>' +
+                        name.substring(idx + query.length);
+                } else {
+                    item.textContent = name;
+                }
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // Prevent blur
+                    input.value = name;
+                    autocomplete.classList.remove('active');
+                    submitBtn.disabled = false;
+                });
+                autocomplete.appendChild(item);
+            });
+            autocomplete.classList.add('active');
+        } else {
+            autocomplete.classList.remove('active');
+        }
+    });
+
+    input.addEventListener('keydown', (e) => {
+        const items = autocomplete.querySelectorAll('.v2-autocomplete-item');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+            items.forEach((item, i) => item.classList.toggle('selected', i === selectedIndex));
+            if (items[selectedIndex]) input.value = items[selectedIndex].textContent;
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = Math.max(selectedIndex - 1, 0);
+            items.forEach((item, i) => item.classList.toggle('selected', i === selectedIndex));
+            if (items[selectedIndex]) input.value = items[selectedIndex].textContent;
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            autocomplete.classList.remove('active');
+            if (input.value.trim()) {
+                v2SubmitGuess();
+            }
+        } else if (e.key === 'Escape') {
+            autocomplete.classList.remove('active');
+        }
+    });
+
+    input.addEventListener('blur', () => {
+        // Small delay to allow click on autocomplete items
+        setTimeout(() => autocomplete.classList.remove('active'), 150);
+    });
+
+    input.addEventListener('focus', () => {
+        if (input.value.trim().length >= 1) {
+            const matches = dailyChallengeV2.filterCountries(input.value.trim());
+            if (matches.length > 0) {
+                // Re-show autocomplete
+                input.dispatchEvent(new Event('input'));
+            }
+        }
+    });
+
+    submitBtn.addEventListener('click', v2SubmitGuess);
+
+    // Result action buttons
+    document.getElementById('v2-share-btn').addEventListener('click', v2ShareResult);
+    document.getElementById('v2-leaderboard-btn').addEventListener('click', showDailyLeaderboard);
+    document.getElementById('v2-name-submit-btn').addEventListener('click', () => {
+        document.getElementById('v2-name-input-area').style.display = 'flex';
+        document.getElementById('v2-name-submit-btn').style.display = 'none';
+    });
+    document.getElementById('v2-submit-name').addEventListener('click', v2SubmitName);
+    document.getElementById('v2-practice-btn').addEventListener('click', () => {
+        document.getElementById('daily-v2-container').style.display = 'none';
+        startChallengeMode();
+    });
+}
+
+function v2SubmitGuess() {
+    const input = document.getElementById('v2-country-input');
+    const guessText = input.value.trim();
+    if (!guessText) return;
+
+    // Check if the guess is a valid country name
+    const validName = dailyChallengeV2.countryNames.find(
+        n => n.toLowerCase() === guessText.toLowerCase()
+    );
+    if (!validName) {
+        const msgEl = document.getElementById('v2-message');
+        msgEl.textContent = 'Not a valid country name';
+        msgEl.className = 'v2-message wrong';
+        return;
+    }
+
+    const result = dailyChallengeV2.submitGuess(validName);
+    if (!result) return;
+
+    const msgEl = document.getElementById('v2-message');
+    document.getElementById('v2-autocomplete').classList.remove('active');
+
+    if (result.correct) {
+        msgEl.textContent = 'Correct!';
+        msgEl.className = 'v2-message correct';
+        soundEffects.playCorrect();
+        if (typeof AnimationEffects !== 'undefined') {
+            AnimationEffects.showConfetti();
+        }
+        // Unlock country and check achievements
+        const country = dailyChallengeV2.todaysCountry;
+        achievementSystem.unlockCountry(country.alpha2Code, country);
+        achievementSystem.checkAchievements();
+    } else if (result.gameOver) {
+        msgEl.textContent = `The answer was ${dailyChallengeV2.todaysCountry.name}`;
+        msgEl.className = 'v2-message wrong';
+        soundEffects.playWrong();
+    } else {
+        msgEl.textContent = `Not ${validName}`;
+        msgEl.className = 'v2-message wrong';
+        soundEffects.playWrong();
+    }
+
+    // Update guess tracker
+    v2RenderGuessTracker();
+
+    // Reveal next hint if wrong and game not over
+    if (!result.correct && !result.gameOver) {
+        v2RevealHint(result.hintsRevealed);
+    }
+
+    // Clear input
+    input.value = '';
+    document.getElementById('v2-submit-btn').disabled = true;
+
+    if (result.gameOver) {
+        v2EndGame(result.won);
+    } else {
+        // Focus input for next guess
+        input.focus();
+    }
+}
+
+function v2RenderGuessTracker() {
+    const tracker = document.getElementById('v2-guess-tracker');
+    const guesses = dailyChallengeV2.guesses;
+    const maxGuesses = dailyChallengeV2.maxGuesses;
+    let html = '';
+
+    for (let i = 0; i < maxGuesses; i++) {
+        if (i < guesses.length) {
+            const cls = guesses[i].correct ? 'correct' : 'wrong';
+            html += `<div class="v2-guess-square ${cls}"></div>`;
+        } else if (i === guesses.length && dailyChallengeV2.gameActive) {
+            html += `<div class="v2-guess-square current"></div>`;
+        } else {
+            html += `<div class="v2-guess-square empty"></div>`;
+        }
+    }
+
+    tracker.innerHTML = html;
+}
+
+function v2RevealHint(hintIndex) {
+    const hints = dailyChallengeV2.getHints();
+    const hint = hints[hintIndex];
+    if (!hint) return;
+
+    const hintsContainer = document.getElementById('v2-hints');
+    const card = document.createElement('div');
+    card.className = 'v2-hint-card';
+    card.innerHTML = `
+        <span class="hint-icon">${hint.icon}</span>
+        <span class="hint-label">${hint.label}:</span>
+        <span class="hint-value">${hint.value}</span>
+    `;
+    hintsContainer.appendChild(card);
+}
+
+function v2StartVisualTimer() {
+    const timerEl = document.getElementById('v2-timer');
+    timerEl.classList.add('running');
+
+    if (v2TimerInterval) clearInterval(v2TimerInterval);
+
+    v2TimerInterval = setInterval(() => {
+        const elapsed = dailyChallenge.getElapsedTime();
+        const totalSec = Math.floor(elapsed / 1000);
+        const min = Math.floor(totalSec / 60);
+        const sec = totalSec % 60;
+        timerEl.textContent = `⏱️ ${min}:${sec.toString().padStart(2, '0')}`;
+    }, 200);
+}
+
+function v2StopVisualTimer() {
+    if (v2TimerInterval) {
+        clearInterval(v2TimerInterval);
+        v2TimerInterval = null;
+    }
+    document.getElementById('v2-timer').classList.remove('running');
+}
+
+async function v2EndGame(won) {
+    v2StopVisualTimer();
+
+    // Disable input
+    document.getElementById('v2-country-input').disabled = true;
+    document.getElementById('v2-submit-btn').disabled = true;
+
+    // Submit result
+    await dailyChallengeV2.submitResult(won);
+
+    // Show result area after a short delay
+    setTimeout(() => {
+        document.getElementById('v2-input-area').style.display = 'none';
+        const resultArea = document.getElementById('v2-result-area');
+        resultArea.style.display = 'block';
+
+        const country = dailyChallengeV2.todaysCountry;
+
+        // Flag and country name
+        document.getElementById('v2-result-flag').src = country.flag?.large || `flags/${country.alpha2Code.toLowerCase()}.svg`;
+        document.getElementById('v2-result-country').textContent = country.name;
+
+        // Stats
+        const timeMs = dailyChallenge.getFinalTime();
+        const totalSec = Math.floor(timeMs / 1000);
+        const min = Math.floor(totalSec / 60);
+        const sec = totalSec % 60;
+        const timeStr = `${min}:${sec.toString().padStart(2, '0')}`;
+        const guessStr = won ? `${dailyChallengeV2.guesses.length}/${dailyChallengeV2.maxGuesses}` : `X/${dailyChallengeV2.maxGuesses}`;
+        const currentStreak = dailyChallenge.dailyStats.streak || 0;
+
+        document.getElementById('v2-result-stats').innerHTML = `
+            <div class="v2-result-stat">
+                <span class="stat-value">${guessStr}</span>
+                <span class="stat-label">Guesses</span>
+            </div>
+            <div class="v2-result-stat">
+                <span class="stat-value">${timeStr}</span>
+                <span class="stat-label">Time</span>
+            </div>
+            <div class="v2-result-stat">
+                <span class="stat-value">${currentStreak}</span>
+                <span class="stat-label">Streak</span>
+            </div>
+        `;
+
+        // Share preview
+        document.getElementById('v2-result-share-preview').textContent = dailyChallengeV2.getShareText();
+
+        // Show leaderboard name submit if won
+        if (won) {
+            document.getElementById('v2-name-submit-btn').style.display = 'inline-block';
+        } else {
+            document.getElementById('v2-name-submit-btn').style.display = 'none';
+        }
+        document.getElementById('v2-name-input-area').style.display = 'none';
+
+        // Countdown
+        document.getElementById('v2-countdown').textContent = dailyChallenge.getTimeUntilNext();
+    }, won ? 800 : 1500);
+}
+
+function v2ShareResult() {
+    const shareText = dailyChallengeV2.getShareText();
+    if (navigator.share) {
+        navigator.share({ title: 'Flagtriv Daily', text: shareText });
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareText).then(() => {
+            showToast('📋 Result copied to clipboard!');
+        });
+    }
+}
+
+async function v2SubmitName() {
+    const nameInput = document.getElementById('v2-player-name');
+    const playerName = nameInput.value.trim();
+    if (!playerName) return;
+    if (playerName.length > 12) {
+        showToast('Name must be 12 characters or less');
+        return;
+    }
+
+    const result = await dailyChallengeV2.submitToLeaderboard(playerName);
+    if (result.success) {
+        document.getElementById('v2-name-input-area').style.display = 'none';
+        showToast('Submitted to leaderboard!');
+    } else {
+        showToast('Failed to submit: ' + (result.error || 'Unknown error'));
+    }
+}
+
+// Show V2 daily complete screen (when revisiting after already played)
+function showDailyCompleteV2() {
+    // Hide everything
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('top-bar').style.display = 'none';
+    document.getElementById('mode-selection').style.display = 'none';
+    document.getElementById('daily-v2-container').style.display = 'flex';
+
+    const country = dailyChallenge.getTodaysCountry();
+    const todayResult = dailyChallenge.dailyStats.results[dailyChallenge.today];
+
+    if (!todayResult || typeof todayResult !== 'object') {
+        // No valid result, let them play
+        startDailyChallengeV2();
+        return;
+    }
+
+    // Load V2-specific data
+    const v2Results = JSON.parse(localStorage.getItem('dailyV2Results') || '{}');
+    const v2Data = v2Results[dailyChallenge.today];
+
+    // Show the flag
+    const flagImg = document.getElementById('v2-flag');
+    flagImg.src = country.flag?.large || `flags/${country.alpha2Code.toLowerCase()}.svg`;
+
+    // Reconstruct state for display
+    if (v2Data) {
+        dailyChallengeV2.todaysCountry = country;
+        dailyChallengeV2.guesses = v2Data.guesses || [];
+        dailyChallengeV2.hintsRevealed = v2Data.hintsUsed || 0;
+        dailyChallengeV2.gameActive = false;
+    }
+
+    // Render hints that were revealed
+    const hintsContainer = document.getElementById('v2-hints');
+    hintsContainer.innerHTML = '';
+    if (v2Data && v2Data.hintsUsed > 0) {
+        dailyChallengeV2.todaysCountry = country;
+        const hints = dailyChallengeV2.getHints();
+        for (let i = 1; i <= v2Data.hintsUsed; i++) {
+            if (hints[i]) {
+                const card = document.createElement('div');
+                card.className = 'v2-hint-card';
+                card.innerHTML = `
+                    <span class="hint-icon">${hints[i].icon}</span>
+                    <span class="hint-label">${hints[i].label}:</span>
+                    <span class="hint-value">${hints[i].value}</span>
+                `;
+                hintsContainer.appendChild(card);
+            }
+        }
+    }
+
+    // Render guess tracker
+    v2RenderGuessTracker();
+
+    // Hide input, show result
+    document.getElementById('v2-input-area').style.display = 'none';
+    document.getElementById('v2-message').textContent = '';
+    const resultArea = document.getElementById('v2-result-area');
+    resultArea.style.display = 'block';
+
+    document.getElementById('v2-result-flag').src = country.flag?.large || `flags/${country.alpha2Code.toLowerCase()}.svg`;
+    document.getElementById('v2-result-country').textContent = country.name;
+
+    // Stats
+    const won = todayResult.correct;
+    const totalGuesses = todayResult.attempts || (v2Data?.totalGuesses || 0);
+    const timeMs = todayResult.timeMs || 0;
+    const totalSec = Math.floor(timeMs / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    const timeStr = `${min}:${sec.toString().padStart(2, '0')}`;
+    const guessStr = won ? `${totalGuesses}/${dailyChallengeV2.maxGuesses}` : `X/${dailyChallengeV2.maxGuesses}`;
+    const currentStreak = dailyChallenge.dailyStats.streak || 0;
+
+    document.getElementById('v2-result-stats').innerHTML = `
+        <div class="v2-result-stat">
+            <span class="stat-value">${guessStr}</span>
+            <span class="stat-label">Guesses</span>
+        </div>
+        <div class="v2-result-stat">
+            <span class="stat-value">${timeStr}</span>
+            <span class="stat-label">Time</span>
+        </div>
+        <div class="v2-result-stat">
+            <span class="stat-value">${currentStreak}</span>
+            <span class="stat-label">Streak</span>
+        </div>
+    `;
+
+    // Share preview
+    if (v2Data) {
+        document.getElementById('v2-result-share-preview').textContent = dailyChallengeV2.getShareText();
+    } else {
+        // Fallback share for V1 results viewed in V2 UI
+        document.getElementById('v2-result-share-preview').textContent = dailyChallenge.getShareText(todayResult);
+    }
+
+    document.getElementById('v2-name-submit-btn').style.display = 'none';
+    document.getElementById('v2-name-input-area').style.display = 'none';
+    document.getElementById('v2-countdown').textContent = dailyChallenge.getTimeUntilNext();
+
+    // Timer shows final time
+    document.getElementById('v2-timer').textContent = `⏱️ ${timeStr}`;
+    document.getElementById('v2-timer').classList.remove('running');
+
+    // Set up listeners
+    v2SetupInputListeners();
 }
 
 // Initialize the game when the page loads

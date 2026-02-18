@@ -567,6 +567,59 @@
         <button id="next" hidden>Next country</button>
     </div>
 
+    <!-- V2 Daily Challenge Container (hint-based) -->
+    <div id="daily-v2-container" style="display: none;">
+        <div class="v2-game-area">
+            <div class="v2-header">
+                <h1 class="v2-title">Daily Flag</h1>
+                <div class="v2-timer" id="v2-timer">⏱️ 0:00</div>
+            </div>
+
+            <img id="v2-flag" src="" alt="Country Flag" class="v2-flag-img">
+
+            <div id="v2-hints" class="v2-hints">
+                <!-- Hints appear here progressively -->
+            </div>
+
+            <div id="v2-guess-tracker" class="v2-guess-tracker">
+                <!-- Guess squares: ⬜⬜⬜⬜⬜⬜ -->
+            </div>
+
+            <div class="v2-input-area" id="v2-input-area">
+                <div class="v2-input-wrapper">
+                    <input type="text" id="v2-country-input" placeholder="Type a country name..."
+                           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <button id="v2-submit-btn" class="v2-submit-btn" disabled>Guess</button>
+                </div>
+                <div id="v2-autocomplete" class="v2-autocomplete"></div>
+            </div>
+
+            <p id="v2-message" class="v2-message"></p>
+
+            <div id="v2-result-area" class="v2-result-area" style="display: none;">
+                <div id="v2-result-flag-info" class="v2-result-flag-info">
+                    <img id="v2-result-flag" src="" alt="Flag">
+                    <h2 id="v2-result-country"></h2>
+                </div>
+                <div id="v2-result-stats" class="v2-result-stats"></div>
+                <div id="v2-result-share-preview" class="v2-result-share-preview"></div>
+                <div class="v2-result-actions">
+                    <button id="v2-share-btn" class="v2-share-btn">📤 Share Result</button>
+                    <button id="v2-leaderboard-btn" class="v2-leaderboard-btn">🏆 Leaderboard</button>
+                    <button id="v2-name-submit-btn" class="v2-name-submit-btn" style="display: none;">Submit to Leaderboard</button>
+                </div>
+                <div id="v2-name-input-area" class="v2-name-input-area" style="display: none;">
+                    <input type="text" id="v2-player-name" placeholder="Your name (max 12 chars)" maxlength="12">
+                    <button id="v2-submit-name" class="v2-submit-name-btn">Submit</button>
+                </div>
+                <p id="v2-next-challenge" class="v2-next-challenge">Next challenge in: <span id="v2-countdown"></span></p>
+                <div class="v2-extra-actions">
+                    <button id="v2-practice-btn" class="v2-practice-btn">🎮 Practice Mode</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="stats-modal" class="modal">
         <div class="modal-content">
             <button class="close-btn">
@@ -644,6 +697,7 @@
     <script src="js/continentFilter.js"></script>
     <script src="js/flagFacts.js"></script>
     <script src="js/dailyChallenge.js"></script>
+    <script src="js/dailyChallengeV2.js"></script>
     <script src="js/achievements.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/soundEffects.js"></script>
