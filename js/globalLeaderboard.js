@@ -82,28 +82,28 @@ class GlobalLeaderboard {
     }
 
     // Submit score to global leaderboard with retries
-    async submitScore(playerName, timeSpent, attempts, date) {
+    // timeMs: time in milliseconds (precise)
+    async submitScore(playerName, timeMs, attempts, date) {
         // Check if Supabase is available
         if (!this.validateSupabaseConnection()) {
             console.error('❌ Cannot submit to global leaderboard - Supabase not available');
-            return { 
-                success: false, 
-                global: false, 
-                error: 'Global leaderboard unavailable. Please check your connection and try again.' 
+            return {
+                success: false,
+                global: false,
+                error: 'Global leaderboard unavailable. Please check your connection and try again.'
             };
         }
 
         try {
             const country = await this.getUserCountry();
-            
-            // Convert time to milliseconds for precise scoring
-            const timeMilliseconds = timeSpent * 1000;
+
+            const timeMilliseconds = Math.round(timeMs);
             const score = this.calculateScore(timeMilliseconds, attempts);
-            
+
             const entry = {
                 player_name: playerName,
                 country: country,
-                time_spent: timeSpent, // Keep for backward compatibility
+                time_spent: Math.round(timeMilliseconds / 1000), // Backward compat (seconds)
                 time_milliseconds: timeMilliseconds,
                 attempts: attempts,
                 score: score,
@@ -227,10 +227,12 @@ class GlobalLeaderboard {
                 const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
                 
                 // Show time and attempts for context
-                const timeDisplay = entry.time;
+                const timeDisplay = entry.timeMs && typeof formatTimeMs === 'function'
+                    ? formatTimeMs(entry.timeMs)
+                    : `${entry.time}s`;
                 const attemptsDisplay = entry.attempts === 1 ? '1st try' : `${entry.attempts} tries`;
-                
-                text += `${medal} ${entry.name} (${entry.country}) - ${timeDisplay}s (${attemptsDisplay})\n`;
+
+                text += `${medal} ${entry.name} (${entry.country}) - ${timeDisplay} (${attemptsDisplay})\n`;
             });
         }
         

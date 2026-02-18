@@ -196,20 +196,20 @@ class DailyChallenge {
     }
 
     // Submit to global leaderboard with precise timing - ENHANCED
-    async submitToLeaderboard(playerName, timeSpent, attempts) {
+    async submitToLeaderboard(playerName, timeMs, attempts) {
         // Use locked final time (not current elapsed time)
         const preciseTime = this.getFinalTime();
-        const finalTimeSeconds = preciseTime > 0 ? Math.round(preciseTime / 1000) : timeSpent;
+        const finalTimeMs = preciseTime > 0 ? preciseTime : timeMs;
 
         console.log('⏱️ Submitting to leaderboard with locked timing:', {
-            originalTime: timeSpent,
+            originalTimeMs: timeMs,
             lockedTimeMs: preciseTime,
-            finalTimeSeconds: finalTimeSeconds,
+            finalTimeMs: finalTimeMs,
             attempts: attempts,
             timingSource: preciseTime > 0 ? 'locked' : 'fallback'
         });
 
-        return await this.globalLeaderboard.submitScore(playerName, finalTimeSeconds, attempts, this.today);
+        return await this.globalLeaderboard.submitScore(playerName, finalTimeMs, attempts, this.today);
     }
 
     // Get today's leaderboard
@@ -248,9 +248,10 @@ class DailyChallenge {
         }
 
         const flag = this.getTodaysCountry().flag?.emoji || '🏳️';
-        const timeStr = result.timeSpent ? ` in ${Math.floor(result.timeSpent / 60)}:${(result.timeSpent % 60).toString().padStart(2, '0')}` : '';
+        const timeMs = result.timeMs || (result.timeSpent ? result.timeSpent * 1000 : 0);
+        const timeStr = timeMs > 0 ? ` in ${typeof formatTimeMs === 'function' ? formatTimeMs(timeMs) : (timeMs / 1000).toFixed(2) + 's'}` : '';
         const attemptsStr = attempts === 1 ? ' (1st try!)' : ` (${attempts} tries)`;
-        
+
         return `Flagtriv Daily ${flag}\n${squares.join('')}${timeStr}${attemptsStr}\nflagtriv.com`;
     }
 
