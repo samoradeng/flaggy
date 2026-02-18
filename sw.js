@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flagtriv-v12';
+const CACHE_NAME = 'flagtriv-v13';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -9,6 +9,7 @@ const ASSETS_TO_CACHE = [
   '/js/animations.js',
   '/js/continentFilter.js',
   '/js/dailyChallenge.js',
+  '/js/dailyChallengeV2.js',
   '/js/flagFacts.js',
   '/js/globalLeaderboard.js',
   '/js/multiplayerGame.js',
