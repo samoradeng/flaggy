@@ -2,7 +2,7 @@
 // Feature Flag: V2 Daily Challenge (hint-based)
 // Set to false to revert to original multiple-choice daily
 // ==============================
-const DAILY_V2 = true;
+const DAILY_V2 = false;
 
 // Format milliseconds into a readable time string with centisecond precision
 // e.g. 1240 -> "1.24s", 65120 -> "1:05.12"
