@@ -130,8 +130,8 @@ class DailyChallengeV2 {
     // Submit to leaderboard (reuse V1)
     async submitToLeaderboard(playerName) {
         const totalGuesses = this.guesses.length;
-        const timeSpent = Math.round(this.v1.getFinalTime() / 1000);
-        return await this.v1.submitToLeaderboard(playerName, timeSpent, totalGuesses);
+        const timeMs = this.v1.getFinalTime();
+        return await this.v1.submitToLeaderboard(playerName, timeMs, totalGuesses);
     }
 
     // Get day number for share text
@@ -155,14 +155,9 @@ class DailyChallengeV2 {
         // Score display: guesses/max or X if failed
         const scoreStr = won ? `${this.guesses.length}/${this.maxGuesses}` : `X/${this.maxGuesses}`;
 
-        // Time display
+        // Time display with centisecond precision
         const timeMs = this.v1.getFinalTime();
-        const totalSeconds = Math.floor(timeMs / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        const timeStr = minutes > 0
-            ? `${minutes}:${seconds.toString().padStart(2, '0')}`
-            : `0:${seconds.toString().padStart(2, '0')}`;
+        const timeStr = typeof formatTimeMs === 'function' ? formatTimeMs(timeMs) : `${(timeMs / 1000).toFixed(2)}s`;
 
         return `🏁 Flagtriv #${dayNumber}\n${squaresStr} ${scoreStr}\n⏱️ ${timeStr}\n\nflagtriv.com`;
     }

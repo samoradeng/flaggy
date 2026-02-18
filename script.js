@@ -2,7 +2,21 @@
 // Feature Flag: V2 Daily Challenge (hint-based)
 // Set to false to revert to original multiple-choice daily
 // ==============================
-const DAILY_V2 = true;
+const DAILY_V2 = false;
+
+// Format milliseconds into a readable time string with centisecond precision
+// e.g. 1240 -> "1.24s", 65120 -> "1:05.12"
+function formatTimeMs(ms) {
+    const totalSeconds = ms / 1000;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    if (minutes > 0) {
+        const wholeSeconds = Math.floor(seconds);
+        const centiseconds = Math.floor((seconds - wholeSeconds) * 100);
+        return `${minutes}:${wholeSeconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
+    }
+    return `${seconds.toFixed(2)}s`;
+}
 
 // Global variables
 let countries = {};
@@ -1150,9 +1164,9 @@ async function submitDailyNameHandler() {
     // Submit to leaderboard - use saved time from result, not current elapsed time
     const todayResult = dailyChallenge.dailyStats.results[dailyChallenge.today];
     const attempts = todayResult?.attempts || (3 - lives);
-    const timeSpent = todayResult?.timeSpent || Math.round(dailyChallenge.getElapsedTime() / 1000);
+    const timeMs = todayResult?.timeMs || dailyChallenge.getElapsedTime();
 
-    const result = await dailyChallenge.submitToLeaderboard(playerName, timeSpent, attempts);
+    const result = await dailyChallenge.submitToLeaderboard(playerName, timeMs, attempts);
     
     if (result.success) {
         document.getElementById('daily-name-modal').style.display = 'none';
@@ -1185,7 +1199,7 @@ async function showDailyLeaderboard() {
                 entryDiv.className = `leaderboard-item ${isCurrentPlayer ? 'your-entry' : ''}`;
                 
                 const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
-                const timeDisplay = `${entry.time}s`;
+                const timeDisplay = entry.timeMs ? formatTimeMs(entry.timeMs) : `${entry.time}s`;
                 const attemptsDisplay = entry.attempts === 1 ? '(1st try!)' : `(${entry.attempts} tries)`;
                 const flagEmoji = entry.country !== 'Unknown' ? countryCodeToFlag(entry.country) : '';
 
@@ -1697,11 +1711,8 @@ function v2StartVisualTimer() {
 
     v2TimerInterval = setInterval(() => {
         const elapsed = dailyChallenge.getElapsedTime();
-        const totalSec = Math.floor(elapsed / 1000);
-        const min = Math.floor(totalSec / 60);
-        const sec = totalSec % 60;
-        timerEl.textContent = `⏱️ ${min}:${sec.toString().padStart(2, '0')}`;
-    }, 200);
+        timerEl.textContent = `⏱️ ${formatTimeMs(elapsed)}`;
+    }, 50);
 }
 
 function v2StopVisualTimer() {
@@ -1736,10 +1747,7 @@ async function v2EndGame(won) {
 
         // Stats
         const timeMs = dailyChallenge.getFinalTime();
-        const totalSec = Math.floor(timeMs / 1000);
-        const min = Math.floor(totalSec / 60);
-        const sec = totalSec % 60;
-        const timeStr = `${min}:${sec.toString().padStart(2, '0')}`;
+        const timeStr = formatTimeMs(timeMs);
         const guessStr = won ? `${dailyChallengeV2.guesses.length}/${dailyChallengeV2.maxGuesses}` : `X/${dailyChallengeV2.maxGuesses}`;
         const currentStreak = dailyChallenge.dailyStats.streak || 0;
 
@@ -1872,10 +1880,7 @@ function showDailyCompleteV2() {
     const won = todayResult.correct;
     const totalGuesses = todayResult.attempts || (v2Data?.totalGuesses || 0);
     const timeMs = todayResult.timeMs || 0;
-    const totalSec = Math.floor(timeMs / 1000);
-    const min = Math.floor(totalSec / 60);
-    const sec = totalSec % 60;
-    const timeStr = `${min}:${sec.toString().padStart(2, '0')}`;
+    const timeStr = formatTimeMs(timeMs);
     const guessStr = won ? `${totalGuesses}/${dailyChallengeV2.maxGuesses}` : `X/${dailyChallengeV2.maxGuesses}`;
     const currentStreak = dailyChallenge.dailyStats.streak || 0;
 
