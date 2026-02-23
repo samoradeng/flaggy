@@ -196,10 +196,14 @@ class MultiplayerGame {
     showLobby(gameId, continent, flagCount) {
         // Store total flags for UI display
         this.totalFlagsInGame = flagCount;
-        
+
+        // Reset game state from previous round so lobby-to-gameplay transition works on rematch
+        this.gameStartTime = null;
+        this.gameEnded = false;
+
         // Hide main menu
         document.getElementById('mode-selection').style.display = 'none';
-        
+
         // Show lobby
         document.getElementById('multiplayer-lobby').style.display = 'block';
         
