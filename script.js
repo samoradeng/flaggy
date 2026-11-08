@@ -1,3 +1,6 @@
+// Debug: Log immediately on script load
+console.log('🚀 Script starting...');
+
 // Global variables
 let countries = {};
 let currentCountry = null;
@@ -146,11 +149,15 @@ async function loadCountries() {
         // Check if opened with a game invite link
         checkForGameInvite();
     } catch (error) {
-        console.error('Error loading countries:', error);
-        console.error('Error details:', error.message, error.stack);
+        console.error('Error loading countries:', JSON.stringify(error));
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        const errorMsg = error.message || error.name || String(error) || 'Unknown error';
         document.body.innerHTML = `<div style="padding: 20px; font-family: sans-serif;">
             <h1>Error loading game data</h1>
-            <p>${error.message}</p>
+            <p><strong>Error:</strong> ${errorMsg}</p>
+            <p><strong>Type:</strong> ${error.name || 'Unknown'}</p>
             <p style="font-size: 12px; color: #666;">${error.stack || ''}</p>
             <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 10px;">Retry</button>
         </div>`;
