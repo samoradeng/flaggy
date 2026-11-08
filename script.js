@@ -286,6 +286,7 @@ function initializeEventListeners() {
     if (closeStatsBtn) {
         closeStatsBtn.addEventListener('click', () => {
             statsModal.style.display = 'none';
+            showModeSelection();
         });
     }
 
@@ -1423,6 +1424,14 @@ function initializeStats() {
 }
 
 function showStatsModal() {
+    // Hide other screens that might be visible
+    document.getElementById('endless-game-over-screen').style.display = 'none';
+    document.getElementById('game-over-screen').style.display = 'none';
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('top-bar').style.display = 'none';
+    document.getElementById('home-logo-btn').style.display = 'none';
+
+    // Show the stats modal
     document.getElementById('stats-modal').style.display = 'block';
     updateStatsDisplay();
 }
