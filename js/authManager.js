@@ -40,7 +40,7 @@
 
 // Supabase configuration
 const SUPABASE_URL = 'https://piydwvszbczwaqerxhvd.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE'; // Get from Supabase Settings > API
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpeWR3dnN6YmN6d2FxZXJ4aHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4ODM0NzIsImV4cCI6MjA2NTQ1OTQ3Mn0.nJ0IkdexK8IpULbdbkzORwrFMraGF0vkJfHCgBliOGk';
 
 class AuthManager {
     constructor() {
