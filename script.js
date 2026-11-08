@@ -146,6 +146,15 @@ async function loadCountries() {
         console.log('Countries loaded:', Object.keys(countries).length);
         initializeGame();
 
+        // Hide animated splash screen
+        setTimeout(() => {
+            const splash = document.getElementById('app-splash');
+            if (splash) {
+                splash.classList.add('hidden');
+                setTimeout(() => splash.remove(), 500);
+            }
+        }, 800);
+
         // Check if opened with a game invite link
         checkForGameInvite();
     } catch (error) {
