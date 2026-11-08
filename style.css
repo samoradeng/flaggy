@@ -42,8 +42,8 @@ body {
 /* Floating Home Button - Native mobile feel */
 #home-logo-btn {
     position: fixed;
-    top: max(70px, calc(20px + env(safe-area-inset-top, 50px)));
-    left: max(20px, env(safe-area-inset-left, 0px));
+    top: 16px;
+    left: 16px;
     height: 48px;
     padding: 0 20px;
     border-radius: 24px;

@@ -33,12 +33,31 @@ let achievementSystem;
 let soundEffects;
 let multiplayerGame;
 
+// Configure Capacitor plugins for native app
+async function initializeCapacitor() {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        try {
+            // Configure status bar to not overlay content
+            const { StatusBar } = window.Capacitor.Plugins;
+            if (StatusBar) {
+                await StatusBar.setOverlaysWebView({ overlay: false });
+                await StatusBar.setStyle({ style: 'DARK' });
+            }
+        } catch (e) {
+            console.log('StatusBar plugin not available:', e);
+        }
+    }
+}
+
 // Load countries and initialize the game
 async function loadCountries() {
     try {
+        // Initialize Capacitor plugins first
+        await initializeCapacitor();
+
         const response = await fetch('countries.json');
         countries = await response.json();
-        
+
         // Initialize all systems after countries are loaded
         continentFilter = new ContinentFilter();
         flagFacts = new FlagFacts();
@@ -46,7 +65,7 @@ async function loadCountries() {
         achievementSystem = new AchievementSystem();
         soundEffects = new SoundEffects();
         multiplayerGame = new MultiplayerGame(countries, continentFilter, flagFacts, soundEffects);
-        
+
         console.log('Countries loaded:', Object.keys(countries).length);
         initializeGame();
     } catch (error) {

@@ -12,8 +12,12 @@ const config: CapacitorConfig = {
       launchShowDuration: 1500,
       backgroundColor: '#667eea',
       showSpinner: false,
-      launchAutoHide: true,
-      splashImmersive: true
+      launchAutoHide: true
+    },
+    StatusBar: {
+      overlaysWebView: false,
+      style: 'DARK',
+      backgroundColor: '#F7F6F9'
     }
   }
 };
