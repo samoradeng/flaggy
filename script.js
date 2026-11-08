@@ -42,9 +42,8 @@ async function initializeCapacitor() {
         try {
             const { StatusBar } = window.Capacitor.Plugins;
             if (StatusBar) {
-                await StatusBar.setOverlaysWebView({ overlay: false });
+                await StatusBar.setOverlaysWebView({ overlay: true });
                 await StatusBar.setStyle({ style: 'LIGHT' });
-                await StatusBar.setBackgroundColor({ color: '#F8F7FC' });
             }
         } catch (e) {
             console.log('StatusBar plugin not available:', e);
