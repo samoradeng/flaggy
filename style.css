@@ -888,14 +888,6 @@ body {
     color: white;
 }
 
-.share-btn.whatsapp {
-    background-color: #25D366;
-}
-
-.share-btn.text {
-    background-color: #007AFF;
-}
-
 .share-btn.native {
     background-color: #667eea;
 }
