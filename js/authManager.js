@@ -38,9 +38,9 @@
  *   FOR UPDATE USING (auth.uid() = user_id);
  */
 
-// Supabase configuration - REPLACE WITH YOUR VALUES
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// Supabase configuration
+const SUPABASE_URL = 'https://piydwvszbczwaqerxhvd.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE'; // Get from Supabase Settings > API
 
 class AuthManager {
     constructor() {
