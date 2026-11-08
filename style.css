@@ -38,6 +38,7 @@ body {
     justify-content: center;
     margin: 0;
     padding: 0;
+    padding-top: env(safe-area-inset-top);
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Roboto', sans-serif;
     background-color: #F8F7FC;
     min-height: 100%;
@@ -676,11 +677,23 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-.close-btn {
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     position: sticky;
     top: 0;
-    right: 0;
-    float: right;
+    background: white;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    z-index: 10;
+}
+
+.modal-header h2 {
+    margin: 0;
+}
+
+.close-btn {
     cursor: pointer;
     width: 32px;
     height: 32px;
@@ -692,8 +705,7 @@ body {
     padding: 0;
     border: none;
     background: #e8e8e8;
-    z-index: 100;
-    margin-bottom: -32px;
+    flex-shrink: 0;
 }
 
 .close-btn:hover {
