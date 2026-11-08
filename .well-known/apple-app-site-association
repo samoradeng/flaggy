@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "5P54VDRKV9.com.flagtriv.app",
+        "paths": ["*"]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["5P54VDRKV9.com.flagtriv.app"]
+  }
+}

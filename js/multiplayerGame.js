@@ -55,7 +55,11 @@ class MultiplayerGame {
             this.copyLobbyLink();
         });
 
-        // Share buttons (removed email)
+        // Share buttons
+        document.getElementById('share-native').addEventListener('click', () => {
+            this.shareViaNative();
+        });
+
         document.getElementById('share-whatsapp').addEventListener('click', () => {
             this.shareViaWhatsApp();
         });
@@ -156,6 +160,40 @@ class MultiplayerGame {
         }
     }
 
+    // Join a challenge directly from a deep link URL
+    async joinChallengeFromLink(gameId) {
+        if (!gameId) return;
+
+        gameId = gameId.trim().toUpperCase();
+
+        // Get stored nickname or prompt for one
+        let nickname = localStorage.getItem('playerNickname') || '';
+
+        if (!nickname) {
+            nickname = prompt('Enter your nickname to join the game:');
+            if (!nickname) return;
+            localStorage.setItem('playerNickname', nickname);
+        }
+
+        // Hide any visible screens and show loading
+        document.getElementById('mode-selection').style.display = 'none';
+
+        const result = await this.multiplayerSync.joinGame(gameId, nickname);
+
+        if (result.success) {
+            if (result.gameState.status === 'finished') {
+                this.showGameFinishedModal(result.gameState);
+            } else if (result.gameState.status === 'playing') {
+                this.startGameplay(result.gameState);
+            } else {
+                this.showLobby(gameId, result.gameState.continent, result.gameState.totalFlags);
+            }
+        } else {
+            alert('Could not join game: ' + result.error);
+            document.getElementById('mode-selection').style.display = 'flex';
+        }
+    }
+
     showGameFinishedModal(gameState) {
         // Show the game finished modal for late joiners
         document.getElementById('game-finished-modal').style.display = 'block';
@@ -196,24 +234,22 @@ class MultiplayerGame {
     showLobby(gameId, continent, flagCount) {
         // Store total flags for UI display
         this.totalFlagsInGame = flagCount;
-
-        // Reset game state from previous round so lobby-to-gameplay transition works on rematch
-        this.gameStartTime = null;
-        this.gameEnded = false;
-
+        
         // Hide main menu
         document.getElementById('mode-selection').style.display = 'none';
 
-        // Show lobby
+        // Show lobby and home button
         document.getElementById('multiplayer-lobby').style.display = 'block';
+        document.getElementById('home-logo-btn').style.display = 'flex';
         
         // Update lobby info
         document.getElementById('lobby-game-id').textContent = gameId;
         document.getElementById('lobby-flag-count').textContent = flagCount;
         document.getElementById('lobby-continents').textContent = this.getContinentDisplayName(continent);
         
-        // Generate and display challenge link
-        const challengeLink = `${window.location.origin}${window.location.pathname}?game=${gameId}`;
+        // Generate and display challenge link - use production URL for native apps
+        const baseUrl = 'https://flagtriv.com';
+        const challengeLink = `${baseUrl}?game=${gameId}`;
         document.getElementById('lobby-challenge-link').value = challengeLink;
         
         // Show/hide start button based on host status
@@ -316,6 +352,74 @@ class MultiplayerGame {
         window.open(smsUrl);
     }
 
+    async shareViaNative() {
+        const link = document.getElementById('lobby-challenge-link').value;
+        const text = `🌍 Join my Flagtriv challenge! Can you beat my geography knowledge?`;
+
+        // Check if Capacitor Share is available (native app)
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+            try {
+                await window.Capacitor.Plugins.Share.share({
+                    title: 'Flagtriv Challenge',
+                    text: text,
+                    url: link,
+                    dialogTitle: 'Share with friends'
+                });
+            } catch (err) {
+                console.error('Native share failed:', err);
+                this.fallbackShare(text, link);
+            }
+        } else if (navigator.share) {
+            // Web Share API fallback
+            try {
+                await navigator.share({
+                    title: 'Flagtriv Challenge',
+                    text: text,
+                    url: link
+                });
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Web share failed:', err);
+                    this.fallbackShare(text, link);
+                }
+            }
+        } else {
+            this.fallbackShare(text, link);
+        }
+    }
+
+    fallbackShare(text, link) {
+        // Copy link to clipboard as fallback
+        const fullText = `${text} ${link}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(fullText).then(() => {
+                this.showToast('📋 Link copied to clipboard!');
+            }).catch(() => {
+                this.showToast('❌ Unable to share');
+            });
+        } else {
+            this.showToast('❌ Sharing not available on this device');
+        }
+    }
+
+    leaveLobby() {
+        // Leave the multiplayer sync
+        if (this.multiplayerSync) {
+            this.multiplayerSync.stopSync();
+        }
+
+        // Reset game state
+        this.gameFlags = [];
+        this.currentFlagIndex = 0;
+        this.playerScore = 0;
+        this.correctCount = 0;
+        this.gameStartTime = null;
+
+        // Hide lobby and show main menu
+        document.getElementById('multiplayer-lobby').style.display = 'none';
+        document.getElementById('mode-selection').style.display = 'flex';
+    }
+
     async startMultiplayerGame() {
         if (!this.multiplayerSync.isHost) return;
 
@@ -414,7 +518,10 @@ class MultiplayerGame {
         // Show game container
         document.getElementById('game-container').style.display = 'flex';
         document.getElementById('top-bar').style.display = 'flex';
-        
+
+        // Hide home button in multiplayer gameplay (results screen will show it)
+        document.getElementById('home-logo-btn').style.display = 'none';
+
         // Create and show timer element
         this.createTimerElement();
         

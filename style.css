@@ -22,48 +22,91 @@
     color: #3c4043;
 }
 
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background: #F8F7FC;
+    height: 100%;
+}
+
 body {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     margin: 0;
-    font-family: 'Roboto', arial, sans-serif;
-    background: linear-gradient(135deg, #F7F6F9 0%, #FEF2F3 50%, #DFD5FF 100%);
-    min-height: 100vh;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Roboto', sans-serif;
+    background-color: #F8F7FC;
+    min-height: 100%;
+    min-height: 100dvh;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    color: #1a1a2e;
 }
 
-/* Home Logo Button (Top Left) */
+/* Back Button - aligned with top bar */
 #home-logo-btn {
     position: fixed;
-    top: 16px;
-    left: 16px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
+    top: 12px;
+    left: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
     border: none;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, background 0.15s ease;
+    z-index: 9999;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+    -webkit-tap-highlight-color: transparent;
+}
+
+#home-logo-btn:active {
+    transform: scale(0.9);
+    background: rgba(235, 235, 235, 0.95);
+}
+
+.back-arrow {
+    width: 20px;
+    height: 20px;
+    color: #667eea;
+    stroke-width: 2.5;
+}
+
+/* Back Button - matches home button style */
+.back-btn {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    left: 12px;
+    height: 40px;
+    padding: 0 16px 0 12px;
+    border: none;
+    border-radius: 20px;
+    background-color: #667eea;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
+    gap: 4px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1000;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
-#home-logo-btn:hover {
-    background-color: rgba(255, 255, 255, 1);
-    transform: scale(1.05);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.home-logo-main {
-    width: 48px;
-    height:48px;
-    object-fit: contain;
+.back-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 #game-container {
@@ -81,8 +124,8 @@ body {
 }
 
 #flag {
-    width: 360px;
-    height: 270px;
+    width: min(360px, 85vw);
+    height: min(240px, 56vw);
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -92,6 +135,7 @@ body {
     box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.15);
 }
 
+/* Option Buttons - original web style */
 .option {
     margin: 4px;
     color: black;
@@ -107,6 +151,7 @@ body {
     cursor: pointer;
     box-shadow: 0 1px 1px rgba(0, 0, 0, .1);
     transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .option.disabled {
@@ -129,6 +174,10 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, .15);
     border: 1px solid #dadce0;
     transform: translateY(-1px);
+}
+
+.option:not(.disabled):active {
+    transform: scale(0.98);
 }
 
 #message {
@@ -214,23 +263,26 @@ body {
     color: #1d1d1d;
 }
 
-/* Consolidated Top Bar */
+/* Premium Top Bar */
 #top-bar {
     position: fixed;
-    top: 8px;
+    top: 12px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 12px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 8px 16px;
-    border-radius: 20px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 10px 18px;
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
     z-index: 100;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
+    max-width: calc(100% - 120px);
+    letter-spacing: -0.2px;
 }
 
 #streak-display-top {
@@ -411,7 +463,7 @@ body {
 }
 
 .submit-name-btn {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background-color: #4CAF50;
     color: white;
     border: none;
     padding: 12px 24px;
@@ -419,8 +471,11 @@ body {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    transition: all 0.2s ease;
+}
+
+.submit-name-btn:active {
+    transform: scale(0.98);
 }
 
 .submit-name-btn:hover {
@@ -458,7 +513,7 @@ body {
 }
 
 #daily-leaderboard-list {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background-color: #f5f5f5;
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 24px;
@@ -534,7 +589,7 @@ body {
 }
 
 .copy-leaderboard-btn {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background-color: #4CAF50;
     color: white;
     border: none;
     padding: 12px 24px;
@@ -542,13 +597,15 @@ body {
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    transition: all 0.2s ease;
 }
 
 .copy-leaderboard-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+    background-color: #45a049;
+}
+
+.copy-leaderboard-btn:active {
+    transform: scale(0.98);
 }
 
 .close-leaderboard-btn {
@@ -580,12 +637,12 @@ body {
 }
 
 .global-status.global {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background-color: #4CAF50;
     color: white;
 }
 
 .global-status.local {
-    background: linear-gradient(135deg, #ff9800, #f57c00);
+    background-color: #ff9800;
     color: white;
 }
 
@@ -597,7 +654,9 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 1000;
 }
 
@@ -606,14 +665,15 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: white;
-    padding: 32px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
-    border-radius: 16px;
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
+    background-color: #fff;
+    padding: 28px;
+    width: calc(100% - 40px);
+    max-width: 400px;
+    max-height: calc(100% - 80px);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .close-btn {
@@ -657,29 +717,33 @@ body {
 
 .challenge-setting {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     margin-bottom: 16px;
     padding: 12px 0;
     border-bottom: 1px solid #f0f0f0;
+    text-align: left;
 }
 
 .challenge-setting label {
     font-weight: 500;
     color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
 }
 
 .challenge-setting select,
 .challenge-setting input {
-    padding: 8px 12px;
+    padding: 12px;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
-    font-size: 14px;
-    min-width: 120px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .create-challenge-btn {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background-color: #4CAF50;
     color: white;
     border: none;
     padding: 14px 32px;
@@ -689,12 +753,14 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     margin-top: 16px;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
 .create-challenge-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+    background-color: #45a049;
+}
+
+.create-challenge-btn:active {
+    transform: scale(0.98);
 }
 
 .challenge-divider {
@@ -737,20 +803,22 @@ body {
 
 .link-container {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 10px;
     margin: 16px 0;
-    padding: 16px;
+    padding: 12px;
     background-color: #f8f9fa;
-    border-radius: 8px;
+    border-radius: 12px;
 }
 
 .link-container input {
-    flex: 1;
+    width: 100%;
     padding: 12px;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
     font-family: monospace;
+    box-sizing: border-box;
 }
 
 .link-container button {
@@ -769,6 +837,10 @@ body {
     background-color: #014cec;
 }
 
+.link-container button:active {
+    transform: scale(0.98);
+}
+
 .share-instruction {
     font-size: 14px;
     color: #666;
@@ -780,7 +852,7 @@ body {
 .share-section {
     margin: 24px 0;
     padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background-color: #f5f5f5;
     border-radius: 12px;
     
 }
@@ -799,15 +871,15 @@ body {
 
 .share-buttons {
     display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin-top: 12px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
 }
 
 .share-btn {
-    padding: 8px 16px;
+    padding: 12px 20px;
     border: none;
+    width: 100%;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
@@ -816,12 +888,8 @@ body {
     color: white;
 }
 
-.share-btn.whatsapp {
-    background: linear-gradient(135deg, #25D366, #128C7E);
-}
-
-.share-btn.text {
-    background: linear-gradient(135deg, #007AFF, #0051D5);
+.share-btn.native {
+    background-color: #667eea;
 }
 
 .share-btn:hover {
@@ -831,28 +899,34 @@ body {
 
 /* Multiplayer Lobby */
 #multiplayer-lobby {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 500px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 80px 20px 20px;
+    overflow-y: auto;
 }
 
 .lobby-content {
     background-color: white;
-    padding: 32px;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     text-align: center;
+    width: 100%;
+    max-width: 360px;
+    box-sizing: border-box;
 }
 
 .lobby-info {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background-color: #f5f5f5;
     padding: 20px;
     border-radius: 12px;
     margin: 20px 0;
-   
 }
 
 .lobby-info p {
@@ -877,7 +951,7 @@ body {
 }
 
 .host-badge {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background-color: #4CAF50;
     color: white;
     padding: 4px 12px;
     border-radius: 12px;
@@ -898,22 +972,26 @@ body {
 }
 
 .start-game-btn {
-    background: linear-gradient(135deg, #0052FF, #014cec);
+    background-color: #4CAF50;
     color: white;
     border: none;
-    padding: 14px 32px;
+    padding: 14px 24px;
     border-radius: 25px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     margin-top: 20px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .start-game-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 82, 255, 0.4);
+    background-color: #45a049;
+}
+
+.start-game-btn:active {
+    transform: scale(0.98);
 }
 
 .lobby-waiting {
@@ -925,35 +1003,40 @@ body {
 
 /* Multiplayer Results */
 #multiplayer-results {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 500px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 80px 20px 20px;
+    overflow-y: auto;
 }
 
 .results-content {
     background-color: white;
-    padding: 32px;
-    border-radius: 16px;
+    padding: 24px 20px;
+    border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     text-align: center;
+    width: 100%;
+    max-width: 360px;
+    box-sizing: border-box;
 }
 
 #result-message {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 24px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
 #multiplayer-leaderboard {
     margin: 24px 0;
     padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background-color: #f5f5f5;
     border-radius: 12px;
-   
 }
 
 #multiplayer-leaderboard h3 {
@@ -1028,7 +1111,7 @@ body {
 .final-stats {
     margin: 24px 0;
     padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background-color: #f5f5f5;
     border-radius: 12px;
 }
 
@@ -1040,47 +1123,48 @@ body {
 
 .results-actions {
     display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .results-actions button {
-    padding: 12px 24px;
+    padding: 14px 24px;
     border: none;
     border-radius: 25px;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    width: 100%;
 }
 
 #share-multiplayer-result {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background-color: #4CAF50;
     color: white;
 }
 
 #play-again-multiplayer {
-    background: linear-gradient(135deg, #0052FF, #014cec);
+    background-color: #0052FF;
     color: white;
 }
 
-#share-multiplayer-result:hover,
-#play-again-multiplayer:hover,
-#rematch-btn:hover,
-#join-rematch-btn:hover {
-    transform: translateY(-2px);
+#share-multiplayer-result:active,
+#play-again-multiplayer:active,
+#rematch-btn:active,
+#join-rematch-btn:active {
+    transform: scale(0.98);
 }
 
 #rematch-btn {
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    background-color: #ff6b35;
     color: white;
 }
 
 #rematch-notification {
     margin-top: 20px;
     padding: 16px;
-    background: linear-gradient(135deg, #f0f4ff, #e8efff);
+    background-color: #f0f4ff;
     border-radius: 12px;
     text-align: center;
 }
@@ -1092,7 +1176,7 @@ body {
 }
 
 #join-rematch-btn {
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    background-color: #ff6b35;
     color: white;
     padding: 12px 24px;
     border: none;
@@ -1107,7 +1191,7 @@ body {
 #late-joiner-leaderboard {
     margin: 24px 0;
     padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    background-color: #f5f5f5;
     border-radius: 12px;
    
 }
@@ -1456,74 +1540,71 @@ body {
     display: flex;
     flex-direction: column;
     text-align: center;
-    width: 90%;
-    max-width: 400px;
+    width: calc(100% - 48px);
+    max-width: 360px;
+    padding: 0 24px;
+    box-sizing: border-box;
 }
 
 #mode-buttons {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     margin-bottom: 24px;
 }
 
 #daily-challenge-btn,
 #challenge-mode-btn,
 #challenge-friends-btn {
-    padding: 16px 32px;
-    font-size: 18px;
-    font-family: 'Roboto', arial, sans-serif;
+    padding: 0 32px;
+    font-size: 17px;
+    font-family: inherit;
     border: none;
-    border-radius: 50px;
+    border-radius: 16px;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    font-weight: 600;
+    transition: all 0.2s ease;
     min-width: 200px;
-    height: 56px; /* Fixed height for consistency */
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #daily-challenge-btn {
-    background: #000000;
+    background-color: #667eea;
     color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 #challenge-mode-btn {
-    background: white;
-    color: #000000;
-    border: 2px solid #000000;
+    background-color: #f8f9fa;
+    color: #3c4043;
+    border: 1px solid #dadce0;
 }
 
 #challenge-friends-btn {
-    background: white;
-    color: #000000;
-    border: 2px solid #000000;
-}
-
-#daily-challenge-btn:hover {
-    background-color: #333333;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-#challenge-mode-btn:hover {
     background-color: #f8f9fa;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: #3c4043;
+    border: 1px solid #dadce0;
 }
 
-#challenge-friends-btn:hover {
-    background-color: #f8f9fa;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+#daily-challenge-btn:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+#challenge-mode-btn:active,
+#challenge-friends-btn:active {
+    transform: scale(0.98);
+    background-color: #e8e8e8;
 }
 
 #daily-challenge-btn:disabled,
 #challenge-mode-btn:disabled,
 #challenge-friends-btn:disabled {
-    background-color: #e0e0e0;
+    background: #e5e5e5;
     color: #999;
     cursor: not-allowed;
     transform: none;
@@ -1532,6 +1613,9 @@ body {
 
 #main-menu-stats {
     margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 #daily-streak-info {
@@ -1629,14 +1713,16 @@ body {
 }
 
 #view-leaderboard-btn {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background-color: #4CAF50;
     color: white;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
 #view-leaderboard-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+    background-color: #45a049;
+}
+
+#view-leaderboard-btn:active {
+    transform: scale(0.98);
 }
 
 #try-again,
@@ -1763,14 +1849,14 @@ body {
 }
 
 .achievement-content {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background-color: #4CAF50;
     color: white;
     padding: 20px 24px;
     border-radius: 16px;
     display: flex;
     align-items: center;
     gap: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     max-width: 400px;
 }
 

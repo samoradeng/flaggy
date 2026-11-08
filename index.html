@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
     <!-- Primary SEO Meta Tags -->
     <title>Flagtriv - #1 Flag Quiz Game | Guess World Flags Daily</title>
@@ -156,9 +156,11 @@
 
     <div id="resultsToast">Copied results to clipboard</div>
 
-    <!-- Home Logo Button (Top Left) -->
+    <!-- Floating Back Button (shows during gameplay) -->
     <button id="home-logo-btn" title="Home">
-        <img src="images/FLAGTRIV LOGO.svg" alt="Flagtriv" class="home-logo-main">
+        <svg class="back-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+        </svg>
     </button>
 
     <!-- Consolidated Top Bar -->
@@ -432,8 +434,7 @@
                     <button id="copy-lobby-link">📋 Copy Link</button>
                 </div>
                 <div class="share-buttons">
-                    <button id="share-whatsapp" class="share-btn whatsapp">📱 WhatsApp</button>
-                    <button id="share-text" class="share-btn text">💬 Text</button>
+                    <button id="share-native" class="share-btn native">📤 Share</button>
                 </div>
             </div>
             
@@ -534,9 +535,6 @@
         <div id="main-menu-stats">
             <div id="passport-preview" style="display: none;">
                 <span>🗺️ <span id="passport-preview-count">0</span>/250 flags discovered</span>
-            </div>
-            <div id="social-proof" style="display: none;">
-                <span id="social-proof-text"></span>
             </div>
         </div>
     </div>
