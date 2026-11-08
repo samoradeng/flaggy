@@ -1,13 +1,13 @@
 /* Safe area background cover - removes grey line */
-html::before {
-    content: '';
+#safe-area-cover {
     position: fixed;
-    top: 0;
+    top: -1px;
     left: 0;
     right: 0;
-    height: env(safe-area-inset-top);
+    height: calc(env(safe-area-inset-top) + 2px);
     background: #F8F7FC;
-    z-index: 99998;
+    z-index: 9999;
+    pointer-events: none;
 }
 
 /* Animated Splash Screen - Wes Anderson meets Subway Surfer */
