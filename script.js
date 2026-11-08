@@ -318,16 +318,11 @@ function initializeEventListeners() {
 
     // Daily leaderboard modal
     const viewLeaderboardBtn = document.getElementById('view-leaderboard-btn');
-    const viewDailyLeaderboardBtn = document.getElementById('view-daily-leaderboard-btn');
     const dailyLeaderboardClose = document.querySelector('.daily-leaderboard-close');
     const closeLeaderboard = document.getElementById('close-leaderboard');
 
     if (viewLeaderboardBtn) {
         viewLeaderboardBtn.addEventListener('click', showDailyLeaderboard);
-    }
-
-    if (viewDailyLeaderboardBtn) {
-        viewDailyLeaderboardBtn.addEventListener('click', showDailyLeaderboard);
     }
 
     if (dailyLeaderboardClose) {
