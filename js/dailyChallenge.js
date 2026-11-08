@@ -187,12 +187,44 @@ class DailyChallenge {
                 this.dailyStats.streak = 1;
             }
         } else {
-            this.dailyStats.streak = 0;
+            // Don't reset streak here - let the UI handle streak save flow
+            this.pendingStreakLoss = true;
+            this.preStreakLossValue = this.dailyStats.streak;
         }
 
         this.dailyStats.lastPlayedDate = this.today;
         this.saveDailyStats();
         return true;
+    }
+
+    // Check if streak loss is pending (user got wrong answer)
+    hasPendingStreakLoss() {
+        return this.pendingStreakLoss && this.preStreakLossValue > 0;
+    }
+
+    // User chose to save their streak
+    saveStreak() {
+        this.pendingStreakLoss = false;
+        // Streak stays at current value
+        this.saveDailyStats();
+    }
+
+    // User chose not to save (or couldn't)
+    confirmStreakLoss() {
+        this.dailyStats.streak = 0;
+        this.pendingStreakLoss = false;
+        this.preStreakLossValue = 0;
+        this.saveDailyStats();
+    }
+
+    // Get current streak (accounting for pending loss)
+    getCurrentStreak() {
+        return this.dailyStats.streak;
+    }
+
+    // Get the streak value before pending loss
+    getPreLossStreak() {
+        return this.preStreakLossValue || this.dailyStats.streak;
     }
 
     // Submit to global leaderboard with precise timing - ENHANCED

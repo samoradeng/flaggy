@@ -707,9 +707,17 @@ function startDailyChallenge() {
 }
 
 function startChallengeMode() {
+    // Check practice limit for free users
+    if (!checkPracticeLimit()) {
+        return; // Premium modal will show
+    }
+
+    // Record this practice session
+    recordPracticeGame();
+
     gameMode = 'challenge';
     isMultiplayerMode = false;
-    
+
     // Hide all screens and show game
     document.getElementById('mode-selection').style.display = 'none';
     document.getElementById('endless-game-over-screen').style.display = 'none';
@@ -1164,16 +1172,34 @@ function updateUI() {
 async function endDailyChallenge(success) {
     const attempts = 3 - lives; // Calculate attempts used
     const timeSpent = dailyChallenge.getElapsedTime();
-    
+
     // Submit result
     await dailyChallenge.submitResult(success, attempts, Math.round(timeSpent / 1000));
-    
+
     if (success) {
         // Show name input modal for successful completion
         document.getElementById('daily-name-modal').style.display = 'block';
     } else {
-        // Show game over for daily challenge
-        showDailyGameOver();
+        // Check if user has a streak to save
+        if (dailyChallenge.hasPendingStreakLoss()) {
+            const currentStreak = dailyChallenge.getPreLossStreak();
+            window.premiumManager.showStreakSaveModal(
+                currentStreak,
+                () => {
+                    // User saved their streak
+                    dailyChallenge.saveStreak();
+                    showDailyGameOver();
+                },
+                () => {
+                    // User chose not to save
+                    dailyChallenge.confirmStreakLoss();
+                    showDailyGameOver();
+                }
+            );
+        } else {
+            // No streak to save, proceed directly
+            showDailyGameOver();
+        }
     }
 }
 
@@ -1581,6 +1607,61 @@ function shareStats() {
         navigator.clipboard.writeText(shareText).then(() => {
             showToast('📋 Stats copied to clipboard!');
         });
+    }
+}
+
+// ========== Premium Modal Functions ==========
+
+let selectedPremiumPlan = 'yearly';
+
+function selectPremiumOption(plan) {
+    selectedPremiumPlan = plan;
+    document.querySelectorAll('.premium-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    event.currentTarget.classList.add('selected');
+}
+
+function subscribePremium() {
+    if (selectedPremiumPlan === 'yearly') {
+        window.premiumManager.purchaseYearly();
+    } else {
+        window.premiumManager.purchaseMonthly();
+    }
+    document.getElementById('premium-modal').style.display = 'none';
+}
+
+function showPremiumModal(reason) {
+    window.premiumManager.showUpgradeModal(reason);
+}
+
+// Check practice limits before starting practice mode
+function checkPracticeLimit() {
+    if (!window.premiumManager.canPlayPractice()) {
+        showPremiumModal('practice');
+        return false;
+    }
+    return true;
+}
+
+// Record practice game played
+function recordPracticeGame() {
+    window.premiumManager.recordPracticeGame();
+    updatePracticeCounter();
+}
+
+// Update practice counter display
+function updatePracticeCounter() {
+    const remaining = window.premiumManager.getPracticeRemaining();
+    const counter = document.getElementById('practice-counter');
+    if (counter) {
+        if (remaining === Infinity) {
+            counter.textContent = '♾️ Unlimited';
+            counter.classList.add('premium');
+        } else {
+            counter.textContent = `${remaining}/5 today`;
+            counter.classList.remove('premium');
+        }
     }
 }
 

@@ -702,7 +702,60 @@
         </div>
     </div>
 
+    <!-- Premium Upgrade Modal -->
+    <div id="premium-modal" class="modal-overlay" style="display: none;">
+        <div class="premium-content" style="position: relative;">
+            <button class="premium-close" onclick="document.getElementById('premium-modal').style.display='none'">&times;</button>
+            <div class="premium-badge">⭐ PREMIUM</div>
+            <h2>Upgrade to Flagtriv+</h2>
+            <p id="premium-reason">Unlock the full experience!</p>
+
+            <div class="premium-features">
+                <div class="premium-feature">
+                    <span class="premium-feature-icon">♾️</span>
+                    <span class="premium-feature-text">Unlimited Practice Mode</span>
+                </div>
+                <div class="premium-feature">
+                    <span class="premium-feature-icon">⚔️</span>
+                    <span class="premium-feature-text">Unlimited Challenge Creation</span>
+                </div>
+                <div class="premium-feature">
+                    <span class="premium-feature-icon">🚫</span>
+                    <span class="premium-feature-text">Ad-Free Experience</span>
+                </div>
+                <div class="premium-feature">
+                    <span class="premium-feature-icon">✈️</span>
+                    <span class="premium-feature-text">Offline Practice Mode</span>
+                </div>
+                <div class="premium-feature">
+                    <span class="premium-feature-icon">🛡️</span>
+                    <span class="premium-feature-text">1 Free Streak Save / Week</span>
+                </div>
+            </div>
+
+            <div class="premium-pricing">
+                <div class="premium-option selected" onclick="selectPremiumOption('yearly')">
+                    <div class="premium-option-left">
+                        <div class="premium-option-period">Yearly</div>
+                        <div class="premium-option-save">Save 58%</div>
+                    </div>
+                    <div class="premium-option-price">$19.99/yr</div>
+                </div>
+                <div class="premium-option" onclick="selectPremiumOption('monthly')">
+                    <div class="premium-option-left">
+                        <div class="premium-option-period">Monthly</div>
+                    </div>
+                    <div class="premium-option-price">$3.99/mo</div>
+                </div>
+            </div>
+
+            <button class="premium-subscribe-btn" onclick="subscribePremium()">Start Free Trial</button>
+            <button class="premium-restore" onclick="window.premiumManager.restorePurchases()">Restore Purchases</button>
+        </div>
+    </div>
+
     <!-- Load JavaScript modules -->
+    <script src="js/premiumManager.js"></script>
     <script src="js/globalLeaderboard.js"></script>
     <script src="js/continentFilter.js"></script>
     <script src="js/flagFacts.js"></script>
