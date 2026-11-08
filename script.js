@@ -47,10 +47,56 @@ async function initializeCapacitor() {
             console.log('StatusBar plugin not available:', e);
         }
 
+        // Handle deep links when app is opened from a URL
+        try {
+            const { App } = window.Capacitor.Plugins;
+            if (App) {
+                // Listen for app opened via URL while running
+                App.addListener('appUrlOpen', (event) => {
+                    console.log('App opened with URL:', event.url);
+                    handleDeepLink(event.url);
+                });
+            }
+        } catch (e) {
+            console.log('App plugin not available:', e);
+        }
+
         // Prevent zoom on double-tap and pinch
         document.addEventListener('gesturestart', function(e) {
             e.preventDefault();
         });
+    }
+}
+
+// Handle deep links (game invites)
+function handleDeepLink(url) {
+    try {
+        const urlObj = new URL(url);
+        const gameId = urlObj.searchParams.get('game');
+
+        if (gameId && multiplayerGame) {
+            console.log('Joining game from deep link:', gameId);
+            // Auto-join the game
+            multiplayerGame.joinChallengeFromLink(gameId);
+        }
+    } catch (e) {
+        console.log('Error handling deep link:', e);
+    }
+}
+
+// Check for game parameter on page load
+function checkForGameInvite() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('game');
+
+    if (gameId) {
+        console.log('Found game invite in URL:', gameId);
+        // Wait for multiplayerGame to be initialized
+        setTimeout(() => {
+            if (multiplayerGame) {
+                multiplayerGame.joinChallengeFromLink(gameId);
+            }
+        }, 500);
     }
 }
 
@@ -73,6 +119,9 @@ async function loadCountries() {
 
         console.log('Countries loaded:', Object.keys(countries).length);
         initializeGame();
+
+        // Check if opened with a game invite link
+        checkForGameInvite();
     } catch (error) {
         console.error('Error loading countries:', error);
         document.body.innerHTML = '<h1>Error loading game data. Please refresh the page.</h1>';

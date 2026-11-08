@@ -160,6 +160,40 @@ class MultiplayerGame {
         }
     }
 
+    // Join a challenge directly from a deep link URL
+    async joinChallengeFromLink(gameId) {
+        if (!gameId) return;
+
+        gameId = gameId.trim().toUpperCase();
+
+        // Get stored nickname or prompt for one
+        let nickname = localStorage.getItem('playerNickname') || '';
+
+        if (!nickname) {
+            nickname = prompt('Enter your nickname to join the game:');
+            if (!nickname) return;
+            localStorage.setItem('playerNickname', nickname);
+        }
+
+        // Hide any visible screens and show loading
+        document.getElementById('mode-selection').style.display = 'none';
+
+        const result = await this.multiplayerSync.joinGame(gameId, nickname);
+
+        if (result.success) {
+            if (result.gameState.status === 'finished') {
+                this.showGameFinishedModal(result.gameState);
+            } else if (result.gameState.status === 'playing') {
+                this.startGameplay(result.gameState);
+            } else {
+                this.showLobby(gameId, result.gameState.continent, result.gameState.totalFlags);
+            }
+        } else {
+            alert('Could not join game: ' + result.error);
+            document.getElementById('mode-selection').style.display = 'flex';
+        }
+    }
+
     showGameFinishedModal(gameState) {
         // Show the game finished modal for late joiners
         document.getElementById('game-finished-modal').style.display = 'block';
