@@ -3,12 +3,12 @@
     "apps": [],
     "details": [
       {
-        "appID": "TEAM_ID.com.flagtriv.app",
+        "appID": "5P54VDRKV9.com.flagtriv.app",
         "paths": ["*"]
       }
     ]
   },
   "webcredentials": {
-    "apps": ["TEAM_ID.com.flagtriv.app"]
+    "apps": ["5P54VDRKV9.com.flagtriv.app"]
   }
 }
