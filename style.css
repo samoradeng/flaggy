@@ -10,7 +10,7 @@
     pointer-events: none;
 }
 
-/* Animated Splash Screen - Wes Anderson meets Subway Surfer */
+/* Animated Splash Screen - Logo expands + waving flag */
 #app-splash {
     position: fixed;
     top: 0;
@@ -22,65 +22,96 @@
     align-items: center;
     justify-content: center;
     z-index: 99999;
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition: opacity 0.5s ease-out;
 }
 
 #app-splash.hidden {
     opacity: 0;
-    transform: scale(1.05);
     pointer-events: none;
 }
 
 .splash-content {
     text-align: center;
-    animation: fadeInUp 0.8s ease-out;
+    position: relative;
 }
 
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+.splash-logo-container {
+    position: relative;
+    display: inline-block;
 }
 
-.splash-logo {
-    width: 100px;
-    height: 100px;
+.splash-logo-small {
+    width: 80px;
+    height: 80px;
     filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
-    animation: gentleBounce 2s ease-in-out infinite;
+    animation: logoExpand 1.2s ease-out forwards;
 }
 
-@keyframes gentleBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+.splash-logo-full {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    height: 70px;
+    width: auto;
+    opacity: 0;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+    animation: logoReveal 0.6s ease-out 0.8s forwards;
 }
 
-.splash-flags {
-    margin-top: 32px;
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-    max-width: 260px;
+@keyframes logoExpand {
+    0% { transform: scale(0.6); opacity: 0; }
+    40% { transform: scale(1.1); opacity: 1; }
+    60% { transform: scale(1); }
+    100% { transform: scale(0); opacity: 0; }
 }
 
-.splash-flag {
-    font-size: 32px;
-    animation: wave 1.8s ease-in-out infinite;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+@keyframes logoReveal {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
-.splash-flag:nth-child(1) { animation-delay: 0s; }
-.splash-flag:nth-child(2) { animation-delay: 0.1s; }
-.splash-flag:nth-child(3) { animation-delay: 0.2s; }
-.splash-flag:nth-child(4) { animation-delay: 0.3s; }
-.splash-flag:nth-child(5) { animation-delay: 0.4s; }
-.splash-flag:nth-child(6) { animation-delay: 0.5s; }
-.splash-flag:nth-child(7) { animation-delay: 0.6s; }
-.splash-flag:nth-child(8) { animation-delay: 0.7s; }
+.splash-flag-pole {
+    position: absolute;
+    right: -60px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    animation: poleAppear 0.4s ease-out 1.2s forwards;
+}
 
-@keyframes wave {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    25% { transform: translateY(-6px) rotate(-3deg); }
-    75% { transform: translateY(-6px) rotate(3deg); }
+@keyframes poleAppear {
+    0% { opacity: 0; transform: translateY(-50%) translateX(-20px); }
+    100% { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+.flag-pole {
+    width: 4px;
+    height: 100px;
+    background: linear-gradient(180deg, #8B4513 0%, #654321 100%);
+    border-radius: 2px;
+    position: absolute;
+    right: 0;
+    top: -30px;
+}
+
+.splash-waving-flag {
+    font-size: 48px;
+    position: absolute;
+    right: 8px;
+    top: -30px;
+    transform-origin: left center;
+    animation: flagWave 0.8s ease-in-out infinite;
+    animation-delay: 1.4s;
+    opacity: 0;
+    animation: flagAppearAndWave 0.8s ease-in-out 1.4s infinite;
+}
+
+@keyframes flagAppearAndWave {
+    0% { opacity: 1; transform: rotate(0deg); }
+    25% { transform: rotate(8deg); }
+    75% { transform: rotate(-8deg); }
+    100% { opacity: 1; transform: rotate(0deg); }
 }
 
 /* Existing styles... */
@@ -137,7 +168,7 @@ body {
 /* Back Button - aligned with top bar */
 #home-logo-btn {
     position: fixed;
-    top: 12px;
+    top: calc(12px + env(safe-area-inset-top));
     left: 12px;
     width: 40px;
     height: 40px;
@@ -352,7 +383,7 @@ body {
 /* Premium Top Bar */
 #top-bar {
     position: fixed;
-    top: 12px;
+    top: calc(12px + env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
     display: flex;

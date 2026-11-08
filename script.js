@@ -1,6 +1,13 @@
 // Debug: Log immediately on script load
 console.log('🚀 Script starting...');
 
+// Set random flag for splash screen
+const splashFlags = ['🇺🇸', '🇬🇧', '🇯🇵', '🇫🇷', '🇧🇷', '🇩🇪', '🇮🇹', '🇪🇸', '🇨🇦', '🇦🇺', '🇲🇽', '🇰🇷', '🇮🇳', '🇳🇬', '🇿🇦', '🇦🇷', '🇨🇳', '🇷🇺', '🇸🇪', '🇳🇴'];
+const randomFlagEl = document.getElementById('random-flag');
+if (randomFlagEl) {
+    randomFlagEl.textContent = splashFlags[Math.floor(Math.random() * splashFlags.length)];
+}
+
 // Global variables
 let countries = {};
 let currentCountry = null;
