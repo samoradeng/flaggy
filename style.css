@@ -677,9 +677,10 @@ body {
 }
 
 .close-btn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+    position: sticky;
+    top: 0;
+    right: 0;
+    float: right;
     cursor: pointer;
     width: 32px;
     height: 32px;
@@ -690,8 +691,9 @@ body {
     justify-content: center;
     padding: 0;
     border: none;
-    background: #f0f0f0;
-    z-index: 10;
+    background: #e8e8e8;
+    z-index: 100;
+    margin-bottom: -32px;
 }
 
 .close-btn:hover {
