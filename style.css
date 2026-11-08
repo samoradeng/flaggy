@@ -412,7 +412,7 @@ body {
 /* Multiplayer Timer - Fixed Position */
 .multiplayer-timer-display {
     position: fixed;
-    top: 16px;
+    top: calc(16px + env(safe-area-inset-top));
     right: 16px;
     background: linear-gradient(135deg, #ff6b35, #f7931e);
     color: white;
@@ -2092,7 +2092,7 @@ body {
     
     /* Mobile timer positioning */
     .multiplayer-timer-display {
-        top: 12px;
+        top: calc(12px + env(safe-area-inset-top));
         right: 12px;
         padding: 8px 16px;
         font-size: 14px;
@@ -2347,6 +2347,7 @@ body {
     
     /* Very small mobile timer */
     .multiplayer-timer-display {
+        top: calc(10px + env(safe-area-inset-top));
         padding: 6px 12px;
         font-size: 12px;
         min-width: 60px;
