@@ -698,25 +698,29 @@ body {
 
 .challenge-setting {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     margin-bottom: 16px;
     padding: 12px 0;
     border-bottom: 1px solid #f0f0f0;
+    text-align: left;
 }
 
 .challenge-setting label {
     font-weight: 500;
     color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
 }
 
 .challenge-setting select,
 .challenge-setting input {
-    padding: 8px 12px;
+    padding: 12px;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
-    font-size: 14px;
-    min-width: 120px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .create-challenge-btn {
@@ -778,20 +782,22 @@ body {
 
 .link-container {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 10px;
     margin: 16px 0;
-    padding: 16px;
+    padding: 12px;
     background-color: #f8f9fa;
-    border-radius: 8px;
+    border-radius: 12px;
 }
 
 .link-container input {
-    flex: 1;
+    width: 100%;
     padding: 12px;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
     font-family: monospace;
+    box-sizing: border-box;
 }
 
 .link-container button {
@@ -882,20 +888,21 @@ body {
     right: 0;
     bottom: 0;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: calc(70px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+    padding: 80px 20px 20px;
     overflow-y: auto;
 }
 
 .lobby-content {
     background-color: white;
-    padding: 24px;
+    padding: 20px;
     border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     text-align: center;
     width: 100%;
-    max-width: 400px;
+    max-width: 360px;
+    box-sizing: border-box;
 }
 
 .lobby-info {
@@ -949,17 +956,19 @@ body {
 }
 
 .start-game-btn {
-    background: linear-gradient(135deg, #0052FF, #014cec);
+    background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
     border: none;
-    padding: 14px 32px;
+    padding: 14px 24px;
     border-radius: 25px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     margin-top: 20px;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .start-game-btn:hover {
