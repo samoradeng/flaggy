@@ -10,7 +10,7 @@
     pointer-events: none;
 }
 
-/* Animated Splash Screen - Logo expands + waving flag */
+/* Animated Splash Screen */
 #app-splash {
     position: fixed;
     top: 0;
@@ -31,87 +31,51 @@
 }
 
 .splash-content {
-    text-align: center;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.splash-logo-container {
-    position: relative;
-    display: inline-block;
-}
-
-.splash-logo-small {
-    width: 80px;
-    height: 80px;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
-    animation: logoExpand 1.2s ease-out forwards;
-}
-
-.splash-logo-full {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    height: 70px;
-    width: auto;
-    opacity: 0;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
-    animation: logoReveal 0.6s ease-out 0.8s forwards;
-}
-
-@keyframes logoExpand {
-    0% { transform: scale(0.6); opacity: 0; }
-    40% { transform: scale(1.1); opacity: 1; }
-    60% { transform: scale(1); }
-    100% { transform: scale(0); opacity: 0; }
-}
-
-@keyframes logoReveal {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-
-.splash-flag-pole {
-    position: absolute;
-    right: -60px;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0;
-    animation: poleAppear 0.4s ease-out 1.2s forwards;
-}
-
-@keyframes poleAppear {
-    0% { opacity: 0; transform: translateY(-50%) translateX(-20px); }
-    100% { opacity: 1; transform: translateY(-50%) translateX(0); }
-}
-
-.flag-pole {
-    width: 4px;
+/* F logo - pops in */
+.splash-logo {
+    width: 100px;
     height: 100px;
-    background: linear-gradient(180deg, #8B4513 0%, #654321 100%);
-    border-radius: 2px;
-    position: absolute;
-    right: 0;
-    top: -30px;
+    filter: drop-shadow(0 6px 20px rgba(0,0,0,0.2));
+    animation: logoPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    z-index: 2;
 }
 
-.splash-waving-flag {
-    font-size: 48px;
+@keyframes logoPop {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Flag pops out from behind and waves */
+.splash-flag {
     position: absolute;
-    right: 8px;
-    top: -30px;
-    transform-origin: left center;
-    animation: flagWave 0.8s ease-in-out infinite;
-    animation-delay: 1.4s;
+    font-size: 50px;
+    right: -35px;
+    top: -10px;
     opacity: 0;
-    animation: flagAppearAndWave 0.8s ease-in-out 1.4s infinite;
+    transform-origin: left center;
+    animation: flagPopOut 0.5s ease-out 0.4s forwards, flagWave 0.8s ease-in-out 0.9s infinite;
 }
 
-@keyframes flagAppearAndWave {
-    0% { opacity: 1; transform: rotate(0deg); }
-    25% { transform: rotate(8deg); }
-    75% { transform: rotate(-8deg); }
-    100% { opacity: 1; transform: rotate(0deg); }
+@keyframes flagPopOut {
+    0% {
+        opacity: 0;
+        transform: scale(0) translateX(-30px) rotate(-20deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateX(0) rotate(0deg);
+    }
+}
+
+@keyframes flagWave {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(8deg); }
 }
 
 /* Existing styles... */
