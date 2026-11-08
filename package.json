@@ -6,13 +6,39 @@
   "scripts": {
     "dev": "npx serve -s . -l 3000",
     "start": "npx serve -s . -l 3000",
-    "build": "echo 'Static site - no build needed'",
-    "preview": "npx serve -s . -l 4173"
+    "build": "npm run build:web",
+    "build:web": "rm -rf www && mkdir -p www && cp -r index.html style.css script.js countries.json js images flags sounds www/ 2>/dev/null || cp -r index.html style.css script.js countries.json js images flags www/",
+    "preview": "npx serve -s . -l 4173",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "cap:android": "npm run build && npx cap sync android && npx cap open android"
   },
-  "keywords": ["flags", "geography", "game", "quiz", "daily-challenge"],
+  "keywords": [
+    "flags",
+    "geography",
+    "game",
+    "quiz",
+    "daily-challenge"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "serve": "^14.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samoradeng/flaggy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/samoradeng/flaggy/issues"
+  },
+  "homepage": "https://github.com/samoradeng/flaggy#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4"
   }
 }
