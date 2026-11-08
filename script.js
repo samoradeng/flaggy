@@ -37,15 +37,20 @@ let multiplayerGame;
 async function initializeCapacitor() {
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         try {
-            // Configure status bar to not overlay content
             const { StatusBar } = window.Capacitor.Plugins;
             if (StatusBar) {
                 await StatusBar.setOverlaysWebView({ overlay: false });
                 await StatusBar.setStyle({ style: 'DARK' });
+                await StatusBar.setBackgroundColor({ color: '#F8F7FC' });
             }
         } catch (e) {
             console.log('StatusBar plugin not available:', e);
         }
+
+        // Prevent zoom on double-tap and pinch
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
     }
 }
 

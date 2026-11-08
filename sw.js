@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flagtriv-v20';
+const CACHE_NAME = 'flagtriv-v21';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

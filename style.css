@@ -28,56 +28,46 @@ body {
     align-items: center;
     justify-content: center;
     margin: 0;
-    font-family: 'Roboto', arial, sans-serif;
-    background: linear-gradient(135deg, #F7F6F9 0%, #FEF2F3 50%, #DFD5FF 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    background: linear-gradient(180deg, #F8F7FC 0%, #FEF2F3 50%, #E8E4F5 100%);
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     overflow-x: hidden;
-    /* iOS safe area support */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Floating Home Button - Native mobile feel */
+/* Native iOS-style Back Button */
 #home-logo-btn {
     position: fixed;
-    top: 16px;
-    left: 16px;
-    height: 48px;
-    padding: 0 20px;
-    border-radius: 24px;
-    border: 2px solid rgba(255,255,255,0.3);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    top: 12px;
+    left: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     cursor: pointer;
-    display: none; /* Hidden on main menu */
+    display: none;
     align-items: center;
     justify-content: center;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
     z-index: 9999;
-    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
     -webkit-tap-highlight-color: transparent;
 }
 
 #home-logo-btn:active {
-    transform: scale(0.95);
-    box-shadow: 0 3px 15px rgba(102, 126, 234, 0.5);
+    transform: scale(0.92);
+    background: rgba(240, 240, 240, 0.95);
 }
 
-.home-logo-main {
-    display: none; /* Hide SVG logo - use emoji instead */
-}
-
-.home-btn-text {
-    color: white;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.home-btn-text::before {
-    content: "🏠 ";
-    font-size: 18px;
+.back-arrow {
+    width: 22px;
+    height: 22px;
+    color: #667eea;
 }
 
 /* Back Button - matches home button style */
@@ -258,20 +248,22 @@ body {
 /* Consolidated Top Bar */
 #top-bar {
     position: fixed;
-    top: 8px;
+    top: 12px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 8px 16px;
-    border-radius: 20px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 10px 16px;
+    border-radius: 22px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
     z-index: 100;
     font-size: 14px;
     font-weight: 500;
+    max-width: calc(100% - 140px); /* Leave room for back button */
 }
 
 #streak-display-top {
@@ -985,27 +977,33 @@ body {
 
 /* Multiplayer Results */
 #multiplayer-results {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 500px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 80px 20px 20px;
+    overflow-y: auto;
 }
 
 .results-content {
     background-color: white;
-    padding: 32px;
-    border-radius: 16px;
+    padding: 24px 20px;
+    border-radius: 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     text-align: center;
+    width: 100%;
+    max-width: 360px;
+    box-sizing: border-box;
 }
 
 #result-message {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 24px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
 #multiplayer-leaderboard {
@@ -1100,19 +1098,20 @@ body {
 
 .results-actions {
     display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
 }
 
 .results-actions button {
-    padding: 12px 24px;
+    padding: 14px 24px;
     border: none;
     border-radius: 25px;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    width: 100%;
 }
 
 #share-multiplayer-result {
@@ -1516,14 +1515,16 @@ body {
     display: flex;
     flex-direction: column;
     text-align: center;
-    width: 90%;
-    max-width: 400px;
+    width: calc(100% - 48px);
+    max-width: 360px;
+    padding: 0 24px;
+    box-sizing: border-box;
 }
 
 #mode-buttons {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     margin-bottom: 24px;
 }
 
