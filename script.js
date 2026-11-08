@@ -108,11 +108,25 @@ async function loadCountries() {
         await initializeCapacitor();
         console.log('Capacitor initialized');
 
-        const response = await fetch('countries.json');
-        console.log('Fetch response:', response.status, response.ok);
+        // Use absolute path for iOS Capacitor compatibility
+        let response;
+        let lastError;
+        const paths = ['/countries.json', './countries.json', 'countries.json'];
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        for (const path of paths) {
+            try {
+                console.log('Trying path:', path);
+                response = await fetch(path);
+                console.log('Response for', path, ':', response.status, response.ok);
+                if (response.ok) break;
+            } catch (e) {
+                console.log('Fetch error for', path, ':', e.name, e.message);
+                lastError = e;
+            }
+        }
+
+        if (!response || !response.ok) {
+            throw new Error(`Could not load countries.json. Status: ${response?.status || 'none'}. Error: ${lastError?.message || 'unknown'}`);
         }
 
         countries = await response.json();
