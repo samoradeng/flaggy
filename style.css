@@ -346,17 +346,17 @@ body {
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    padding: 10px 18px;
-    border-radius: 14px;
+    padding: 12px 20px;
+    border-radius: 16px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
     z-index: 100;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
-    max-width: calc(100% - 120px);
+    max-width: calc(100% - 130px);
     letter-spacing: -0.2px;
 }
 
@@ -409,20 +409,20 @@ body {
     font-weight: 500;
 }
 
-/* Multiplayer Timer - Fixed Position */
+/* Multiplayer Timer - Fixed Position, aligned with top bar */
 .multiplayer-timer-display {
     position: fixed;
-    top: calc(16px + env(safe-area-inset-top));
+    top: calc(12px + env(safe-area-inset-top));
     right: 16px;
     background: linear-gradient(135deg, #ff6b35, #f7931e);
     color: white;
-    padding: 12px 20px;
-    border-radius: 25px;
+    padding: 10px 24px;
+    border-radius: 20px;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 20px;
     box-shadow: 0 4px 16px rgba(255, 107, 53, 0.4);
     z-index: 1000;
-    min-width: 80px;
+    min-width: 60px;
     text-align: center;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
@@ -2094,9 +2094,9 @@ body {
     .multiplayer-timer-display {
         top: calc(12px + env(safe-area-inset-top));
         right: 12px;
-        padding: 8px 16px;
-        font-size: 14px;
-        min-width: 70px;
+        padding: 10px 20px;
+        font-size: 18px;
+        min-width: 55px;
     }
     
     .modal-content {
@@ -2348,9 +2348,9 @@ body {
     /* Very small mobile timer */
     .multiplayer-timer-display {
         top: calc(10px + env(safe-area-inset-top));
-        padding: 6px 12px;
-        font-size: 12px;
-        min-width: 60px;
+        padding: 8px 16px;
+        font-size: 16px;
+        min-width: 50px;
     }
 }
 
