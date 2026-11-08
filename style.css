@@ -1,64 +1,86 @@
-/* Animated Splash Screen */
+/* Safe area background cover - removes grey line */
+html::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top);
+    background: #F8F7FC;
+    z-index: 99998;
+}
+
+/* Animated Splash Screen - Wes Anderson meets Subway Surfer */
 #app-splash {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: #FFFC00;
+    background: linear-gradient(180deg, #FFF5E6 0%, #FFEB99 50%, #FFE066 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 99999;
-    transition: opacity 0.5s ease-out;
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 
 #app-splash.hidden {
     opacity: 0;
+    transform: scale(1.05);
     pointer-events: none;
 }
 
 .splash-content {
     text-align: center;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .splash-logo {
-    width: 120px;
-    height: 120px;
-    animation: pulse 1.5s ease-in-out infinite;
+    width: 100px;
+    height: 100px;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+    animation: gentleBounce 2s ease-in-out infinite;
 }
 
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+@keyframes gentleBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
 }
 
 .splash-flags {
-    margin-top: 30px;
+    margin-top: 32px;
     display: flex;
-    gap: 8px;
+    gap: 12px;
     justify-content: center;
     flex-wrap: wrap;
-    max-width: 280px;
+    max-width: 260px;
 }
 
 .splash-flag {
-    font-size: 28px;
-    animation: float 2s ease-in-out infinite;
+    font-size: 32px;
+    animation: wave 1.8s ease-in-out infinite;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .splash-flag:nth-child(1) { animation-delay: 0s; }
-.splash-flag:nth-child(2) { animation-delay: 0.15s; }
-.splash-flag:nth-child(3) { animation-delay: 0.3s; }
-.splash-flag:nth-child(4) { animation-delay: 0.45s; }
-.splash-flag:nth-child(5) { animation-delay: 0.6s; }
-.splash-flag:nth-child(6) { animation-delay: 0.75s; }
-.splash-flag:nth-child(7) { animation-delay: 0.9s; }
-.splash-flag:nth-child(8) { animation-delay: 1.05s; }
+.splash-flag:nth-child(2) { animation-delay: 0.1s; }
+.splash-flag:nth-child(3) { animation-delay: 0.2s; }
+.splash-flag:nth-child(4) { animation-delay: 0.3s; }
+.splash-flag:nth-child(5) { animation-delay: 0.4s; }
+.splash-flag:nth-child(6) { animation-delay: 0.5s; }
+.splash-flag:nth-child(7) { animation-delay: 0.6s; }
+.splash-flag:nth-child(8) { animation-delay: 0.7s; }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+@keyframes wave {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-6px) rotate(-3deg); }
+    75% { transform: translateY(-6px) rotate(3deg); }
 }
 
 /* Existing styles... */
