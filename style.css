@@ -66,6 +66,31 @@ body {
     object-fit: contain;
 }
 
+/* Back Button */
+.back-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
 #game-container {
     position: fixed;
     top: 50%;
@@ -822,6 +847,10 @@ body {
 
 .share-btn.text {
     background: linear-gradient(135deg, #007AFF, #0051D5);
+}
+
+.share-btn.native {
+    background: linear-gradient(135deg, #667eea, #764ba2);
 }
 
 .share-btn:hover {

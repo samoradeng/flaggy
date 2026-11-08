@@ -116,6 +116,12 @@ function initializeEventListeners() {
         homeLogo.addEventListener('click', showModeSelection);
     }
 
+    // Game back button - returns to main menu
+    const gameBackBtn = document.getElementById('game-back-btn');
+    if (gameBackBtn) {
+        gameBackBtn.addEventListener('click', goBackToMenu);
+    }
+
     // Passport preview click - opens stats modal to passport tab
     const passportPreview = document.getElementById('passport-preview');
     if (passportPreview) {
@@ -425,6 +431,24 @@ function showModeSelection() {
     updateMainMenuStats();
 }
 
+function goBackToMenu() {
+    // For practice mode, confirm before leaving (they'll lose progress)
+    if (gameMode === 'challenge' && score > 0) {
+        if (!confirm('Leave game? Your current progress will be lost.')) {
+            return;
+        }
+    }
+
+    // For daily challenge, don't allow going back during play (it auto-saves)
+    if (gameMode === 'daily') {
+        if (!confirm('Leave daily challenge? You can return and continue later.')) {
+            return;
+        }
+    }
+
+    showModeSelection();
+}
+
 function updateMainMenuStats() {
     // Update Day number (days since launch: Jan 1, 2025)
     const dayNumberEl = document.getElementById('daily-day-number');
@@ -528,7 +552,8 @@ function startDailyChallenge() {
     document.getElementById('mode-selection').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
     document.getElementById('top-bar').style.display = 'flex';
-    
+    document.getElementById('game-back-btn').style.display = 'block';
+
     // Reset game state
     score = 0;
     streak = 0;
@@ -556,7 +581,8 @@ function startChallengeMode() {
     document.getElementById('endless-game-over-screen').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
     document.getElementById('top-bar').style.display = 'flex';
-    
+    document.getElementById('game-back-btn').style.display = 'block';
+
     // Reset game state
     score = 0;
     streak = 0;
