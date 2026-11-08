@@ -3530,64 +3530,60 @@ body {
     color: #666;
 }
 
-/* Inline Sign In Prompt (on home screen) */
+/* Inline Sign In Prompt (on home screen) - subtle text link */
 .sign-in-prompt-inline {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    margin-top: 20px;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
-    border-radius: 14px;
-    font-size: 14px;
-    color: #333;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #999;
+}
+
+.sign-in-prompt-inline span {
+    display: none; /* Hide the cloud emoji text */
 }
 
 .sign-in-prompt-inline button {
-    background: #667eea;
-    color: white;
+    background: none;
+    color: #667eea;
     border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
+    padding: 0;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 .sign-in-prompt-inline button:hover {
-    background: #5a6fd6;
+    color: #5a6fd6;
 }
 
-/* User Info (when signed in) */
+/* User Info (when signed in) - subtle */
 .user-info-inline {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    margin-top: 20px;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-    border-radius: 14px;
-    font-size: 14px;
-    color: #2e7d32;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #666;
 }
 
 .user-info-inline button {
-    background: transparent;
-    color: #666;
-    border: 1px solid #ccc;
-    padding: 6px 12px;
-    border-radius: 6px;
+    background: none;
+    color: #999;
+    border: none;
+    padding: 0;
     font-size: 12px;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
 .user-info-inline button:hover {
-    background: #f5f5f5;
-    border-color: #999;
+    color: #666;
+    text-decoration: underline;
 }
 
 /* Auth Toast */

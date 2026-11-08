@@ -550,14 +550,12 @@
 
         <!-- Sign In Prompt (shown when not signed in) -->
         <div id="sign-in-prompt" class="sign-in-prompt-inline">
-            <span>☁️ <span id="sign-in-prompt-text">Sign in to sync progress</span></span>
-            <button id="sign-in-btn-inline" onclick="window.authManager.showSignInPrompt('sync')">Sign In</button>
+            <button onclick="window.authManager.showSignInPrompt('sync')">Sign in to sync progress</button>
         </div>
 
         <!-- User Info (shown when signed in) -->
         <div id="user-info" class="user-info-inline" style="display: none;">
-            <span>☁️ Synced as <strong id="user-name-display">User</strong></span>
-            <button id="sign-out-btn-inline" onclick="window.authManager.signOut()">Sign Out</button>
+            <span>Synced as <span id="user-name-display">User</span></span>
         </div>
     </div>
 
