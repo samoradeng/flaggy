@@ -104,10 +104,19 @@ function checkForGameInvite() {
 async function loadCountries() {
     try {
         // Initialize Capacitor plugins first
+        console.log('Starting loadCountries...');
         await initializeCapacitor();
+        console.log('Capacitor initialized');
 
         const response = await fetch('countries.json');
+        console.log('Fetch response:', response.status, response.ok);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         countries = await response.json();
+        console.log('Countries parsed successfully');
 
         // Initialize all systems after countries are loaded
         continentFilter = new ContinentFilter();
@@ -124,7 +133,13 @@ async function loadCountries() {
         checkForGameInvite();
     } catch (error) {
         console.error('Error loading countries:', error);
-        document.body.innerHTML = '<h1>Error loading game data. Please refresh the page.</h1>';
+        console.error('Error details:', error.message, error.stack);
+        document.body.innerHTML = `<div style="padding: 20px; font-family: sans-serif;">
+            <h1>Error loading game data</h1>
+            <p>${error.message}</p>
+            <p style="font-size: 12px; color: #666;">${error.stack || ''}</p>
+            <button onclick="location.reload()" style="padding: 10px 20px; margin-top: 10px;">Retry</button>
+        </div>`;
     }
 }
 
