@@ -123,13 +123,13 @@ body {
     color: #1a1a2e;
 }
 
-/* Back Button - aligned with top bar */
+/* Back Button - vertically centered with top bar */
 #home-logo-btn {
     position: fixed;
-    top: calc(12px + env(safe-area-inset-top));
-    left: 12px;
-    width: 40px;
-    height: 40px;
+    top: calc(14px + env(safe-area-inset-top));
+    left: 16px;
+    width: 44px;
+    height: 44px;
     border-radius: 14px;
     border: none;
     background: rgba(255, 255, 255, 0.85);
@@ -2053,10 +2053,10 @@ body {
 /* Mobile responsiveness */
 @media only screen and (max-width: 600px) {
     #home-logo-btn {
-        top: 12px;
-        left: 12px;
-        width: 40px;
-        height: 40px;
+        top: calc(14px + env(safe-area-inset-top));
+        left: 16px;
+        width: 44px;
+        height: 44px;
     }
     
     .home-logo-main {
@@ -2285,10 +2285,10 @@ body {
 
 @media only screen and (max-width: 400px) {
     #home-logo-btn {
-        top: 8px;
-        left: 8px;
-        width: 36px;
-        height: 36px;
+        top: calc(12px + env(safe-area-inset-top));
+        left: 12px;
+        width: 40px;
+        height: 40px;
     }
     
     .home-logo-main {
