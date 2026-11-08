@@ -156,9 +156,10 @@
 
     <div id="resultsToast">Copied results to clipboard</div>
 
-    <!-- Home Logo Button (Top Left) -->
+    <!-- Floating Home Button (shows during gameplay) -->
     <button id="home-logo-btn" title="Home">
         <img src="images/FLAGTRIV LOGO.svg" alt="Flagtriv" class="home-logo-main">
+        <span class="home-btn-text">Home</span>
     </button>
 
     <!-- Consolidated Top Bar -->
@@ -417,7 +418,6 @@
     <!-- Multiplayer Lobby -->
     <div id="multiplayer-lobby" style="display: none;">
         <div class="lobby-content">
-            <button id="lobby-back-btn" class="back-btn">← Back</button>
             <h2>🏁 Challenge Lobby</h2>
             <div class="lobby-info">
                 <p><strong>Game ID:</strong> <span id="lobby-game-id"></span></p>
@@ -544,7 +544,6 @@
     </div>
 
     <div id="game-container" style="display: none;">
-        <button id="game-back-btn" class="back-btn">← Back</button>
         <h1 id="heading">Guess the Flag</h1>
         <p id="subHeading">Can you identify which country or territory this is?</p>
         <img id="flag" src="" alt="Country Flag">

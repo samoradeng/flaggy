@@ -113,13 +113,7 @@ function initializeEventListeners() {
     }
     
     if (homeLogo) {
-        homeLogo.addEventListener('click', showModeSelection);
-    }
-
-    // Game back button - returns to main menu
-    const gameBackBtn = document.getElementById('game-back-btn');
-    if (gameBackBtn) {
-        gameBackBtn.addEventListener('click', goBackToMenu);
+        homeLogo.addEventListener('click', goBackToMenu);
     }
 
     // Passport preview click - opens stats modal to passport tab
@@ -421,6 +415,7 @@ function showModeSelection() {
     document.getElementById('endless-game-over-screen').style.display = 'none';
     document.getElementById('multiplayer-lobby').style.display = 'none';
     document.getElementById('multiplayer-results').style.display = 'none';
+    document.getElementById('home-logo-btn').style.display = 'none';
 
     // Show mode selection
     document.getElementById('mode-selection').style.display = 'flex';
@@ -552,7 +547,7 @@ function startDailyChallenge() {
     document.getElementById('mode-selection').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
     document.getElementById('top-bar').style.display = 'flex';
-    document.getElementById('game-back-btn').style.display = 'block';
+    document.getElementById('home-logo-btn').style.display = 'flex';
 
     // Reset game state
     score = 0;
@@ -581,7 +576,7 @@ function startChallengeMode() {
     document.getElementById('endless-game-over-screen').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
     document.getElementById('top-bar').style.display = 'flex';
-    document.getElementById('game-back-btn').style.display = 'block';
+    document.getElementById('home-logo-btn').style.display = 'flex';
 
     // Reset game state
     score = 0;

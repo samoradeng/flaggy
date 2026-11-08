@@ -68,11 +68,6 @@ class MultiplayerGame {
             this.shareViaText();
         });
 
-        // Lobby back button
-        document.getElementById('lobby-back-btn').addEventListener('click', () => {
-            this.leaveLobby();
-        });
-
         // Results actions
         document.getElementById('share-multiplayer-result').addEventListener('click', () => {
             this.shareResults();
@@ -208,9 +203,10 @@ class MultiplayerGame {
         
         // Hide main menu
         document.getElementById('mode-selection').style.display = 'none';
-        
-        // Show lobby
+
+        // Show lobby and home button
         document.getElementById('multiplayer-lobby').style.display = 'block';
+        document.getElementById('home-logo-btn').style.display = 'flex';
         
         // Update lobby info
         document.getElementById('lobby-game-id').textContent = gameId;
@@ -489,8 +485,8 @@ class MultiplayerGame {
         document.getElementById('game-container').style.display = 'flex';
         document.getElementById('top-bar').style.display = 'flex';
 
-        // Hide back button in multiplayer (has its own controls)
-        document.getElementById('game-back-btn').style.display = 'none';
+        // Hide home button in multiplayer gameplay (results screen will show it)
+        document.getElementById('home-logo-btn').style.display = 'none';
 
         // Create and show timer element
         this.createTimerElement();
