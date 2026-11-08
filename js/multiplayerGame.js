@@ -55,16 +55,16 @@ class MultiplayerGame {
             this.copyLobbyLink();
         });
 
-        // Share buttons
-        document.getElementById('share-native').addEventListener('click', () => {
+        // Share buttons (some may be removed in simplified UI)
+        document.getElementById('share-native')?.addEventListener('click', () => {
             this.shareViaNative();
         });
 
-        document.getElementById('share-whatsapp').addEventListener('click', () => {
+        document.getElementById('share-whatsapp')?.addEventListener('click', () => {
             this.shareViaWhatsApp();
         });
 
-        document.getElementById('share-text').addEventListener('click', () => {
+        document.getElementById('share-text')?.addEventListener('click', () => {
             this.shareViaText();
         });
 
