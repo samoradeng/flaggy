@@ -37,18 +37,12 @@
     justify-content: center;
 }
 
-/* F logo - pops in */
+/* F logo - always visible */
 .splash-logo {
     width: 100px;
     height: 100px;
     filter: drop-shadow(0 6px 20px rgba(0,0,0,0.2));
-    animation: logoPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     z-index: 2;
-}
-
-@keyframes logoPop {
-    0% { transform: scale(0); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
 }
 
 /* Flag pops out from behind and waves */
@@ -59,7 +53,7 @@
     top: -10px;
     opacity: 0;
     transform-origin: left center;
-    animation: flagPopOut 0.5s ease-out 0.4s forwards, flagWave 0.8s ease-in-out 0.9s infinite;
+    animation: flagPopOut 0.5s ease-out 0.2s forwards, flagWave 0.8s ease-in-out 0.7s infinite;
 }
 
 @keyframes flagPopOut {
