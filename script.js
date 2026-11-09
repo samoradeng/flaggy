@@ -1606,23 +1606,319 @@ function switchTab(tabName) {
     }
 }
 
-function shareStats() {
+async function shareStats() {
+    const activeTab = document.querySelector('.tab-button.active')?.dataset?.tab;
+
+    // Generate the share card image
+    const canvas = await generateShareCard(activeTab);
+
+    // Convert canvas to blob
+    canvas.toBlob(async (blob) => {
+        const file = new File([blob], 'flagtriv-stats.png', { type: 'image/png' });
+
+        const shareText = activeTab === 'passport'
+            ? `🌍 I've discovered ${achievementSystem.getCorrectlyAnsweredCountries().size} flags on Flagtriv! How many can you get?\n\nPlay at flagtriv.com`
+            : `🏆 I've unlocked ${achievementSystem.getProgress().unlocked} achievements on Flagtriv!\n\nPlay at flagtriv.com`;
+
+        // Try native share with image
+        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+            try {
+                await navigator.share({
+                    title: 'My Flagtriv Stats',
+                    text: shareText,
+                    files: [file]
+                });
+                return;
+            } catch (e) {
+                console.log('Share cancelled or failed:', e);
+            }
+        }
+
+        // Fallback: download the image
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'flagtriv-stats.png';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('📸 Image saved! Share it on Instagram');
+    }, 'image/png');
+}
+
+async function generateShareCard(tabType) {
+    const canvas = document.createElement('canvas');
+    // Instagram story size (1080x1920) or square (1080x1080)
+    canvas.width = 1080;
+    canvas.height = 1350; // 4:5 ratio - good for Instagram feed
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Add subtle pattern overlay
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    for (let i = 0; i < 20; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = Math.random() * 100 + 50;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // White card
+    const cardX = 60;
+    const cardY = 200;
+    const cardWidth = canvas.width - 120;
+    const cardHeight = canvas.height - 400;
+
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
+    ctx.fill();
+
+    // App logo/title
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏳️ Flagtriv', canvas.width / 2, 130);
+
+    if (tabType === 'passport') {
+        await drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight);
+    } else if (tabType === 'achievements') {
+        await drawAchievementsCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight);
+    } else {
+        await drawStatsCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight);
+    }
+
+    // Footer
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = '36px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('flagtriv.com', canvas.width / 2, canvas.height - 80);
+
+    return canvas;
+}
+
+async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight) {
+    const countries = achievementSystem.getCorrectlyAnsweredCountries();
+    const countriesCount = countries.size;
+
+    // Title
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('My Flag Passport', canvas.width / 2, cardY + 80);
+
+    // Big number
+    ctx.font = 'bold 180px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#667eea';
+    ctx.fillText(countriesCount.toString(), canvas.width / 2, cardY + 280);
+
+    ctx.font = '48px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#666';
+    ctx.fillText('flags discovered', canvas.width / 2, cardY + 350);
+
+    // Progress bar
+    const progress = countriesCount / 250;
+    const barWidth = cardWidth - 120;
+    const barHeight = 30;
+    const barX = cardX + 60;
+    const barY = cardY + 400;
+
+    ctx.fillStyle = '#e0e0e0';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth, barHeight, 15);
+    ctx.fill();
+
+    const progressGradient = ctx.createLinearGradient(barX, 0, barX + barWidth * progress, 0);
+    progressGradient.addColorStop(0, '#667eea');
+    progressGradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = progressGradient;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth * progress, barHeight, 15);
+    ctx.fill();
+
+    ctx.fillStyle = '#999';
+    ctx.font = '32px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(`${countriesCount}/250 flags`, canvas.width / 2, barY + 70);
+
+    // Continent breakdown
+    const continentData = getContinentProgress();
+    let yPos = cardY + 530;
+
+    ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#333';
+    ctx.textAlign = 'left';
+
+    const continentEmojis = {
+        'Africa': '🌍',
+        'Asia': '🌏',
+        'Europe': '🇪🇺',
+        'Americas': '🌎',
+        'Oceania': '🏝️'
+    };
+
+    for (const [continent, data] of Object.entries(continentData)) {
+        ctx.fillStyle = '#333';
+        ctx.fillText(`${continentEmojis[continent] || '🌐'} ${continent}`, cardX + 80, yPos);
+
+        ctx.fillStyle = '#667eea';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${data.unlocked}/${data.total}`, cardX + cardWidth - 80, yPos);
+        ctx.textAlign = 'left';
+
+        yPos += 60;
+    }
+}
+
+async function drawAchievementsCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight) {
+    const progress = achievementSystem.getProgress();
+
+    // Title
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('My Achievements', canvas.width / 2, cardY + 80);
+
+    // Big number
+    ctx.font = 'bold 180px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#667eea';
+    ctx.fillText(progress.unlocked.toString(), canvas.width / 2, cardY + 280);
+
+    ctx.font = '48px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#666';
+    ctx.fillText(`of ${progress.total} unlocked`, canvas.width / 2, cardY + 350);
+
+    // Progress bar
+    const progressRatio = progress.unlocked / progress.total;
+    const barWidth = cardWidth - 120;
+    const barHeight = 30;
+    const barX = cardX + 60;
+    const barY = cardY + 400;
+
+    ctx.fillStyle = '#e0e0e0';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth, barHeight, 15);
+    ctx.fill();
+
+    const progressGradient = ctx.createLinearGradient(barX, 0, barX + barWidth * progressRatio, 0);
+    progressGradient.addColorStop(0, '#667eea');
+    progressGradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = progressGradient;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth * progressRatio, barHeight, 15);
+    ctx.fill();
+
+    // List unlocked achievements
+    const unlockedAchievements = achievementSystem.achievements.filter(a => a.unlocked);
+    let yPos = cardY + 500;
+
+    ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'left';
+
+    for (const achievement of unlockedAchievements.slice(0, 6)) {
+        ctx.fillStyle = '#333';
+        ctx.fillText(`${achievement.icon} ${achievement.name}`, cardX + 80, yPos);
+
+        ctx.fillStyle = '#22c55e';
+        ctx.textAlign = 'right';
+        ctx.fillText('✓', cardX + cardWidth - 80, yPos);
+        ctx.textAlign = 'left';
+
+        yPos += 60;
+    }
+
+    if (unlockedAchievements.length > 6) {
+        ctx.fillStyle = '#999';
+        ctx.textAlign = 'center';
+        ctx.fillText(`+${unlockedAchievements.length - 6} more`, canvas.width / 2, yPos + 20);
+    }
+}
+
+async function drawStatsCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight) {
     const level = Math.floor(totalXP / 100) + 1;
     const countriesCount = achievementSystem.getCorrectlyAnsweredCountries().size;
     const achievementsCount = achievementSystem.getProgress().unlocked;
-    
-    const shareText = `🌍 My Flagtriv Stats:\n🏆 Level ${level}\n🗺️ ${countriesCount} flags discovered\n🎯 ${achievementsCount} achievements unlocked\n🔥 Best streak: ${bestStreak}\n\nPlay at flagtriv.com`;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'My Flagtriv Stats',
-            text: shareText
-        });
-    } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareText).then(() => {
-            showToast('📋 Stats copied to clipboard!');
+
+    // Title
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('My Stats', canvas.width / 2, cardY + 80);
+
+    // Stats grid
+    const stats = [
+        { icon: '🏆', label: 'Level', value: level },
+        { icon: '🔥', label: 'Best Streak', value: bestStreak },
+        { icon: '🗺️', label: 'Flags', value: countriesCount },
+        { icon: '🎯', label: 'Achievements', value: achievementsCount }
+    ];
+
+    const gridStartY = cardY + 180;
+    const cellWidth = cardWidth / 2;
+    const cellHeight = 200;
+
+    stats.forEach((stat, i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const x = cardX + col * cellWidth + cellWidth / 2;
+        const y = gridStartY + row * cellHeight;
+
+        // Icon
+        ctx.font = '64px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(stat.icon, x, y);
+
+        // Value
+        ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillStyle = '#667eea';
+        ctx.fillText(stat.value.toString(), x, y + 80);
+
+        // Label
+        ctx.font = '32px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillStyle = '#666';
+        ctx.fillText(stat.label, x, y + 120);
+    });
+}
+
+function getContinentProgress() {
+    const correctCountries = achievementSystem.getCorrectlyAnsweredCountries();
+    const continents = {};
+
+    const continentMapping = {
+        'Africa': [],
+        'Asia': [],
+        'Europe': [],
+        'Americas': [],
+        'Oceania': []
+    };
+
+    // Build continent lists from countries data
+    if (window.countries) {
+        window.countries.forEach(country => {
+            const continent = country.region || 'Other';
+            if (continentMapping[continent]) {
+                continentMapping[continent].push(country.name);
+            } else if (continent === 'North America' || continent === 'South America') {
+                continentMapping['Americas'].push(country.name);
+            }
         });
     }
+
+    for (const [continent, countryList] of Object.entries(continentMapping)) {
+        const unlocked = countryList.filter(c => correctCountries.has(c)).length;
+        continents[continent] = {
+            unlocked,
+            total: countryList.length || 1
+        };
+    }
+
+    return continents;
 }
 
 // ========== Premium Modal Functions ==========
