@@ -1739,8 +1739,23 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     const isComplete = countriesCount >= 250;
     const progress = countriesCount / 250;
 
-    // --- COMPACT HEADER ---
+    // --- HEADER ---
     ctx.textAlign = 'center';
+
+    // Rank title - gives people something to brag about
+    let rank;
+    if (countriesCount >= 250) rank = 'World Champion';
+    else if (countriesCount >= 200) rank = 'Flag Master';
+    else if (countriesCount >= 150) rank = 'Globe Trotter';
+    else if (countriesCount >= 100) rank = 'Explorer';
+    else if (countriesCount >= 50) rank = 'Adventurer';
+    else if (countriesCount >= 25) rank = 'Traveler';
+    else if (countriesCount >= 10) rank = 'Tourist';
+    else rank = 'Beginner';
+
+    ctx.font = '26px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.fillText(rank.toUpperCase(), canvas.width / 2, cardY + 45);
 
     // Big number
     if (isComplete) {
@@ -1752,41 +1767,20 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     } else {
         ctx.fillStyle = '#667eea';
     }
-    ctx.font = 'bold 90px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText(countriesCount.toString(), canvas.width / 2, cardY + 80);
+    ctx.font = 'bold 80px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(countriesCount.toString(), canvas.width / 2, cardY + 115);
 
-    // Subtitle
-    ctx.font = '30px -apple-system, BlinkMacSystemFont, sans-serif';
+    // Subtitle with challenge
+    ctx.font = '28px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#666';
-    ctx.fillText(isComplete ? 'ALL FLAGS DISCOVERED' : `of 250 flags`, canvas.width / 2, cardY + 125);
-
-    // Progress bar (thin)
-    const barWidth = cardWidth - 120;
-    const barHeight = 10;
-    const barX = cardX + 60;
-    const barY = cardY + 150;
-
-    ctx.fillStyle = '#e8e8e8';
-    ctx.beginPath();
-    ctx.roundRect(barX, barY, barWidth, barHeight, 5);
-    ctx.fill();
-
-    if (progress > 0) {
-        const progressGradient = ctx.createLinearGradient(barX, 0, barX + barWidth, 0);
-        progressGradient.addColorStop(0, '#667eea');
-        progressGradient.addColorStop(1, '#764ba2');
-        ctx.fillStyle = progressGradient;
-        ctx.beginPath();
-        ctx.roundRect(barX, barY, Math.max(barWidth * progress, barHeight), barHeight, 5);
-        ctx.fill();
-    }
+    ctx.fillText(`of 250 flags`, canvas.width / 2, cardY + 150);
 
     // Flag mosaic - scales based on count
     const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
     const allCodes = Object.keys(countryDetails);
 
-    // Available space for flags - minimal gap after header
-    const flagAreaTop = cardY + 175;
+    // Available space for flags - start after header
+    const flagAreaTop = cardY + 170;
     const flagAreaBottom = cardY + cardHeight - 25;
     const flagAreaHeight = flagAreaBottom - flagAreaTop;
     const maxGridWidth = cardWidth - 60;
