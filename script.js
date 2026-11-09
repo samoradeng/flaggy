@@ -1785,43 +1785,59 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
     const allCodes = Object.keys(countryDetails);
 
-    // Available space for flags
-    const flagAreaTop = cardY + 180;
-    const flagAreaBottom = cardY + cardHeight - 30;
+    // Available space for flags - start right after header
+    const flagAreaTop = cardY + 190;
+    const flagAreaBottom = cardY + cardHeight - 40;
     const flagAreaHeight = flagAreaBottom - flagAreaTop;
-    const flagAreaWidth = cardWidth - 60;
+    const maxGridWidth = cardWidth - 80;
 
-    // Calculate optimal grid to fill space nicely
-    let flagsPerRow, flagSize, flagGap, maxRows;
+    // Calculate grid that fills the space well
+    // Work backwards from available space to determine flag size
+    let flagsPerRow, maxRows;
 
     if (countriesCount === 1) {
-        flagsPerRow = 1; flagSize = 160; flagGap = 0; maxRows = 1;
+        flagsPerRow = 1; maxRows = 1;
     } else if (countriesCount <= 4) {
-        flagsPerRow = 2; flagSize = 130; flagGap = 16; maxRows = 2;
+        flagsPerRow = 2; maxRows = 2;
     } else if (countriesCount <= 9) {
-        flagsPerRow = 3; flagSize = 110; flagGap = 14; maxRows = 3;
-    } else if (countriesCount <= 16) {
-        flagsPerRow = 4; flagSize = 100; flagGap = 12; maxRows = 4;
-    } else if (countriesCount <= 30) {
-        flagsPerRow = 6; flagSize = 85; flagGap = 10; maxRows = 5;
-    } else if (countriesCount <= 56) {
-        flagsPerRow = 8; flagSize = 70; flagGap = 8; maxRows = 7;
-    } else if (countriesCount <= 100) {
-        flagsPerRow = 10; flagSize = 58; flagGap = 6; maxRows = 10;
+        flagsPerRow = 3; maxRows = 3;
+    } else if (countriesCount <= 20) {
+        flagsPerRow = 5; maxRows = 4;
+    } else if (countriesCount <= 36) {
+        flagsPerRow = 6; maxRows = 6;
+    } else if (countriesCount <= 63) {
+        flagsPerRow = 9; maxRows = 7;
+    } else if (countriesCount <= 120) {
+        flagsPerRow = 10; maxRows = 12;
     } else {
-        flagsPerRow = 12; flagSize = 48; flagGap = 5; maxRows = 12;
+        flagsPerRow = 12; maxRows = 14;
     }
 
-    const flagHeight = Math.round(flagSize * 0.67);
     const flagsToShow = Math.min(countriesCount, flagsPerRow * maxRows);
     const actualRows = Math.ceil(flagsToShow / flagsPerRow);
 
-    const gridWidth = flagsPerRow * flagSize + (flagsPerRow - 1) * flagGap;
-    const gridHeight = actualRows * flagHeight + (actualRows - 1) * flagGap;
+    // Calculate flag size to fill available space
+    const gapRatio = 0.12; // gap as fraction of flag size
+    const availableWidth = maxGridWidth;
+    const availableHeight = flagAreaHeight - (countriesCount > flagsToShow ? 50 : 0); // room for "+X more"
 
-    // Center grid in available space
+    // Solve for flag size: rows * (h + gap) = availableHeight, cols * (w + gap) = availableWidth
+    const flagWidth = Math.floor(availableWidth / (flagsPerRow * (1 + gapRatio)));
+    const flagHeightFromWidth = Math.round(flagWidth * 0.67);
+    const flagHeightFromRows = Math.floor(availableHeight / (actualRows * (1 + gapRatio * 0.67)));
+
+    // Use smaller of the two to fit both constraints
+    const finalFlagHeight = Math.min(flagHeightFromWidth, flagHeightFromRows, 140);
+    const finalFlagSize = Math.round(finalFlagHeight / 0.67);
+    const finalFlagGap = Math.round(finalFlagSize * gapRatio);
+
+    const gridWidth = flagsPerRow * finalFlagSize + (flagsPerRow - 1) * finalFlagGap;
+    const gridHeight = actualRows * finalFlagHeight + (actualRows - 1) * finalFlagGap;
+
+    // Position grid - horizontally centered, vertically centered with slight upward bias
     const gridX = cardX + (cardWidth - gridWidth) / 2;
-    const gridY = flagAreaTop + (flagAreaHeight - gridHeight) / 2;
+    const verticalSpace = flagAreaHeight - gridHeight;
+    const gridY = flagAreaTop + Math.max(20, verticalSpace * 0.4); // 40% from top, 60% below
 
     // Sort flags for display
     const sortedCodes = [...allCodes].sort((a, b) => {
@@ -1837,26 +1853,26 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
 
         // Center incomplete rows
         const flagsInThisRow = Math.min(flagsPerRow, sortedCodes.length - row * flagsPerRow);
-        const rowWidth = flagsInThisRow * flagSize + (flagsInThisRow - 1) * flagGap;
+        const rowWidth = flagsInThisRow * finalFlagSize + (flagsInThisRow - 1) * finalFlagGap;
         const rowX = cardX + (cardWidth - rowWidth) / 2;
 
-        const x = rowX + col * (flagSize + flagGap);
-        const y = gridY + row * (flagHeight + flagGap);
+        const x = rowX + col * (finalFlagSize + finalFlagGap);
+        const y = gridY + row * (finalFlagHeight + finalFlagGap);
 
         try {
             const flagSrc = countries[code]?.flag?.large || `flags/${code.toLowerCase()}.svg`;
             const flagImg = await loadImage(flagSrc);
 
-            ctx.shadowColor = 'rgba(0,0,0,0.12)';
-            ctx.shadowBlur = 5;
-            ctx.shadowOffsetY = 2;
+            ctx.shadowColor = 'rgba(0,0,0,0.15)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 3;
 
             // Rounded corners
             ctx.save();
             ctx.beginPath();
-            ctx.roundRect(x, y, flagSize, flagHeight, 3);
+            ctx.roundRect(x, y, finalFlagSize, finalFlagHeight, 4);
             ctx.clip();
-            ctx.drawImage(flagImg, x, y, flagSize, flagHeight);
+            ctx.drawImage(flagImg, x, y, finalFlagSize, finalFlagHeight);
             ctx.restore();
 
             ctx.shadowColor = 'transparent';
@@ -1865,7 +1881,7 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
         } catch (e) {
             ctx.fillStyle = '#f0f0f0';
             ctx.beginPath();
-            ctx.roundRect(x, y, flagSize, flagHeight, 3);
+            ctx.roundRect(x, y, finalFlagSize, finalFlagHeight, 4);
             ctx.fill();
         }
     }
@@ -1873,9 +1889,9 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     // Show "+X more" if not all flags shown
     if (countriesCount > flagsToShow) {
         ctx.fillStyle = '#888';
-        ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`+${countriesCount - flagsToShow} more`, canvas.width / 2, gridY + gridHeight + 38);
+        ctx.fillText(`+${countriesCount - flagsToShow} more`, canvas.width / 2, gridY + gridHeight + 45);
     }
 }
 
