@@ -211,6 +211,58 @@ class AuthManager {
         return { success: true };
     }
 
+    // ========== Email Sign In (OTP) ==========
+
+    async sendEmailCode(email) {
+        if (!this.isConfigured || !this.supabase) {
+            console.log('📧 Simulating email code send...');
+            this.simulatedEmail = email;
+            this.simulatedCode = '123456';
+            return { success: true, message: 'Code sent (demo mode: use 123456)' };
+        }
+
+        console.log('📧 Sending code to:', email);
+        const { data, error } = await this.supabase.auth.signInWithOtp({
+            email: email,
+            options: {
+                shouldCreateUser: true
+            }
+        });
+
+        if (error) {
+            console.error('Email OTP error:', error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true, message: 'Check your email for the code!' };
+    }
+
+    async verifyEmailCode(email, code) {
+        if (!this.isConfigured || !this.supabase) {
+            // Simulated verification
+            if (this.simulatedEmail === email && this.simulatedCode === code) {
+                return this.simulateSignIn('email');
+            }
+            return { success: false, error: 'Invalid code' };
+        }
+
+        console.log('🔑 Verifying code for:', email);
+        const { data, error } = await this.supabase.auth.verifyOtp({
+            email: email,
+            token: code,
+            type: 'email'
+        });
+
+        if (error) {
+            console.error('Verification error:', error);
+            return { success: false, error: error.message };
+        }
+
+        this.hideSignInModal();
+        this.showToast('✅ Signed in successfully!');
+        return { success: true };
+    }
+
     async openOAuthInBrowser(provider, redirectTo) {
         try {
             // Get the OAuth URL without auto-redirect

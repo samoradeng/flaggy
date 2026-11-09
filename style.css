@@ -3586,6 +3586,100 @@ body {
     text-decoration: underline;
 }
 
+/* Email Sign In */
+.sign-in-divider {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    color: #999;
+    font-size: 13px;
+}
+
+.sign-in-divider::before,
+.sign-in-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+}
+
+.sign-in-divider span {
+    padding: 0 12px;
+}
+
+.email-sign-in {
+    width: 100%;
+}
+
+.sign-in-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.sign-in-input:focus {
+    outline: none;
+    border-color: #7B68EE;
+}
+
+.sign-in-email-btn,
+.sign-in-verify-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #7B68EE 0%, #9B7BEE 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sign-in-email-btn:hover,
+.sign-in-verify-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(123, 104, 238, 0.3);
+}
+
+.email-sent-msg {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.email-sent-msg span {
+    font-weight: 600;
+    color: #333;
+}
+
+.sign-in-resend {
+    background: none;
+    border: none;
+    color: #7B68EE;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 12px;
+    padding: 0;
+}
+
+.sign-in-resend:hover {
+    text-decoration: underline;
+}
+
+#sign-in-code {
+    text-align: center;
+    letter-spacing: 8px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
 /* Auth Toast */
 .auth-toast {
     position: fixed;

@@ -782,6 +782,25 @@
                 </button>
             </div>
 
+            <div class="sign-in-divider"><span>or</span></div>
+
+            <div class="email-sign-in">
+                <div id="email-step-1">
+                    <input type="email" id="sign-in-email" placeholder="Enter your email" class="sign-in-input">
+                    <button class="sign-in-email-btn" onclick="sendEmailCode()">
+                        📧 Send me a code
+                    </button>
+                </div>
+                <div id="email-step-2" style="display: none;">
+                    <p class="email-sent-msg">Code sent to <span id="sent-to-email"></span></p>
+                    <input type="text" id="sign-in-code" placeholder="Enter 6-digit code" class="sign-in-input" maxlength="6" inputmode="numeric">
+                    <button class="sign-in-verify-btn" onclick="verifyEmailCode()">
+                        Verify Code
+                    </button>
+                    <button class="sign-in-resend" onclick="resendEmailCode()">Resend code</button>
+                </div>
+            </div>
+
             <p class="sign-in-benefits">
                 ✓ Sync streaks across devices<br>
                 ✓ Never lose your progress<br>
@@ -811,6 +830,81 @@
     <script src="js/multiplayerSync.js"></script>
     <script src="js/multiplayerGame.js"></script>
     <script src="script.js"></script>
+
+    <!-- Email Sign In Functions -->
+    <script>
+        let pendingEmail = '';
+
+        async function sendEmailCode() {
+            const emailInput = document.getElementById('sign-in-email');
+            const email = emailInput.value.trim();
+
+            if (!email || !email.includes('@')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+
+            pendingEmail = email;
+            const btn = document.querySelector('.sign-in-email-btn');
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+
+            const result = await window.authManager.sendEmailCode(email);
+
+            if (result.success) {
+                document.getElementById('email-step-1').style.display = 'none';
+                document.getElementById('email-step-2').style.display = 'block';
+                document.getElementById('sent-to-email').textContent = email;
+                document.getElementById('sign-in-code').focus();
+            } else {
+                alert(result.error || 'Failed to send code');
+            }
+
+            btn.textContent = '📧 Send me a code';
+            btn.disabled = false;
+        }
+
+        async function verifyEmailCode() {
+            const codeInput = document.getElementById('sign-in-code');
+            const code = codeInput.value.trim();
+
+            if (!code || code.length < 6) {
+                alert('Please enter the 6-digit code');
+                return;
+            }
+
+            const btn = document.querySelector('.sign-in-verify-btn');
+            btn.textContent = 'Verifying...';
+            btn.disabled = true;
+
+            const result = await window.authManager.verifyEmailCode(pendingEmail, code);
+
+            if (!result.success) {
+                alert(result.error || 'Invalid code');
+                btn.textContent = 'Verify Code';
+                btn.disabled = false;
+            }
+        }
+
+        async function resendEmailCode() {
+            const result = await window.authManager.sendEmailCode(pendingEmail);
+            if (result.success) {
+                window.authManager.showToast('📧 Code resent!');
+            }
+        }
+
+        // Reset email form when modal opens
+        const originalShowSignInModal = window.authManager?.showSignInModal;
+        if (window.authManager) {
+            window.authManager.showSignInModal = function() {
+                document.getElementById('email-step-1').style.display = 'block';
+                document.getElementById('email-step-2').style.display = 'none';
+                document.getElementById('sign-in-email').value = '';
+                document.getElementById('sign-in-code').value = '';
+                originalShowSignInModal?.call(this);
+            };
+        }
+    </script>
 
     <!-- Register Service Worker for PWA -->
     <script>
