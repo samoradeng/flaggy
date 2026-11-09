@@ -147,9 +147,12 @@ class MultiplayerGame {
         }
 
         const result = await this.multiplayerSync.joinGame(gameId, nickname);
-        
+
         if (result.success) {
             document.getElementById('join-challenge-modal').style.display = 'none';
+
+            // Track analytics
+            window.analytics?.trackChallengeJoined(gameId);
 
             // Check if game is already finished
             if (result.gameState.status === 'finished') {

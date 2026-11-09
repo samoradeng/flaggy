@@ -1349,6 +1349,9 @@ function showDailyComplete() {
     countdownIntervalId = setInterval(() => {
         document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
     }, 60000);
+
+    // Track analytics
+    window.analytics?.trackDailyComplete(result.score, result.total, result.timeMs, dayNum);
 }
 
 function showDailyGameOver() {
@@ -1367,15 +1370,18 @@ function showEndlessGameOver() {
     // Hide other screens
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('top-bar').style.display = 'none';
-    
+
     // Show endless game over screen
     document.getElementById('endless-game-over-screen').style.display = 'block';
-    
+
     // Update content
     const highestScore = parseInt(localStorage.getItem('challengeHighestScore') || '0');
     document.getElementById('endless-score-display').textContent = `Final Score: ${score}`;
     document.getElementById('endless-highest-score-display').textContent = `Best Score: ${Math.max(score, highestScore)}`;
     document.getElementById('final-streak-display').textContent = `Best Streak: ${bestStreak}`;
+
+    // Track analytics
+    window.analytics?.trackPracticeGame(score, bestStreak);
 }
 
 async function submitDailyNameHandler() {
@@ -1414,9 +1420,12 @@ async function submitDailyNameHandler() {
 async function showDailyLeaderboard() {
     const modal = document.getElementById('daily-leaderboard-modal');
     const list = document.getElementById('daily-leaderboard-list');
-    
+
     modal.style.display = 'block';
     list.innerHTML = '<div class="leaderboard-empty">Loading leaderboard...</div>';
+
+    // Track analytics
+    window.analytics?.trackLeaderboardView();
     
     try {
         const leaderboardData = await dailyChallenge.getLeaderboard();
@@ -1515,6 +1524,7 @@ async function shareDailyResultHandler() {
                         text: shareText,
                         files: [file]
                     });
+                    window.analytics?.trackShare('daily', 'native');
                     return;
                 } catch (e) {
                     console.log('Share cancelled or failed:', e);
@@ -1529,6 +1539,7 @@ async function shareDailyResultHandler() {
             a.click();
             URL.revokeObjectURL(url);
             showToast('📸 Image saved! Share it on social media');
+            window.analytics?.trackShare('daily', 'download');
         }, 'image/png');
     } catch (error) {
         console.error('Error generating daily share card:', error);

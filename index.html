@@ -529,8 +529,8 @@
     <!-- Top Header with Profile (fixed position) -->
     <div id="home-header">
         <div id="header-profile">
-            <!-- Sign In Prompt (shown when not signed in) -->
-            <div id="sign-in-prompt" class="sign-in-prompt-header">
+            <!-- Sign In Prompt (hidden for launch - re-enable later) -->
+            <div id="sign-in-prompt" class="sign-in-prompt-header" style="display: none;">
                 <button onclick="window.authManager.showSignInPrompt('sync')">Sign in</button>
             </div>
             <!-- User Info (shown when signed in) -->
@@ -850,6 +850,7 @@
     <!-- Load JavaScript modules -->
     <script src="js/authManager.js"></script>
     <script src="js/premiumManager.js"></script>
+    <script src="js/analytics.js"></script>
     <script src="js/globalLeaderboard.js"></script>
     <script src="js/continentFilter.js"></script>
     <script src="js/flagFacts.js"></script>
