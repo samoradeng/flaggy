@@ -1531,11 +1531,11 @@ async function generateDailyShareCard(result) {
         ctx.fill();
     });
 
-    // White card - tighter
+    // White card
     const cardX = 60;
     const cardY = 160;
     const cardWidth = canvas.width - 120;
-    const cardHeight = 680;
+    const cardHeight = 720;
 
     ctx.fillStyle = 'white';
     ctx.beginPath();
@@ -1565,23 +1565,32 @@ async function generateDailyShareCard(result) {
     ctx.fillText('F', logoX, logoY);
     ctx.textBaseline = 'alphabetic';
 
-    // Day number and streak
+    // Day number and streak - purple to match passport card
     const dayNum = dailyChallenge.getDayNumber();
     const streak = dailyChallenge.getCurrentStreak();
     ctx.font = '26px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillStyle = '#888';
+    ctx.fillStyle = '#667eea';
     let headerText = `DAILY #${dayNum}`;
     if (streak > 1) {
         headerText += `  •  🔥 ${streak} day streak`;
     }
     ctx.fillText(headerText, canvas.width / 2, cardY + 45);
 
-    // Draw result squares as colored rounded rectangles
+    // Calculate lives remaining (3 max - wrong answers)
+    const wrongCount = result.results.filter(r => r === 'wrong').length;
+    const livesRemaining = Math.max(0, 3 - wrongCount);
+
+    // Draw hearts for lives
+    const hearts = '❤️'.repeat(livesRemaining) + '🖤'.repeat(3 - livesRemaining);
+    ctx.font = '32px -apple-system';
+    ctx.fillText(hearts, canvas.width / 2, cardY + 85);
+
+    // Draw result squares as colored rounded rectangles - shifted down for centering
     const squareSize = 65;
     const squareGap = 18;
     const totalSquaresWidth = (squareSize * 5) + (squareGap * 4);
     const squaresStartX = (canvas.width - totalSquaresWidth) / 2;
-    const squaresY = cardY + 80;
+    const squaresY = cardY + 120;
 
     result.results.forEach((r, i) => {
         const x = squaresStartX + (i * (squareSize + squareGap));
@@ -1614,20 +1623,20 @@ async function generateDailyShareCard(result) {
     // Score
     ctx.font = 'bold 100px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = result.score === result.total ? '#22c55e' : '#667eea';
-    ctx.fillText(`${result.score}/${result.total}`, canvas.width / 2, cardY + 240);
+    ctx.fillText(`${result.score}/${result.total}`, canvas.width / 2, cardY + 280);
 
     // Time with lightning bolt
     const timeStr = (result.timeMs / 1000).toFixed(2) + 's';
     ctx.font = '42px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#666';
-    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 310);
+    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 350);
 
     // Draw actual flag images in circles
     const flagSize = 85;
     const flagGap = 22;
     const totalFlagsWidth = (flagSize * 5) + (flagGap * 4);
     const flagsStartX = (canvas.width - totalFlagsWidth) / 2;
-    const flagsY = cardY + 365;
+    const flagsY = cardY + 405;
 
     for (let i = 0; i < result.flags.length; i++) {
         const flag = result.flags[i];
@@ -1675,7 +1684,7 @@ async function generateDailyShareCard(result) {
     // Challenge text
     ctx.font = 'italic 30px Georgia, serif';
     ctx.fillStyle = '#888';
-    ctx.fillText('Can you beat my time?', canvas.width / 2, cardY + 530);
+    ctx.fillText('Can you beat my time?', canvas.width / 2, cardY + 570);
 
     // Footer
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
