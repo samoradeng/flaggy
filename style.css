@@ -1648,6 +1648,22 @@ body {
     box-sizing: border-box;
 }
 
+.app-footer {
+    margin-top: 24px;
+    padding-top: 16px;
+}
+
+.footer-link {
+    color: #9ca3af;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.footer-link:hover {
+    color: #667eea;
+    text-decoration: underline;
+}
+
 #mode-buttons {
     display: flex;
     flex-direction: column;
