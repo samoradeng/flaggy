@@ -1739,43 +1739,12 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     const isComplete = countriesCount >= 250;
     const progress = countriesCount / 250;
 
-    // Determine rank based on progress
-    let rank, rankColor;
-    if (countriesCount >= 250) {
-        rank = '🏆 World Champion';
-        rankColor = '#FFD700';
-    } else if (countriesCount >= 200) {
-        rank = '🌟 Flag Master';
-        rankColor = '#667eea';
-    } else if (countriesCount >= 100) {
-        rank = '🗺️ Globe Trotter';
-        rankColor = '#22c55e';
-    } else if (countriesCount >= 50) {
-        rank = '🧭 Explorer';
-        rankColor = '#3b82f6';
-    } else if (countriesCount >= 10) {
-        rank = '🚀 Rising Star';
-        rankColor = '#8b5cf6';
-    } else {
-        rank = '🌱 Beginner';
-        rankColor = '#666';
-    }
-
-    // Title
-    ctx.fillStyle = '#333';
-    ctx.font = 'bold 48px -apple-system, BlinkMacSystemFont, sans-serif';
+    // --- COMPACT HEADER ---
     ctx.textAlign = 'center';
-    ctx.fillText('My Flag Passport', canvas.width / 2, cardY + 70);
 
-    // Rank badge
-    ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillStyle = rankColor;
-    ctx.fillText(rank, canvas.width / 2, cardY + 115);
-
-    // Big number with special styling for complete
+    // Big number
     if (isComplete) {
-        // Gold gradient for 250
-        const goldGrad = ctx.createLinearGradient(canvas.width/2 - 100, 0, canvas.width/2 + 100, 0);
+        const goldGrad = ctx.createLinearGradient(canvas.width/2 - 80, 0, canvas.width/2 + 80, 0);
         goldGrad.addColorStop(0, '#FFD700');
         goldGrad.addColorStop(0.5, '#FFF8DC');
         goldGrad.addColorStop(1, '#FFD700');
@@ -1783,116 +1752,130 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     } else {
         ctx.fillStyle = '#667eea';
     }
-    ctx.font = 'bold 140px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText(countriesCount.toString(), canvas.width / 2, cardY + 250);
+    ctx.font = 'bold 90px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(countriesCount.toString(), canvas.width / 2, cardY + 80);
 
-    ctx.font = '40px -apple-system, BlinkMacSystemFont, sans-serif';
+    // Subtitle
+    ctx.font = '30px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#666';
-    ctx.fillText(isComplete ? 'ALL FLAGS DISCOVERED!' : 'flags discovered', canvas.width / 2, cardY + 310);
+    ctx.fillText(isComplete ? 'ALL FLAGS DISCOVERED' : `of 250 flags`, canvas.width / 2, cardY + 125);
 
-    // Progress bar (skip if complete - show celebration instead)
-    if (!isComplete) {
-        const barWidth = cardWidth - 120;
-        const barHeight = 24;
-        const barX = cardX + 60;
-        const barY = cardY + 350;
+    // Progress bar (thin)
+    const barWidth = cardWidth - 120;
+    const barHeight = 10;
+    const barX = cardX + 60;
+    const barY = cardY + 150;
 
-        ctx.fillStyle = '#e0e0e0';
-        ctx.beginPath();
-        ctx.roundRect(barX, barY, barWidth, barHeight, 12);
-        ctx.fill();
+    ctx.fillStyle = '#e8e8e8';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth, barHeight, 5);
+    ctx.fill();
 
-        const progressGradient = ctx.createLinearGradient(barX, 0, barX + barWidth * progress, 0);
+    if (progress > 0) {
+        const progressGradient = ctx.createLinearGradient(barX, 0, barX + barWidth, 0);
         progressGradient.addColorStop(0, '#667eea');
         progressGradient.addColorStop(1, '#764ba2');
         ctx.fillStyle = progressGradient;
         ctx.beginPath();
-        ctx.roundRect(barX, barY, barWidth * progress, barHeight, 12);
+        ctx.roundRect(barX, barY, Math.max(barWidth * progress, barHeight), barHeight, 5);
         ctx.fill();
-
-        ctx.fillStyle = '#999';
-        ctx.font = '28px -apple-system, BlinkMacSystemFont, sans-serif';
-        ctx.fillText(`${Math.round(progress * 100)}% complete`, canvas.width / 2, barY + 55);
     }
 
     // Flag mosaic - scales based on count
     const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
     const allCodes = Object.keys(countryDetails);
 
-    // Calculate optimal grid based on count
-    let flagsToShow, flagSize, flagsPerRow, flagGap;
+    // Available space for flags
+    const flagAreaTop = cardY + 180;
+    const flagAreaBottom = cardY + cardHeight - 30;
+    const flagAreaHeight = flagAreaBottom - flagAreaTop;
+    const flagAreaWidth = cardWidth - 60;
 
-    if (countriesCount <= 18) {
-        // Few flags: show all, larger
-        flagsToShow = countriesCount;
-        flagSize = 80;
-        flagsPerRow = 6;
-        flagGap = 12;
-    } else if (countriesCount <= 48) {
-        // Medium: show all up to 48, medium size
-        flagsToShow = Math.min(countriesCount, 48);
-        flagSize = 56;
-        flagsPerRow = 8;
-        flagGap = 8;
+    // Calculate optimal grid to fill space nicely
+    let flagsPerRow, flagSize, flagGap, maxRows;
+
+    if (countriesCount === 1) {
+        flagsPerRow = 1; flagSize = 160; flagGap = 0; maxRows = 1;
+    } else if (countriesCount <= 4) {
+        flagsPerRow = 2; flagSize = 130; flagGap = 16; maxRows = 2;
+    } else if (countriesCount <= 9) {
+        flagsPerRow = 3; flagSize = 110; flagGap = 14; maxRows = 3;
+    } else if (countriesCount <= 16) {
+        flagsPerRow = 4; flagSize = 100; flagGap = 12; maxRows = 4;
+    } else if (countriesCount <= 30) {
+        flagsPerRow = 6; flagSize = 85; flagGap = 10; maxRows = 5;
+    } else if (countriesCount <= 56) {
+        flagsPerRow = 8; flagSize = 70; flagGap = 8; maxRows = 7;
+    } else if (countriesCount <= 100) {
+        flagsPerRow = 10; flagSize = 58; flagGap = 6; maxRows = 10;
     } else {
-        // Many flags: dense mosaic of 72 flags
-        flagsToShow = Math.min(countriesCount, 72);
-        flagSize = 44;
-        flagsPerRow = 12;
-        flagGap = 5;
+        flagsPerRow = 12; flagSize = 48; flagGap = 5; maxRows = 12;
     }
 
-    const flagHeight = flagSize * 0.67;
+    const flagHeight = Math.round(flagSize * 0.67);
+    const flagsToShow = Math.min(countriesCount, flagsPerRow * maxRows);
+    const actualRows = Math.ceil(flagsToShow / flagsPerRow);
+
     const gridWidth = flagsPerRow * flagSize + (flagsPerRow - 1) * flagGap;
-    const rows = Math.ceil(flagsToShow / flagsPerRow);
-    const gridHeight = rows * flagHeight + (rows - 1) * flagGap;
+    const gridHeight = actualRows * flagHeight + (actualRows - 1) * flagGap;
 
-    // Position grid to fill remaining card space nicely
-    const startY = isComplete ? cardY + 360 : cardY + 430;
-    const availableHeight = cardY + cardHeight - startY - 40;
-    const startX = cardX + (cardWidth - gridWidth) / 2;
-    const gridY = startY + Math.max(0, (availableHeight - gridHeight) / 2);
+    // Center grid in available space
+    const gridX = cardX + (cardWidth - gridWidth) / 2;
+    const gridY = flagAreaTop + (flagAreaHeight - gridHeight) / 2;
 
-    // Shuffle flags for variety in display (deterministic based on count)
-    const shuffledCodes = [...allCodes].sort((a, b) => {
-        const hashA = a.charCodeAt(0) * 31 + a.charCodeAt(1);
-        const hashB = b.charCodeAt(0) * 31 + b.charCodeAt(1);
+    // Sort flags for display
+    const sortedCodes = [...allCodes].sort((a, b) => {
+        const hashA = a.charCodeAt(0) * 31 + (a.charCodeAt(1) || 0);
+        const hashB = b.charCodeAt(0) * 31 + (b.charCodeAt(1) || 0);
         return hashA - hashB;
     }).slice(0, flagsToShow);
 
-    for (let i = 0; i < shuffledCodes.length; i++) {
-        const code = shuffledCodes[i];
+    for (let i = 0; i < sortedCodes.length; i++) {
+        const code = sortedCodes[i];
         const row = Math.floor(i / flagsPerRow);
         const col = i % flagsPerRow;
-        const x = startX + col * (flagSize + flagGap);
+
+        // Center incomplete rows
+        const flagsInThisRow = Math.min(flagsPerRow, sortedCodes.length - row * flagsPerRow);
+        const rowWidth = flagsInThisRow * flagSize + (flagsInThisRow - 1) * flagGap;
+        const rowX = cardX + (cardWidth - rowWidth) / 2;
+
+        const x = rowX + col * (flagSize + flagGap);
         const y = gridY + row * (flagHeight + flagGap);
 
         try {
             const flagSrc = countries[code]?.flag?.large || `flags/${code.toLowerCase()}.svg`;
             const flagImg = await loadImage(flagSrc);
 
-            // Add subtle shadow for depth
-            ctx.shadowColor = 'rgba(0,0,0,0.1)';
-            ctx.shadowBlur = 4;
+            ctx.shadowColor = 'rgba(0,0,0,0.12)';
+            ctx.shadowBlur = 5;
             ctx.shadowOffsetY = 2;
 
+            // Rounded corners
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(x, y, flagSize, flagHeight, 3);
+            ctx.clip();
             ctx.drawImage(flagImg, x, y, flagSize, flagHeight);
+            ctx.restore();
 
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
             ctx.shadowOffsetY = 0;
         } catch (e) {
             ctx.fillStyle = '#f0f0f0';
-            ctx.fillRect(x, y, flagSize, flagHeight);
+            ctx.beginPath();
+            ctx.roundRect(x, y, flagSize, flagHeight, 3);
+            ctx.fill();
         }
     }
 
     // Show "+X more" if not all flags shown
     if (countriesCount > flagsToShow) {
-        ctx.fillStyle = '#999';
-        ctx.font = '24px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillStyle = '#888';
+        ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`+${countriesCount - flagsToShow} more`, canvas.width / 2, gridY + gridHeight + 35);
+        ctx.fillText(`+${countriesCount - flagsToShow} more`, canvas.width / 2, gridY + gridHeight + 38);
     }
 }
 
