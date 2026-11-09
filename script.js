@@ -1516,16 +1516,18 @@ async function generateDailyShareCard(result) {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Subtle pattern
+    // Subtle pattern (seeded for consistency)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-    for (let i = 0; i < 20; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const size = Math.random() * 100 + 50;
+    const patternPositions = [
+        [150, 200, 80], [800, 150, 100], [200, 900, 90],
+        [850, 800, 70], [500, 1100, 85], [100, 500, 75],
+        [900, 500, 95], [400, 300, 60], [700, 1000, 80]
+    ];
+    patternPositions.forEach(([x, y, size]) => {
         ctx.beginPath();
         ctx.arc(x, y, size, 0, Math.PI * 2);
         ctx.fill();
-    }
+    });
 
     // White card
     const cardX = 60;
@@ -1561,42 +1563,117 @@ async function generateDailyShareCard(result) {
     ctx.fillText('F', logoX, logoY);
     ctx.textBaseline = 'alphabetic';
 
-    // Day number
+    // Day number and streak
     const dayNum = dailyChallenge.getDayNumber();
+    const streak = dailyChallenge.getCurrentStreak();
     ctx.font = '28px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#888';
-    ctx.fillText(`DAILY #${dayNum}`, canvas.width / 2, cardY + 60);
+    let headerText = `DAILY #${dayNum}`;
+    if (streak > 1) {
+        headerText += `  •  🔥 ${streak} day streak`;
+    }
+    ctx.fillText(headerText, canvas.width / 2, cardY + 60);
 
-    // Result squares - BIG
-    const squares = result.results.map(r => {
-        if (r === 'correct') return '🟩';
-        if (r === 'wrong') return '⬛';
-        return '❌';
-    }).join(' ');
+    // Draw result squares as colored rounded rectangles
+    const squareSize = 70;
+    const squareGap = 20;
+    const totalSquaresWidth = (squareSize * 5) + (squareGap * 4);
+    const squaresStartX = (canvas.width - totalSquaresWidth) / 2;
+    const squaresY = cardY + 110;
 
-    ctx.font = '80px -apple-system';
-    ctx.fillText(squares, canvas.width / 2, cardY + 180);
+    result.results.forEach((r, i) => {
+        const x = squaresStartX + (i * (squareSize + squareGap));
+
+        // Draw square with gradient effect
+        if (r === 'correct') {
+            const squareGrad = ctx.createLinearGradient(x, squaresY, x, squaresY + squareSize);
+            squareGrad.addColorStop(0, '#22c55e');
+            squareGrad.addColorStop(1, '#16a34a');
+            ctx.fillStyle = squareGrad;
+        } else if (r === 'wrong') {
+            ctx.fillStyle = '#1f2937';
+        } else {
+            ctx.fillStyle = '#dc2626';
+        }
+
+        ctx.beginPath();
+        ctx.roundRect(x, squaresY, squareSize, squareSize, 12);
+        ctx.fill();
+
+        // Add subtle highlight for correct squares
+        if (r === 'correct') {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.beginPath();
+            ctx.roundRect(x + 5, squaresY + 5, squareSize - 10, squareSize / 2 - 5, 8);
+            ctx.fill();
+        }
+    });
 
     // Score
     ctx.font = 'bold 120px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = result.score === result.total ? '#22c55e' : '#667eea';
-    ctx.fillText(`${result.score}/${result.total}`, canvas.width / 2, cardY + 340);
+    ctx.fillText(`${result.score}/${result.total}`, canvas.width / 2, cardY + 310);
 
-    // Time
+    // Time with lightning bolt
     const timeStr = (result.timeMs / 1000).toFixed(2) + 's';
     ctx.font = '48px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#666';
-    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 420);
+    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 390);
 
-    // Flag emojis
-    const flagEmojis = result.flags.map(f => dailyChallenge.getCountryEmoji(f.code)).join('  ');
-    ctx.font = '56px -apple-system';
-    ctx.fillText(flagEmojis, canvas.width / 2, cardY + 550);
+    // Draw actual flag images in circles
+    const flagSize = 90;
+    const flagGap = 25;
+    const totalFlagsWidth = (flagSize * 5) + (flagGap * 4);
+    const flagsStartX = (canvas.width - totalFlagsWidth) / 2;
+    const flagsY = cardY + 450;
+
+    for (let i = 0; i < result.flags.length; i++) {
+        const flag = result.flags[i];
+        const x = flagsStartX + (i * (flagSize + flagGap)) + flagSize / 2;
+        const y = flagsY + flagSize / 2;
+
+        try {
+            const flagSrc = countries[flag.code]?.flag?.large || `flags/${flag.code.toLowerCase()}.svg`;
+            const flagImg = await loadImage(flagSrc);
+
+            // Draw circular flag with shadow
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.15)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 3;
+
+            ctx.beginPath();
+            ctx.arc(x, y, flagSize / 2, 0, Math.PI * 2);
+            ctx.clip();
+
+            // Draw flag image scaled to cover circle
+            const imgSize = Math.max(flagImg.width, flagImg.height);
+            const scale = flagSize / Math.min(flagImg.width, flagImg.height) * 1.2;
+            const drawWidth = flagImg.width * scale;
+            const drawHeight = flagImg.height * scale;
+            ctx.drawImage(flagImg, x - drawWidth / 2, y - drawHeight / 2, drawWidth, drawHeight);
+
+            ctx.restore();
+
+            // Draw border
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, flagSize / 2, 0, Math.PI * 2);
+            ctx.stroke();
+        } catch (e) {
+            // Fallback: draw placeholder circle
+            ctx.fillStyle = '#e5e7eb';
+            ctx.beginPath();
+            ctx.arc(x, y, flagSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
 
     // Challenge text
     ctx.font = 'italic 32px Georgia, serif';
     ctx.fillStyle = '#888';
-    ctx.fillText('Can you beat my time?', canvas.width / 2, cardY + 650);
+    ctx.fillText('Can you beat my time?', canvas.width / 2, cardY + 620);
 
     // Footer
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';

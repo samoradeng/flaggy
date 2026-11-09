@@ -23,9 +23,9 @@ class DailyChallenge {
         return `${year}-${month}-${day}`;
     }
 
-    // Get day number since a fixed start date (for "Daily #247" display)
+    // Get day number since v2 launch (5-flag challenge)
     getDayNumber() {
-        const startDate = new Date('2024-01-01');
+        const startDate = new Date('2026-11-09'); // v2 launch date
         const today = new Date(this.today);
         const diffTime = today - startDate;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
