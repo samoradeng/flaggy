@@ -1587,11 +1587,17 @@ function switchTab(tabName) {
     // Remove active class from all tabs and contents
     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    
+
     // Add active class to selected tab and content
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     document.getElementById(`${tabName}-stats`).classList.add('active');
-    
+
+    // Reset scroll position to top when switching tabs
+    const modalContent = document.querySelector('#stats-modal .modal-content');
+    if (modalContent) {
+        modalContent.scrollTop = 0;
+    }
+
     // Update displays for the active tab
     if (tabName === 'achievements') {
         updateAchievementsDisplay();

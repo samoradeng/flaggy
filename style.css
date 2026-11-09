@@ -1901,6 +1901,12 @@ body {
     margin-top: 20px;
     width: 100%;
     transition: background-color 0.3s ease;
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(to top, white 80%, transparent);
+    padding-top: 20px;
+    padding-bottom: 12px;
+    margin-bottom: -20px;
 }
 
 #share-button:hover {
@@ -2154,15 +2160,15 @@ body {
     
     .tabs {
         flex-wrap: nowrap;
-        gap: 4px;
+        gap: 8px;
         padding-bottom: 8px;
     }
-    
+
     .tab-button {
-        flex: 1;
-        min-width: 80px;
-        margin-right: 4px;
-        padding: 10px 8px;
+        flex: 0 0 auto;
+        min-width: auto;
+        margin-right: 0;
+        padding: 10px 14px;
         font-size: 14px;
     }
     

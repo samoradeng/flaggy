@@ -386,7 +386,6 @@ class AuthManager {
 
             if (data) {
                 this.mergeData(data);
-                this.showToast('☁️ Progress synced!');
                 return data;
             } else {
                 // First time sync - upload local data
