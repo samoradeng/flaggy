@@ -1576,7 +1576,7 @@ async function generateDailyShareCard(result) {
     const squareGap = 24;   // Match flag gap
     const totalSquaresWidth = (squareSize * 5) + (squareGap * 4);
     const squaresStartX = (canvas.width - totalSquaresWidth) / 2;
-    const squaresY = cardY + 85;
+    const squaresY = cardY + 115;
 
     result.results.forEach((r, i) => {
         const x = squaresStartX + (i * (squareSize + squareGap));
@@ -1610,14 +1610,14 @@ async function generateDailyShareCard(result) {
     const timeStr = (result.timeMs / 1000).toFixed(2) + 's';
     ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#667eea';
-    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 275);
+    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 305);
 
     // Draw actual flag images in circles - aligned with squares above
     const flagSize = 90;
     const flagGap = 24;
     const totalFlagsWidth = (flagSize * 5) + (flagGap * 4);
     const flagsStartX = (canvas.width - totalFlagsWidth) / 2;
-    const flagsY = cardY + 330;
+    const flagsY = cardY + 360;
 
     for (let i = 0; i < result.flags.length; i++) {
         const flag = result.flags[i];
