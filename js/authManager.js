@@ -162,11 +162,15 @@ class AuthManager {
         const redirectTo = this.getRedirectUrl();
         console.log('📍 Redirect URL:', redirectTo);
 
+        // On native platforms, use Browser plugin to open Safari for OAuth
+        if (window.Capacitor?.isNativePlatform()) {
+            return this.openOAuthInBrowser('apple', redirectTo);
+        }
+
         const { data, error } = await this.supabase.auth.signInWithOAuth({
             provider: 'apple',
             options: {
-                redirectTo: redirectTo,
-                skipBrowserRedirect: window.Capacitor?.isNativePlatform() ? false : false
+                redirectTo: redirectTo
             }
         });
 
@@ -187,6 +191,11 @@ class AuthManager {
         const redirectTo = this.getRedirectUrl();
         console.log('📍 Redirect URL:', redirectTo);
 
+        // On native platforms, use Browser plugin to open Safari for OAuth
+        if (window.Capacitor?.isNativePlatform()) {
+            return this.openOAuthInBrowser('google', redirectTo);
+        }
+
         const { data, error } = await this.supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
@@ -200,6 +209,37 @@ class AuthManager {
         }
 
         return { success: true };
+    }
+
+    async openOAuthInBrowser(provider, redirectTo) {
+        try {
+            // Get the OAuth URL without auto-redirect
+            const { data, error } = await this.supabase.auth.signInWithOAuth({
+                provider: provider,
+                options: {
+                    redirectTo: redirectTo,
+                    skipBrowserRedirect: true
+                }
+            });
+
+            if (error) {
+                console.error(`${provider} OAuth error:`, error);
+                return { success: false, error: error.message };
+            }
+
+            if (data?.url) {
+                console.log('🌐 Opening OAuth URL in browser:', data.url);
+                // Open in Safari using Capacitor Browser plugin
+                const { Browser } = await import('@capacitor/browser');
+                await Browser.open({ url: data.url });
+                return { success: true };
+            }
+
+            return { success: false, error: 'No OAuth URL returned' };
+        } catch (err) {
+            console.error('Browser open error:', err);
+            return { success: false, error: err.message };
+        }
     }
 
     async signOut() {
@@ -428,9 +468,19 @@ window.authManager = new AuthManager();
 
 // Handle deep links for OAuth callback (Capacitor apps)
 if (window.Capacitor?.isNativePlatform()) {
-    import('@capacitor/app').then(({ App }) => {
+    Promise.all([
+        import('@capacitor/app'),
+        import('@capacitor/browser')
+    ]).then(([{ App }, { Browser }]) => {
         App.addListener('appUrlOpen', async (event) => {
             console.log('🔗 Deep link received:', event.url);
+
+            // Close the browser window
+            try {
+                await Browser.close();
+            } catch (e) {
+                console.log('Browser already closed');
+            }
 
             // Check if this is an auth callback
             if (event.url.includes('auth-callback') || event.url.includes('access_token') || event.url.includes('code=')) {
@@ -452,16 +502,21 @@ if (window.Capacitor?.isNativePlatform()) {
 
                     if (error) {
                         console.error('Error setting session:', error);
+                        window.authManager.showToast('❌ Sign in failed');
                     } else {
                         console.log('✅ Session set successfully');
                         window.authManager.hideSignInModal();
                         window.authManager.showToast('✅ Signed in successfully!');
                     }
+                } else {
+                    // Supabase may handle the session automatically
+                    console.log('🔄 Checking session...');
+                    window.authManager?.supabase?.auth.getSession();
                 }
             }
         });
     }).catch(err => {
-        console.log('App plugin not available:', err);
+        console.log('Capacitor plugins not available:', err);
     });
 }
 
