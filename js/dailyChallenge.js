@@ -10,9 +10,12 @@ class DailyChallenge {
         this.currentFlagIndex = 0;
         this.lives = this.MAX_LIVES;
         this.results = []; // Array of 'correct', 'wrong', or 'skipped'
-        this.startTime = null;
+        this.startTimeStamp = null;
         this.endTime = null;
         this.todaysFlags = null; // Cache today's flags
+
+        // Check for in-progress game on construction
+        this.inProgressKey = 'dailyInProgress';
     }
 
     getStandardizedDate() {
@@ -48,6 +51,47 @@ class DailyChallenge {
 
     saveDailyStats() {
         localStorage.setItem('dailyStatsV2', JSON.stringify(this.dailyStats));
+    }
+
+    // Save in-progress game state
+    saveInProgress() {
+        const state = {
+            date: this.today,
+            currentFlagIndex: this.currentFlagIndex,
+            lives: this.lives,
+            results: [...this.results],
+            startTimeStamp: this.startTimeStamp // Absolute timestamp, not performance.now()
+        };
+        localStorage.setItem(this.inProgressKey, JSON.stringify(state));
+    }
+
+    // Load in-progress game state (returns null if none or from different day)
+    loadInProgress() {
+        try {
+            const saved = localStorage.getItem(this.inProgressKey);
+            if (!saved) return null;
+
+            const state = JSON.parse(saved);
+            // Only restore if it's from today and not completed
+            if (state.date !== this.today) {
+                this.clearInProgress();
+                return null;
+            }
+            return state;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Clear in-progress state (called when game completes)
+    clearInProgress() {
+        localStorage.removeItem(this.inProgressKey);
+    }
+
+    // Check if there's an in-progress game for today
+    hasInProgressGame() {
+        const state = this.loadInProgress();
+        return state !== null && state.currentFlagIndex < this.FLAGS_PER_DAY && state.lives > 0;
     }
 
     hasPlayedToday() {
@@ -107,14 +151,39 @@ class DailyChallenge {
         return (a * seed + c) % m;
     }
 
-    // Start the daily challenge
+    // Start the daily challenge (or resume in-progress)
     startChallenge() {
-        this.currentFlagIndex = 0;
-        this.lives = this.MAX_LIVES;
-        this.results = [];
-        this.startTime = performance.now();
-        this.endTime = null;
+        const inProgress = this.loadInProgress();
+
+        if (inProgress && inProgress.currentFlagIndex < this.FLAGS_PER_DAY && inProgress.lives > 0) {
+            // Resume from saved state
+            this.currentFlagIndex = inProgress.currentFlagIndex;
+            this.lives = inProgress.lives;
+            this.results = inProgress.results;
+            this.startTimeStamp = inProgress.startTimeStamp;
+            this.endTime = null;
+            console.log('📅 Resuming daily challenge from flag', this.currentFlagIndex + 1);
+        } else {
+            // Fresh start - don't set timer yet, wait for startTiming()
+            this.currentFlagIndex = 0;
+            this.lives = this.MAX_LIVES;
+            this.results = [];
+            this.startTimeStamp = null;
+            this.endTime = null;
+        }
+
         return this.getCurrentFlag();
+    }
+
+    // Start the timer (called when first flag is visible)
+    startTiming() {
+        // Only set timer if not already set (fresh game, not resumed)
+        if (!this.startTimeStamp) {
+            this.startTimeStamp = Date.now();
+            // Save immediately to prevent restart exploit
+            this.saveInProgress();
+            console.log('⏱️ Timer started at', this.startTimeStamp);
+        }
     }
 
     // Get current flag to display
@@ -151,11 +220,16 @@ class DailyChallenge {
         const isGameOver = this.lives <= 0 || this.currentFlagIndex >= this.FLAGS_PER_DAY;
 
         if (isGameOver) {
-            this.endTime = performance.now();
+            this.endTime = Date.now();
             // Mark remaining flags as skipped
             while (this.results.length < this.FLAGS_PER_DAY) {
                 this.results.push('skipped');
             }
+            // Clear in-progress since game is complete
+            this.clearInProgress();
+        } else {
+            // Save progress after each answer
+            this.saveInProgress();
         }
 
         return {
@@ -169,9 +243,9 @@ class DailyChallenge {
 
     // Get elapsed time in milliseconds
     getElapsedTimeMs() {
-        if (!this.startTime) return 0;
-        const endPoint = this.endTime || performance.now();
-        return Math.round(endPoint - this.startTime);
+        if (!this.startTimeStamp) return 0;
+        const endPoint = this.endTime || Date.now();
+        return Math.round(endPoint - this.startTimeStamp);
     }
 
     // Get formatted time string (e.g., "8.42s")
