@@ -1386,8 +1386,8 @@ async function submitDailyNameHandler() {
         return;
     }
     
-    if (playerName.length > 12) {
-        alert('Name must be 12 characters or less');
+    if (playerName.length > 10) {
+        alert('Name must be 10 characters or less');
         return;
     }
     
