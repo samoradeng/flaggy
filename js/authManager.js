@@ -192,9 +192,13 @@ class AuthManager {
         try {
             console.log('🍎 Using native Apple Sign In...');
 
-            // Import the native plugin
-            const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+            // Access the native plugin via Capacitor.Plugins
+            const SignInWithApple = window.Capacitor?.Plugins?.SignInWithApple;
             console.log('🍎 SignInWithApple plugin loaded:', !!SignInWithApple);
+
+            if (!SignInWithApple) {
+                throw new Error('SignInWithApple plugin not available');
+            }
 
             // Generate a random nonce for security
             const rawNonce = this.generateNonce();
