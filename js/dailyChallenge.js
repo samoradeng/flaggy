@@ -1,33 +1,21 @@
 class DailyChallenge {
     constructor(countries) {
         this.countries = countries;
-        // Use a standardized date format that's consistent worldwide
         this.today = this.getStandardizedDate();
         this.dailyStats = this.loadDailyStats();
-        this.usedCountries = this.loadUsedCountries();
-        this.globalLeaderboard = new GlobalLeaderboard();
-        this.startTime = null; // Track when question started for precise timing
-        this.questionStartTime = null; // Track when current question started
-        this.finalTime = null; // Lock in the time when answer is given
-    }
 
-    // Lock in the final time when answer is given (correct or game over)
-    lockFinalTime() {
-        if (!this.finalTime) {
-            this.finalTime = this.getElapsedTime();
-            console.log('⏱️ Final time locked:', this.finalTime, 'ms');
-        }
-        return this.finalTime;
-    }
-
-    // Get the locked final time, or current elapsed if not locked
-    getFinalTime() {
-        return this.finalTime || this.getElapsedTime();
+        // New 5-flag challenge state
+        this.FLAGS_PER_DAY = 5;
+        this.MAX_LIVES = 3;
+        this.currentFlagIndex = 0;
+        this.lives = this.MAX_LIVES;
+        this.results = []; // Array of 'correct', 'wrong', or 'skipped'
+        this.startTime = null;
+        this.endTime = null;
+        this.todaysFlags = null; // Cache today's flags
     }
 
     getStandardizedDate() {
-        // Get current date in UTC and format as YYYY-MM-DD
-        // This ensures everyone worldwide gets the same date
         const now = new Date();
         const year = now.getUTCFullYear();
         const month = String(now.getUTCMonth() + 1).padStart(2, '0');
@@ -35,224 +23,207 @@ class DailyChallenge {
         return `${year}-${month}-${day}`;
     }
 
+    // Get day number since a fixed start date (for "Daily #247" display)
+    getDayNumber() {
+        const startDate = new Date('2024-01-01');
+        const today = new Date(this.today);
+        const diffTime = today - startDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays + 1;
+    }
+
     loadDailyStats() {
-        const saved = localStorage.getItem('dailyStats');
+        const saved = localStorage.getItem('dailyStatsV2');
         if (saved) {
-            const stats = JSON.parse(saved);
-            return stats;
+            return JSON.parse(saved);
         }
         return {
             streak: 0,
             lastPlayedDate: null,
             totalPlayed: 0,
-            totalCorrect: 0,
+            totalPerfect: 0, // 5/5 games
             results: {} // date -> result object
         };
     }
 
-    loadUsedCountries() {
-        const saved = localStorage.getItem('dailyUsedCountries');
-        if (saved) {
-            return JSON.parse(saved);
-        }
-        return [];
-    }
-
-    saveUsedCountries() {
-        localStorage.setItem('dailyUsedCountries', JSON.stringify(this.usedCountries));
-    }
-
     saveDailyStats() {
-        localStorage.setItem('dailyStats', JSON.stringify(this.dailyStats));
-        // Also save a simple flag for quick checking
-        localStorage.setItem('dailyPlayedToday', this.today);
+        localStorage.setItem('dailyStatsV2', JSON.stringify(this.dailyStats));
     }
 
     hasPlayedToday() {
-        // Only check for actual result data - the simple flag can get out of sync
         const result = this.dailyStats.results[this.today];
-        // Make sure we have a valid result object with required fields
-        return result !== undefined && result !== null && typeof result === 'object' && 'correct' in result;
+        return result !== undefined && result !== null;
     }
 
-    getTodaysCountry() {
-        // Use a deterministic seed based on the standardized date
+    getTodayResult() {
+        return this.dailyStats.results[this.today];
+    }
+
+    // Generate 5 deterministic flags for today
+    getTodaysFlags() {
+        if (this.todaysFlags) return this.todaysFlags;
+
         const seed = this.dateToSeed(this.today);
         const countryCodes = Object.keys(this.countries);
-        
-        // Create a deterministic sequence using the date seed
-        // This ensures the same country for everyone on the same date
-        const index = seed % countryCodes.length;
-        const selectedCountryCode = countryCodes[index];
-        
-        console.log(`📅 Daily country for ${this.today}: ${selectedCountryCode} (${this.countries[selectedCountryCode].name})`);
-        console.log(`🔢 Seed: ${seed}, Index: ${index}, Total countries: ${countryCodes.length}`);
-        
-        return this.countries[selectedCountryCode];
+        const selectedFlags = [];
+        const usedIndices = new Set();
+
+        // Use seeded random to pick 5 unique flags
+        let currentSeed = seed;
+        while (selectedFlags.length < this.FLAGS_PER_DAY) {
+            currentSeed = this.nextRandom(currentSeed);
+            const index = currentSeed % countryCodes.length;
+
+            if (!usedIndices.has(index)) {
+                usedIndices.add(index);
+                const code = countryCodes[index];
+                selectedFlags.push({
+                    code: code,
+                    ...this.countries[code]
+                });
+            }
+        }
+
+        this.todaysFlags = selectedFlags;
+        console.log('📅 Today\'s flags:', selectedFlags.map(f => f.name));
+        return selectedFlags;
     }
 
     dateToSeed(dateString) {
-        // Create a simple, consistent hash from the date string
-        // This will always produce the same number for the same date
         let hash = 0;
         for (let i = 0; i < dateString.length; i++) {
             const char = dateString.charCodeAt(i);
             hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32-bit integer
+            hash = hash & hash;
         }
-        
-        // Ensure we get a positive number
-        const positiveHash = Math.abs(hash);
-        console.log(`🔢 Date "${dateString}" -> Hash: ${hash} -> Positive: ${positiveHash}`);
-        
-        return positiveHash;
+        return Math.abs(hash);
     }
 
-    // Start timing for precise measurement - ENHANCED
-    startTiming() {
+    // Simple seeded random number generator
+    nextRandom(seed) {
+        const a = 1664525;
+        const c = 1013904223;
+        const m = Math.pow(2, 32);
+        return (a * seed + c) % m;
+    }
+
+    // Start the daily challenge
+    startChallenge() {
+        this.currentFlagIndex = 0;
+        this.lives = this.MAX_LIVES;
+        this.results = [];
         this.startTime = performance.now();
-        this.questionStartTime = performance.now();
-        this.finalTime = null; // Reset final time for new game
-        console.log('⏱️ Started precise timing at:', this.startTime);
+        this.endTime = null;
+        return this.getCurrentFlag();
     }
 
-    // Reset timing for new question (if multiple attempts)
-    resetQuestionTiming() {
-        this.questionStartTime = performance.now();
-        console.log('⏱️ Reset question timing at:', this.questionStartTime);
-    }
-
-    // Get precise time elapsed in milliseconds - ENHANCED
-    getElapsedTime() {
-        if (!this.startTime) {
-            console.warn('⚠️ No start time recorded, using 0');
-            return 0;
+    // Get current flag to display
+    getCurrentFlag() {
+        const flags = this.getTodaysFlags();
+        if (this.currentFlagIndex >= flags.length) {
+            return null;
         }
-        
-        const elapsed = Math.round(performance.now() - this.startTime);
-        console.log('⏱️ Total elapsed time:', elapsed, 'ms');
-        return elapsed;
+        return flags[this.currentFlagIndex];
     }
 
-    // Get time for current question attempt
-    getQuestionElapsedTime() {
-        if (!this.questionStartTime) {
-            console.warn('⚠️ No question start time recorded, using total elapsed');
-            return this.getElapsedTime();
+    // Get flag number (1-5) for display
+    getCurrentFlagNumber() {
+        return this.currentFlagIndex + 1;
+    }
+
+    // Submit answer for current flag
+    submitAnswer(selectedCountryCode) {
+        const currentFlag = this.getCurrentFlag();
+        if (!currentFlag) return null;
+
+        const isCorrect = selectedCountryCode === currentFlag.code;
+
+        if (isCorrect) {
+            this.results.push('correct');
+        } else {
+            this.results.push('wrong');
+            this.lives--;
         }
-        
-        const elapsed = Math.round(performance.now() - this.questionStartTime);
-        console.log('⏱️ Question elapsed time:', elapsed, 'ms');
-        return elapsed;
+
+        this.currentFlagIndex++;
+
+        // Check if game is over
+        const isGameOver = this.lives <= 0 || this.currentFlagIndex >= this.FLAGS_PER_DAY;
+
+        if (isGameOver) {
+            this.endTime = performance.now();
+            // Mark remaining flags as skipped
+            while (this.results.length < this.FLAGS_PER_DAY) {
+                this.results.push('skipped');
+            }
+        }
+
+        return {
+            isCorrect,
+            correctAnswer: currentFlag,
+            isGameOver,
+            livesRemaining: this.lives,
+            nextFlag: isGameOver ? null : this.getCurrentFlag()
+        };
     }
 
-    async submitResult(correct, attempts, timeSpent = 0) {
+    // Get elapsed time in milliseconds
+    getElapsedTimeMs() {
+        if (!this.startTime) return 0;
+        const endPoint = this.endTime || performance.now();
+        return Math.round(endPoint - this.startTime);
+    }
+
+    // Get formatted time string (e.g., "8.42s")
+    getFormattedTime() {
+        const ms = this.getElapsedTimeMs();
+        return (ms / 1000).toFixed(2) + 's';
+    }
+
+    // Get score (correct answers out of 5)
+    getScore() {
+        return this.results.filter(r => r === 'correct').length;
+    }
+
+    // Save the completed game
+    saveResult() {
         if (this.hasPlayedToday()) return false;
 
-        // Use locked final time (recorded when answer was given)
-        const preciseTime = this.getFinalTime();
-        const finalTimeMs = preciseTime > 0 ? preciseTime : (timeSpent * 1000);
-        const finalTimeSeconds = Math.round(finalTimeMs / 1000);
-
-        console.log('⏱️ Submitting result with timing:', {
-            lockedTimeMs: preciseTime,
-            fallbackTimeMs: timeSpent * 1000,
-            finalTimeMs: finalTimeMs,
-            finalTimeSeconds: finalTimeSeconds,
-            attempts: attempts
-        });
+        const score = this.getScore();
+        const timeMs = this.getElapsedTimeMs();
+        const isPerfect = score === this.FLAGS_PER_DAY;
 
         const result = {
-            correct,
-            attempts,
-            timeSpent: finalTimeSeconds,
-            timeMs: finalTimeMs,
-            date: this.today,
-            country: this.getTodaysCountry().name
+            score,
+            total: this.FLAGS_PER_DAY,
+            results: [...this.results],
+            timeMs,
+            flags: this.getTodaysFlags().map(f => ({ code: f.code, name: f.name })),
+            date: this.today
         };
 
         this.dailyStats.results[this.today] = result;
         this.dailyStats.totalPlayed++;
-        
-        if (correct) {
-            this.dailyStats.totalCorrect++;
-            // Update streak
-            const yesterday = new Date();
-            yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-            const yesterdayStr = this.getStandardizedDateFromDate(yesterday);
-            
-            if (this.dailyStats.lastPlayedDate === yesterdayStr) {
-                this.dailyStats.streak++;
-            } else if (this.dailyStats.lastPlayedDate !== this.today) {
-                this.dailyStats.streak = 1;
-            }
-        } else {
-            // Don't reset streak here - let the UI handle streak save flow
-            this.pendingStreakLoss = true;
-            this.preStreakLossValue = this.dailyStats.streak;
+
+        if (isPerfect) {
+            this.dailyStats.totalPerfect++;
+        }
+
+        // Update streak
+        const yesterday = new Date();
+        yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+        const yesterdayStr = this.getStandardizedDateFromDate(yesterday);
+
+        if (this.dailyStats.lastPlayedDate === yesterdayStr) {
+            this.dailyStats.streak++;
+        } else if (this.dailyStats.lastPlayedDate !== this.today) {
+            this.dailyStats.streak = 1;
         }
 
         this.dailyStats.lastPlayedDate = this.today;
         this.saveDailyStats();
-        return true;
-    }
 
-    // Check if streak loss is pending (user got wrong answer)
-    hasPendingStreakLoss() {
-        return this.pendingStreakLoss && this.preStreakLossValue > 0;
-    }
-
-    // User chose to save their streak
-    saveStreak() {
-        this.pendingStreakLoss = false;
-        // Streak stays at current value
-        this.saveDailyStats();
-    }
-
-    // User chose not to save (or couldn't)
-    confirmStreakLoss() {
-        this.dailyStats.streak = 0;
-        this.pendingStreakLoss = false;
-        this.preStreakLossValue = 0;
-        this.saveDailyStats();
-    }
-
-    // Get current streak (accounting for pending loss)
-    getCurrentStreak() {
-        return this.dailyStats.streak;
-    }
-
-    // Get the streak value before pending loss
-    getPreLossStreak() {
-        return this.preStreakLossValue || this.dailyStats.streak;
-    }
-
-    // Submit to global leaderboard with precise timing - ENHANCED
-    async submitToLeaderboard(playerName, timeMs, attempts) {
-        // Use locked final time (not current elapsed time)
-        const preciseTime = this.getFinalTime();
-        const finalTimeMs = preciseTime > 0 ? preciseTime : timeMs;
-
-        console.log('⏱️ Submitting to leaderboard with locked timing:', {
-            originalTimeMs: timeMs,
-            lockedTimeMs: preciseTime,
-            finalTimeMs: finalTimeMs,
-            attempts: attempts,
-            timingSource: preciseTime > 0 ? 'locked' : 'fallback'
-        });
-
-        return await this.globalLeaderboard.submitScore(playerName, finalTimeMs, attempts, this.today);
-    }
-
-    // Get today's leaderboard
-    async getLeaderboard() {
-        return await this.globalLeaderboard.getLeaderboard(this.today);
-    }
-
-    // Generate share text for leaderboard
-    async generateLeaderboardShareText() {
-        const leaderboardData = await this.getLeaderboard();
-        return this.globalLeaderboard.generateShareText(leaderboardData.entries, leaderboardData.isGlobal);
+        return result;
     }
 
     getStandardizedDateFromDate(date) {
@@ -262,29 +233,32 @@ class DailyChallenge {
         return `${year}-${month}-${day}`;
     }
 
-    getShareText(result) {
-        const attempts = result.attempts;
-        const squares = [];
-        
-        for (let i = 0; i < attempts; i++) {
-            if (i === attempts - 1 && result.correct) {
-                squares.push('🟩');
-            } else {
-                squares.push('🟥');
-            }
-        }
-        
-        // Add empty squares for remaining attempts (max 2 for new daily challenge)
-        while (squares.length < 2) {
-            squares.push('⬜');
-        }
+    // Generate share text (Wordle-style)
+    getShareText(result = null) {
+        const r = result || this.getTodayResult();
+        if (!r) return '';
 
-        const flag = this.getTodaysCountry().flag?.emoji || '🏳️';
-        const timeMs = result.timeMs || (result.timeSpent ? result.timeSpent * 1000 : 0);
-        const timeStr = timeMs > 0 ? ` in ${typeof formatTimeMs === 'function' ? formatTimeMs(timeMs) : (timeMs / 1000).toFixed(2) + 's'}` : '';
-        const attemptsStr = attempts === 1 ? ' (1st try!)' : ` (${attempts} tries)`;
+        const dayNum = this.getDayNumber();
+        const squares = r.results.map(res => {
+            if (res === 'correct') return '🟩';
+            if (res === 'wrong') return '⬛';
+            return '❌'; // skipped (ran out of lives)
+        }).join('');
 
-        return `Flagtriv Daily ${flag}\n${squares.join('')}${timeStr}${attemptsStr}\nflagtriv.com`;
+        const timeStr = (r.timeMs / 1000).toFixed(2) + 's';
+        const flagEmojis = r.flags.map(f => this.getCountryEmoji(f.code)).join(' ');
+
+        return `Flagtriv Daily #${dayNum}\n${squares} ${r.score}/${r.total}\n⚡ ${timeStr}\n\n${flagEmojis}\n\nflagtriv.com`;
+    }
+
+    // Convert country code to flag emoji
+    getCountryEmoji(code) {
+        if (!code || code.length !== 2) return '🏳️';
+        const codePoints = code
+            .toUpperCase()
+            .split('')
+            .map(char => 127397 + char.charCodeAt(0));
+        return String.fromCodePoint(...codePoints);
     }
 
     getTimeUntilNext() {
@@ -292,12 +266,17 @@ class DailyChallenge {
         const tomorrow = new Date(now);
         tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
         tomorrow.setUTCHours(0, 0, 0, 0);
-        
+
         const diff = tomorrow - now;
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        
+
         return `${hours}h ${minutes}m`;
+    }
+
+    // Get current streak
+    getCurrentStreak() {
+        return this.dailyStats.streak;
     }
 }
 

@@ -679,30 +679,29 @@ function startDailyChallenge() {
         showDailyComplete();
         return;
     }
-    
+
     gameMode = 'daily';
     isMultiplayerMode = false;
-    
+
     // Hide mode selection and show game
     document.getElementById('mode-selection').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
     document.getElementById('top-bar').style.display = 'flex';
     document.getElementById('home-logo-btn').style.display = 'flex';
 
-    // Reset game state
+    // Start the new 5-flag daily challenge
+    currentCountry = dailyChallenge.startChallenge();
+    lives = dailyChallenge.MAX_LIVES;
     score = 0;
     streak = 0;
-    lives = 2; // Daily challenge has 2 attempts
     usedCountries = [];
-    
+
     // Update UI
-    document.getElementById('heading').textContent = 'Daily Flag Challenge';
-    document.getElementById('subHeading').textContent = 'One flag per day - can you guess it?';
+    const flagNum = dailyChallenge.getCurrentFlagNumber();
+    document.getElementById('heading').textContent = `Daily Challenge`;
+    document.getElementById('subHeading').textContent = `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
     document.getElementById('lives-display').style.display = 'flex';
     updateUI();
-    
-    // Get today's country (timing starts when flag loads in displayQuestion)
-    currentCountry = dailyChallenge.getTodaysCountry();
 
     displayQuestion();
 }
@@ -971,7 +970,7 @@ function selectAnswer(selectedAnswer) {
         button.disabled = true;
         button.classList.add('disabled');
     });
-    
+
     // Visual feedback
     optionButtons.forEach(button => {
         if (button.textContent === selectedAnswer) {
@@ -986,21 +985,35 @@ function selectAnswer(selectedAnswer) {
             button.classList.add('correct-answer');
         }
     });
-    
-    // Handle answer
-    if (isCorrect) {
-        handleCorrectAnswer();
+
+    // For daily mode, use the new submit system
+    if (gameMode === 'daily') {
+        // Find the country code from the selected answer name
+        const selectedCode = Object.keys(countries).find(code => countries[code].name === selectedAnswer);
+        const result = dailyChallenge.submitAnswer(selectedCode || '');
+        lives = result.livesRemaining;
+
+        if (result.isCorrect) {
+            handleCorrectAnswer();
+        } else {
+            handleWrongAnswer();
+        }
+
+        // Check if daily challenge is complete
+        if (result.isGameOver) {
+            document.getElementById('next').dataset.dailyComplete = 'true';
+        }
     } else {
-        handleWrongAnswer();
+        // Practice mode - use original logic
+        if (isCorrect) {
+            handleCorrectAnswer();
+        } else {
+            handleWrongAnswer();
+        }
     }
 }
 
 function handleCorrectAnswer() {
-    // Lock in the time for daily challenge when correct answer is given
-    if (gameMode === 'daily') {
-        dailyChallenge.lockFinalTime();
-    }
-
     score++;
     streak++;
 
@@ -1009,54 +1022,60 @@ function handleCorrectAnswer() {
         bestStreak = streak;
         localStorage.setItem('bestStreak', bestStreak.toString());
     }
-    
+
     // Add to used countries for challenge mode
     if (gameMode === 'challenge') {
         usedCountries.push(currentCountry.alpha2Code);
     }
-    
+
     // Unlock country and check achievements
     achievementSystem.unlockCountry(currentCountry.alpha2Code, currentCountry);
     const newAchievements = achievementSystem.checkAchievements();
-    
+
     // Show achievement animations
     newAchievements.forEach(achievement => {
         if (typeof AnimationEffects !== 'undefined') {
             AnimationEffects.showAchievementUnlock(achievement);
         }
     });
-    
+
     // Add XP and check for level up
     const xpGained = 10;
     totalXP += xpGained;
     localStorage.setItem('totalXP', totalXP.toString());
-    
+
     const currentLevel = Math.floor(totalXP / 100) + 1;
     const previousLevel = Math.floor((totalXP - xpGained) / 100) + 1;
-    
+
     if (currentLevel > previousLevel && typeof AnimationEffects !== 'undefined') {
         AnimationEffects.showLevelUpAnimation(currentLevel);
     }
-    
+
     // Show confetti for correct answers
     if (typeof AnimationEffects !== 'undefined') {
         AnimationEffects.showConfetti();
     }
-    
+
     // Show streak confetti for milestones
     if (streak > 0 && streak % 5 === 0 && typeof AnimationEffects !== 'undefined') {
         AnimationEffects.showStreakConfetti();
         soundEffects.playStreak();
     }
-    
+
     updateUI();
     showFacts();
-    
+
     // Show next button
     const nextButton = document.getElementById('next');
     nextButton.hidden = false;
-    nextButton.textContent = gameMode === 'daily' ? 'Complete Challenge' : 'Next Flag';
-    
+
+    if (gameMode === 'daily') {
+        const flagNum = dailyChallenge.getCurrentFlagNumber();
+        nextButton.textContent = flagNum > dailyChallenge.FLAGS_PER_DAY ? 'See Results' : `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
+    } else {
+        nextButton.textContent = 'Next Flag';
+    }
+
     // Update message
     const messages = [
         "🎉 Correct!",
@@ -1070,39 +1089,48 @@ function handleCorrectAnswer() {
 
 function handleWrongAnswer() {
     lives--;
-    
-    if (gameMode === 'daily') {
-        // Daily challenge: reset timing for next attempt
-        dailyChallenge.resetQuestionTiming();
-    }
-    
     updateUI();
-    
-    if (lives <= 0) {
-        // Game over - but show the correct answer first
-        if (gameMode === 'daily') {
-            dailyChallenge.lockFinalTime();
-            endDailyChallenge(false);
+
+    if (gameMode === 'daily') {
+        // Daily challenge: show correct answer and move to next flag
+        showFacts();
+        const nextButton = document.getElementById('next');
+        nextButton.hidden = false;
+
+        if (lives <= 0) {
+            // Out of lives - game over
+            nextButton.textContent = 'See Results';
+            nextButton.dataset.gameOver = 'true';
+            document.getElementById('message').textContent = `❌ Out of lives! The answer was ${currentCountry.name}.`;
         } else {
-            // Show the correct answer before game over
+            // Still have lives - continue to next flag
+            const flagNum = dailyChallenge.getCurrentFlagNumber();
+            if (flagNum > dailyChallenge.FLAGS_PER_DAY) {
+                nextButton.textContent = 'See Results';
+                nextButton.dataset.gameOver = 'true';
+            } else {
+                nextButton.textContent = `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
+                nextButton.dataset.gameOver = 'false';
+            }
+            document.getElementById('message').textContent = `❌ Incorrect. The answer was ${currentCountry.name}. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
+        }
+    } else {
+        // Practice mode
+        if (lives <= 0) {
             showFacts();
             const nextButton = document.getElementById('next');
             nextButton.hidden = false;
             nextButton.textContent = 'See Results';
-            nextButton.dataset.gameOver = 'true'; // Mark for game over handling
-
+            nextButton.dataset.gameOver = 'true';
             document.getElementById('message').textContent = `❌ Game Over! The answer was ${currentCountry.name}.`;
+        } else {
+            showFacts();
+            const nextButton = document.getElementById('next');
+            nextButton.hidden = false;
+            nextButton.textContent = 'Next Flag';
+            nextButton.dataset.gameOver = 'false';
+            document.getElementById('message').textContent = `❌ Incorrect. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
         }
-    } else {
-        // Show facts and next button for another attempt
-        showFacts();
-        const nextButton = document.getElementById('next');
-        nextButton.hidden = false;
-        nextButton.textContent = gameMode === 'daily' ? 'Try Again' : 'Next Flag';
-        nextButton.dataset.gameOver = 'false';
-
-        // Update message
-        document.getElementById('message').textContent = `❌ Incorrect. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
     }
 }
 
@@ -1121,27 +1149,36 @@ function showFacts() {
 function nextQuestion() {
     const nextButton = document.getElementById('next');
 
-    // Check if this is a game over situation (player saw the answer, now go to results)
+    // Check if daily challenge is complete
+    if (gameMode === 'daily' && (nextButton.dataset.dailyComplete === 'true' || nextButton.dataset.gameOver === 'true')) {
+        nextButton.dataset.dailyComplete = 'false';
+        nextButton.dataset.gameOver = 'false';
+        endDailyChallenge();
+        return;
+    }
+
+    // Check if this is a game over situation for practice mode
     if (nextButton.dataset.gameOver === 'true') {
-        nextButton.dataset.gameOver = 'false'; // Reset the flag
-        if (gameMode === 'daily') {
-            endDailyChallenge(false);
-        } else {
-            endChallengeMode();
-        }
+        nextButton.dataset.gameOver = 'false';
+        endChallengeMode();
         return;
     }
 
     if (gameMode === 'daily') {
-        if (lives <= 0) {
-            endDailyChallenge(false);
-        } else if (score > 0) {
-            endDailyChallenge(true);
-        } else {
-            // Reset for another attempt
-            resetQuestionUI();
-            displayQuestion();
+        // Get the next flag for daily challenge
+        currentCountry = dailyChallenge.getCurrentFlag();
+        if (!currentCountry) {
+            // No more flags, end the challenge
+            endDailyChallenge();
+            return;
         }
+
+        // Update subheading with flag progress
+        const flagNum = dailyChallenge.getCurrentFlagNumber();
+        document.getElementById('subHeading').textContent = `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
+
+        resetQuestionUI();
+        displayQuestion();
     } else {
         // Challenge mode - continue to next question
         resetQuestionUI();
@@ -1170,38 +1207,18 @@ function updateUI() {
     document.getElementById('score-display').textContent = `Score: ${score}`;
 }
 
-async function endDailyChallenge(success) {
-    const attempts = 3 - lives; // Calculate attempts used
-    const timeSpent = dailyChallenge.getElapsedTime();
+async function endDailyChallenge() {
+    // Save the result
+    const result = dailyChallenge.saveResult();
 
-    // Submit result
-    await dailyChallenge.submitResult(success, attempts, Math.round(timeSpent / 1000));
-
-    if (success) {
-        // Show name input modal for successful completion
-        document.getElementById('daily-name-modal').style.display = 'block';
-    } else {
-        // Check if user has a streak to save
-        if (dailyChallenge.hasPendingStreakLoss()) {
-            const currentStreak = dailyChallenge.getPreLossStreak();
-            window.premiumManager.showStreakSaveModal(
-                currentStreak,
-                () => {
-                    // User saved their streak
-                    dailyChallenge.saveStreak();
-                    showDailyGameOver();
-                },
-                () => {
-                    // User chose not to save
-                    dailyChallenge.confirmStreakLoss();
-                    showDailyGameOver();
-                }
-            );
-        } else {
-            // No streak to save, proceed directly
-            showDailyGameOver();
-        }
+    if (!result) {
+        // Already played today
+        showDailyComplete();
+        return;
     }
+
+    // Show the daily complete screen with results
+    showDailyComplete();
 }
 
 function endChallengeMode() {
@@ -1225,13 +1242,11 @@ function endChallengeMode() {
 }
 
 function showDailyComplete() {
-    const result = dailyChallenge.dailyStats.results[dailyChallenge.today];
-    const country = dailyChallenge.getTodaysCountry();
+    const result = dailyChallenge.getTodayResult();
 
-    // Safety check: if no valid result, clear stale data and let user play
-    if (!result || typeof result !== 'object' || !('correct' in result)) {
-        console.warn('No valid daily result found, clearing stale data');
-        localStorage.removeItem('dailyPlayedToday');
+    // Safety check: if no valid result, let user play
+    if (!result || typeof result !== 'object') {
+        console.warn('No valid daily result found');
         startDailyChallenge();
         return;
     }
@@ -1244,19 +1259,57 @@ function showDailyComplete() {
     // Show daily complete screen
     document.getElementById('daily-complete-screen').style.display = 'block';
 
-    // Update content
-    document.getElementById('daily-result-heading').textContent = result.correct ? 'Well Done!' : 'Better Luck Tomorrow!';
-    document.getElementById('daily-result-flag').src = country.flag.large;
-    document.getElementById('daily-result-country').textContent = country.name;
-    
-    // Show attempts
-    const attemptsText = result.attempts === 1 ? '1st try!' : `${result.attempts} tries`;
-    document.getElementById('daily-attempts-display').textContent = `Completed in ${attemptsText}`;
-    
+    // Generate result squares
+    const squares = result.results.map(r => {
+        if (r === 'correct') return '🟩';
+        if (r === 'wrong') return '⬛';
+        return '❌';
+    }).join('');
+
+    // Update heading based on score
+    const isPerfect = result.score === result.total;
+    let heading;
+    if (isPerfect) {
+        heading = '🏆 Perfect!';
+    } else if (result.score >= 4) {
+        heading = '🌟 Great job!';
+    } else if (result.score >= 3) {
+        heading = '👍 Well done!';
+    } else if (result.score >= 1) {
+        heading = '😅 Keep practicing!';
+    } else {
+        heading = '💪 Better luck tomorrow!';
+    }
+    document.getElementById('daily-result-heading').textContent = heading;
+
+    // Show score and grid
+    const dayNum = dailyChallenge.getDayNumber();
+    const timeStr = (result.timeMs / 1000).toFixed(2) + 's';
+
+    // Update the result display elements
+    const flagContainer = document.getElementById('daily-result-flag');
+    if (flagContainer) {
+        // Replace flag image with result grid
+        flagContainer.style.display = 'none';
+    }
+
+    document.getElementById('daily-result-country').innerHTML = `
+        <div style="font-size: 14px; color: #888; margin-bottom: 8px;">Daily #${dayNum}</div>
+        <div style="font-size: 48px; letter-spacing: 4px; margin-bottom: 12px;">${squares}</div>
+        <div style="font-size: 32px; font-weight: bold; color: #667eea;">${result.score}/${result.total}</div>
+        <div style="font-size: 18px; color: #666; margin-top: 8px;">⚡ ${timeStr}</div>
+    `;
+
+    // Show flag emojis
+    const flagEmojis = result.flags.map(f => dailyChallenge.getCountryEmoji(f.code)).join(' ');
+    document.getElementById('daily-attempts-display').innerHTML = `
+        <div style="font-size: 24px; margin-top: 16px;">${flagEmojis}</div>
+    `;
+
     // Show streak
-    const currentStreak = dailyChallenge.dailyStats.streak || 0;
-    document.getElementById('daily-streak-display').textContent = `🔥 Current streak: ${currentStreak} days`;
-    
+    const currentStreak = dailyChallenge.getCurrentStreak();
+    document.getElementById('daily-streak-display').textContent = `🔥 ${currentStreak} day streak`;
+
     // Show countdown to next challenge
     document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
 
@@ -1392,20 +1445,165 @@ function shareEndlessResultHandler() {
     }
 }
 
-function shareDailyResultHandler() {
-    const result = dailyChallenge.dailyStats.results[dailyChallenge.today];
+async function shareDailyResultHandler() {
+    const result = dailyChallenge.getTodayResult();
+    if (!result) {
+        showToast('No result to share');
+        return;
+    }
+
+    // Generate visual share card
+    try {
+        const canvas = await generateDailyShareCard(result);
+
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                // Fallback to text
+                shareTextFallback(result);
+                return;
+            }
+
+            const file = new File([blob], 'flagtriv-daily.png', { type: 'image/png' });
+            const shareText = dailyChallenge.getShareText(result);
+
+            if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: 'Flagtriv Daily Challenge',
+                        text: shareText,
+                        files: [file]
+                    });
+                    return;
+                } catch (e) {
+                    console.log('Share cancelled or failed:', e);
+                }
+            }
+
+            // Fallback: download the image
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'flagtriv-daily.png';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('📸 Image saved! Share it on social media');
+        }, 'image/png');
+    } catch (error) {
+        console.error('Error generating daily share card:', error);
+        shareTextFallback(result);
+    }
+}
+
+function shareTextFallback(result) {
     const shareText = dailyChallenge.getShareText(result);
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'Flagtriv Daily Challenge',
-            text: shareText
-        });
-    } else if (navigator.clipboard) {
+    if (navigator.clipboard) {
         navigator.clipboard.writeText(shareText).then(() => {
             showToast('📋 Result copied to clipboard!');
         });
     }
+}
+
+async function generateDailyShareCard(result) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1350;
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Subtle pattern
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    for (let i = 0; i < 20; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = Math.random() * 100 + 50;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // White card
+    const cardX = 60;
+    const cardY = 200;
+    const cardWidth = canvas.width - 120;
+    const cardHeight = canvas.height - 400;
+
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
+    ctx.fill();
+
+    // Logo
+    const logoSize = 120;
+    const logoX = canvas.width / 2;
+    const logoY = 110;
+
+    ctx.beginPath();
+    ctx.arc(logoX, logoY, logoSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFC00';
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#000';
+    ctx.strokeText('F', logoX, logoY);
+    ctx.fillStyle = 'white';
+    ctx.fillText('F', logoX, logoY);
+    ctx.textBaseline = 'alphabetic';
+
+    // Day number
+    const dayNum = dailyChallenge.getDayNumber();
+    ctx.font = '28px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.fillText(`DAILY #${dayNum}`, canvas.width / 2, cardY + 60);
+
+    // Result squares - BIG
+    const squares = result.results.map(r => {
+        if (r === 'correct') return '🟩';
+        if (r === 'wrong') return '⬛';
+        return '❌';
+    }).join(' ');
+
+    ctx.font = '80px -apple-system';
+    ctx.fillText(squares, canvas.width / 2, cardY + 180);
+
+    // Score
+    ctx.font = 'bold 120px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = result.score === result.total ? '#22c55e' : '#667eea';
+    ctx.fillText(`${result.score}/${result.total}`, canvas.width / 2, cardY + 340);
+
+    // Time
+    const timeStr = (result.timeMs / 1000).toFixed(2) + 's';
+    ctx.font = '48px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#666';
+    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 420);
+
+    // Flag emojis
+    const flagEmojis = result.flags.map(f => dailyChallenge.getCountryEmoji(f.code)).join('  ');
+    ctx.font = '56px -apple-system';
+    ctx.fillText(flagEmojis, canvas.width / 2, cardY + 550);
+
+    // Challenge text
+    ctx.font = 'italic 32px Georgia, serif';
+    ctx.fillStyle = '#888';
+    ctx.fillText('Can you beat my time?', canvas.width / 2, cardY + 650);
+
+    // Footer
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = '36px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText('📲 Download Flagtriv on the App Store', canvas.width / 2, canvas.height - 80);
+
+    return canvas;
 }
 
 function showToast(message) {
@@ -1447,10 +1645,11 @@ function updateStatsDisplay() {
     if (dailyChallenge) {
         document.getElementById('daily-current-streak').textContent = dailyChallenge.dailyStats.streak || '0';
         document.getElementById('daily-games-played').textContent = dailyChallenge.dailyStats.totalPlayed || '0';
-        
-        const successRate = dailyChallenge.dailyStats.totalPlayed > 0 ? 
-            Math.round((dailyChallenge.dailyStats.totalCorrect / dailyChallenge.dailyStats.totalPlayed) * 100) : 0;
-        document.getElementById('daily-success-rate').textContent = successRate + '%';
+
+        // Calculate success rate based on perfect games
+        const perfectRate = dailyChallenge.dailyStats.totalPlayed > 0 ?
+            Math.round((dailyChallenge.dailyStats.totalPerfect / dailyChallenge.dailyStats.totalPlayed) * 100) : 0;
+        document.getElementById('daily-success-rate').textContent = perfectRate + '% perfect';
     }
     
     // Achievements
@@ -1596,6 +1795,12 @@ function switchTab(tabName) {
     const modalContent = document.querySelector('#stats-modal .modal-content');
     if (modalContent) {
         modalContent.scrollTop = 0;
+    }
+
+    // Only show share button on passport tab
+    const shareContainer = document.getElementById('share-button-container');
+    if (shareContainer) {
+        shareContainer.style.display = tabName === 'passport' ? 'block' : 'none';
     }
 
     // Update displays for the active tab
