@@ -1785,11 +1785,11 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
     const allCodes = Object.keys(countryDetails);
 
-    // Available space for flags - start right after header
-    const flagAreaTop = cardY + 190;
-    const flagAreaBottom = cardY + cardHeight - 40;
+    // Available space for flags - minimal gap after header
+    const flagAreaTop = cardY + 175;
+    const flagAreaBottom = cardY + cardHeight - 25;
     const flagAreaHeight = flagAreaBottom - flagAreaTop;
-    const maxGridWidth = cardWidth - 80;
+    const maxGridWidth = cardWidth - 60;
 
     // Calculate grid that fills the space well
     // Work backwards from available space to determine flag size
@@ -1827,17 +1827,17 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     const flagHeightFromRows = Math.floor(availableHeight / (actualRows * (1 + gapRatio * 0.67)));
 
     // Use smaller of the two to fit both constraints
-    const finalFlagHeight = Math.min(flagHeightFromWidth, flagHeightFromRows, 140);
+    const finalFlagHeight = Math.min(flagHeightFromWidth, flagHeightFromRows, 160);
     const finalFlagSize = Math.round(finalFlagHeight / 0.67);
-    const finalFlagGap = Math.round(finalFlagSize * gapRatio);
+    const finalFlagGap = Math.max(8, Math.round(finalFlagSize * gapRatio));
 
     const gridWidth = flagsPerRow * finalFlagSize + (flagsPerRow - 1) * finalFlagGap;
     const gridHeight = actualRows * finalFlagHeight + (actualRows - 1) * finalFlagGap;
 
-    // Position grid - horizontally centered, vertically centered with slight upward bias
+    // Position grid - horizontally centered, vertically centered in available space
     const gridX = cardX + (cardWidth - gridWidth) / 2;
     const verticalSpace = flagAreaHeight - gridHeight;
-    const gridY = flagAreaTop + Math.max(20, verticalSpace * 0.4); // 40% from top, 60% below
+    const gridY = flagAreaTop + Math.max(10, verticalSpace / 2); // true center
 
     // Sort flags for display
     const sortedCodes = [...allCodes].sort((a, b) => {
