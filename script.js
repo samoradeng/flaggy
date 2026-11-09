@@ -443,6 +443,14 @@ function initializeEventListeners() {
         viewLeaderboardBtn.addEventListener('click', showDailyLeaderboard);
     }
 
+    // Join leaderboard button (for players who skipped name entry)
+    const joinLeaderboardBtn = document.getElementById('join-leaderboard-btn');
+    if (joinLeaderboardBtn) {
+        joinLeaderboardBtn.addEventListener('click', () => {
+            document.getElementById('daily-name-modal').style.display = 'block';
+        });
+    }
+
     if (dailyLeaderboardClose) {
         dailyLeaderboardClose.addEventListener('click', () => {
             document.getElementById('daily-leaderboard-modal').style.display = 'none';
@@ -1312,6 +1320,13 @@ function showDailyComplete() {
     const currentStreak = dailyChallenge.getCurrentStreak();
     document.getElementById('daily-streak-display').textContent = `🔥 ${currentStreak} day streak`;
 
+    // Show "Add My Score" button if not yet submitted to leaderboard
+    const submittedToday = localStorage.getItem('leaderboardSubmittedDate') === dailyChallenge.today;
+    const joinBtn = document.getElementById('join-leaderboard-btn');
+    if (joinBtn) {
+        joinBtn.style.display = submittedToday ? 'none' : 'block';
+    }
+
     // Show countdown to next challenge
     document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
 
@@ -1367,14 +1382,17 @@ async function submitDailyNameHandler() {
         return;
     }
     
-    // Submit to leaderboard - use saved time from result, not current elapsed time
-    const todayResult = dailyChallenge.dailyStats.results[dailyChallenge.today];
-    const attempts = todayResult?.attempts || (3 - lives);
-    const timeSpent = todayResult?.timeSpent || Math.round(dailyChallenge.getElapsedTime() / 1000);
+    // Submit to leaderboard - use saved result data
+    const todayResult = dailyChallenge.getTodayResult();
+    const wrongCount = todayResult?.results?.filter(r => r === 'wrong').length || 0;
+    const attempts = wrongCount + 1; // 1 attempt if no wrongs, 2 if 1 wrong, etc.
+    const timeSpent = todayResult?.timeMs ? Math.round(todayResult.timeMs / 1000) : 0;
 
     const result = await dailyChallenge.submitToLeaderboard(playerName, timeSpent, attempts);
-    
+
     if (result.success) {
+        // Mark as submitted so we hide "Add My Score" button
+        localStorage.setItem('leaderboardSubmittedDate', dailyChallenge.today);
         document.getElementById('daily-name-modal').style.display = 'none';
         showDailyComplete();
     } else {
