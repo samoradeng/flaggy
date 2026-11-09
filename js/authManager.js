@@ -144,16 +144,31 @@ class AuthManager {
 
     // ========== Sign In Methods ==========
 
+    getRedirectUrl() {
+        // For Capacitor iOS/Android apps, use the custom URL scheme
+        if (window.Capacitor?.isNativePlatform()) {
+            return 'com.flagtriv.app://auth-callback';
+        }
+        // For web, use the current origin
+        return window.location.origin;
+    }
+
     async signInWithApple() {
         if (!this.isConfigured || !this.supabase) {
             return this.simulateSignIn('apple');
         }
 
-        console.log('🍎 Signing in with Apple...');
+        // On iOS, use native Apple Sign In (stays in-app with Face ID/Touch ID)
+        if (window.Capacitor?.isNativePlatform?.() && window.Capacitor?.getPlatform?.() === 'ios') {
+            return this.nativeAppleSignIn();
+        }
+
+        // On web/Android, use OAuth redirect
+        const redirectTo = this.getRedirectUrl();
         const { data, error } = await this.supabase.auth.signInWithOAuth({
             provider: 'apple',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: redirectTo
             }
         });
 
@@ -165,16 +180,64 @@ class AuthManager {
         return { success: true };
     }
 
+    async nativeAppleSignIn() {
+        try {
+            const SignInWithApple = window.Capacitor?.Plugins?.SignInWithApple;
+            if (!SignInWithApple) {
+                throw new Error('SignInWithApple plugin not available');
+            }
+
+            // Generate nonce and hash it for Apple (raw nonce goes to Supabase)
+            const rawNonce = this.generateNonce();
+            const hashedNonce = await this.sha256(rawNonce);
+
+            const result = await SignInWithApple.authorize({
+                scopes: 'email name',
+                nonce: hashedNonce
+            });
+
+            // Exchange the Apple credential with Supabase
+            const { data, error } = await this.supabase.auth.signInWithIdToken({
+                provider: 'apple',
+                token: result.response.identityToken,
+                nonce: rawNonce
+            });
+
+            if (error) {
+                return { success: false, error: error.message };
+            }
+
+            this.hideSignInModal();
+            this.showToast('✅ Signed in with Apple!');
+            return { success: true };
+
+        } catch (error) {
+            // User cancelled or error occurred
+            if (error.message?.includes('canceled') || error.message?.includes('cancelled') || error.code === 1001) {
+                return { success: false, error: 'Sign in cancelled' };
+            }
+            return { success: false, error: error.message || 'Apple Sign In failed' };
+        }
+    }
+
     async signInWithGoogle() {
         if (!this.isConfigured || !this.supabase) {
             return this.simulateSignIn('google');
         }
 
         console.log('🔵 Signing in with Google...');
+        const redirectTo = this.getRedirectUrl();
+        console.log('📍 Redirect URL:', redirectTo);
+
+        // On native platforms, use Browser plugin to open Safari for OAuth
+        if (window.Capacitor?.isNativePlatform()) {
+            return this.openOAuthInBrowser('google', redirectTo);
+        }
+
         const { data, error } = await this.supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: redirectTo
             }
         });
 
@@ -184,6 +247,88 @@ class AuthManager {
         }
 
         return { success: true };
+    }
+
+    // ========== Email Sign In (OTP) ==========
+
+    async sendEmailCode(email) {
+        if (!this.isConfigured || !this.supabase) {
+            console.log('📧 Simulating email code send...');
+            this.simulatedEmail = email;
+            this.simulatedCode = '123456';
+            return { success: true, message: 'Code sent (demo mode: use 123456)' };
+        }
+
+        console.log('📧 Sending code to:', email);
+        const { data, error } = await this.supabase.auth.signInWithOtp({
+            email: email,
+            options: {
+                shouldCreateUser: true
+            }
+        });
+
+        if (error) {
+            console.error('Email OTP error:', error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true, message: 'Check your email for the code!' };
+    }
+
+    async verifyEmailCode(email, code) {
+        if (!this.isConfigured || !this.supabase) {
+            // Simulated verification
+            if (this.simulatedEmail === email && this.simulatedCode === code) {
+                return this.simulateSignIn('email');
+            }
+            return { success: false, error: 'Invalid code' };
+        }
+
+        console.log('🔑 Verifying code for:', email);
+        const { data, error } = await this.supabase.auth.verifyOtp({
+            email: email,
+            token: code,
+            type: 'email'
+        });
+
+        if (error) {
+            console.error('Verification error:', error);
+            return { success: false, error: error.message };
+        }
+
+        this.hideSignInModal();
+        this.showToast('✅ Signed in successfully!');
+        return { success: true };
+    }
+
+    async openOAuthInBrowser(provider, redirectTo) {
+        try {
+            // Get the OAuth URL without auto-redirect
+            const { data, error } = await this.supabase.auth.signInWithOAuth({
+                provider: provider,
+                options: {
+                    redirectTo: redirectTo,
+                    skipBrowserRedirect: true
+                }
+            });
+
+            if (error) {
+                console.error(`${provider} OAuth error:`, error);
+                return { success: false, error: error.message };
+            }
+
+            if (data?.url) {
+                console.log('🌐 Opening OAuth URL:', data.url);
+                // Navigate to OAuth URL - on iOS Capacitor this opens Safari
+                window.location.href = data.url;
+                return { success: true };
+            }
+
+            return { success: false, error: 'No OAuth URL returned' };
+        } catch (err) {
+            console.error('OAuth error:', err);
+            return { success: false, error: err.message };
+        }
     }
 
     async signOut() {
@@ -241,7 +386,6 @@ class AuthManager {
 
             if (data) {
                 this.mergeData(data);
-                this.showToast('☁️ Progress synced!');
                 return data;
             } else {
                 // First time sync - upload local data
@@ -390,6 +534,24 @@ class AuthManager {
         }
     }
 
+    generateNonce(length = 32) {
+        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        const values = new Uint8Array(length);
+        crypto.getRandomValues(values);
+        for (let i = 0; i < length; i++) {
+            result += charset[values[i] % charset.length];
+        }
+        return result;
+    }
+
+    async sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
     showToast(message) {
         const existingToast = document.querySelector('.auth-toast');
         if (existingToast) existingToast.remove();
@@ -409,6 +571,55 @@ class AuthManager {
 
 // Global instance
 window.authManager = new AuthManager();
+
+// Handle deep links for OAuth callback (Capacitor apps)
+if (window.Capacitor?.isNativePlatform()) {
+    // Use the global Capacitor.Plugins.App directly
+    const setupDeepLinkHandler = () => {
+        if (window.Capacitor?.Plugins?.App) {
+            window.Capacitor.Plugins.App.addListener('appUrlOpen', async (event) => {
+                console.log('🔗 Deep link received:', event.url);
+
+                // Check if this is an auth callback
+                if (event.url.includes('auth-callback') || event.url.includes('access_token') || event.url.includes('code=')) {
+                    // Extract the hash or query params
+                    const url = new URL(event.url);
+                    const hashParams = new URLSearchParams(url.hash.substring(1));
+
+                    // Get access token from hash (implicit flow)
+                    const accessToken = hashParams.get('access_token');
+                    const refreshToken = hashParams.get('refresh_token');
+
+                    if (accessToken && window.authManager?.supabase) {
+                        console.log('🔑 Setting session from deep link...');
+                        const { data, error } = await window.authManager.supabase.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken
+                        });
+
+                        if (error) {
+                            console.error('Error setting session:', error);
+                            window.authManager.showToast('❌ Sign in failed');
+                        } else {
+                            console.log('✅ Session set successfully');
+                            window.authManager.hideSignInModal();
+                            window.authManager.showToast('✅ Signed in successfully!');
+                        }
+                    } else {
+                        // Supabase may handle the session automatically
+                        console.log('🔄 Checking session...');
+                        window.authManager?.supabase?.auth.getSession();
+                    }
+                }
+            });
+            console.log('✅ Deep link handler registered');
+        } else {
+            // Retry after a short delay if plugins not ready
+            setTimeout(setupDeepLinkHandler, 100);
+        }
+    };
+    setupDeepLinkHandler();
+}
 
 // Auto-sync on page unload
 window.addEventListener('beforeunload', () => {

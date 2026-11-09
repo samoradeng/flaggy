@@ -112,16 +112,21 @@ class MultiplayerGame {
         const flagCount = parseInt(document.getElementById('flag-count-select').value);
         const continent = document.getElementById('challenge-continent-select').value;
         const hostNickname = document.getElementById('host-nickname').value.trim();
-        
+
         // Use provided nickname or default to "Host"
         const finalNickname = hostNickname || 'Host';
-        
+
         console.log('🎮 Creating challenge with:', {
             flagCount,
             continent,
             hostNickname: finalNickname
         });
-        
+
+        // Track challenge creation for analytics
+        if (window.premiumManager) {
+            window.premiumManager.recordChallengeCreated();
+        }
+
         const result = await this.multiplayerSync.createGame(flagCount, continent, finalNickname);
         
         if (result.success) {
@@ -142,9 +147,12 @@ class MultiplayerGame {
         }
 
         const result = await this.multiplayerSync.joinGame(gameId, nickname);
-        
+
         if (result.success) {
             document.getElementById('join-challenge-modal').style.display = 'none';
+
+            // Track analytics
+            window.analytics?.trackChallengeJoined(gameId);
 
             // Check if game is already finished
             if (result.gameState.status === 'finished') {

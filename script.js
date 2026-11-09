@@ -423,12 +423,14 @@ function initializeEventListeners() {
     if (skipDailyName) {
         skipDailyName.addEventListener('click', () => {
             document.getElementById('daily-name-modal').style.display = 'none';
+            showDailyComplete();
         });
     }
 
     if (dailyNameClose) {
         dailyNameClose.addEventListener('click', () => {
             document.getElementById('daily-name-modal').style.display = 'none';
+            showDailyComplete();
         });
     }
 
@@ -439,6 +441,19 @@ function initializeEventListeners() {
 
     if (viewLeaderboardBtn) {
         viewLeaderboardBtn.addEventListener('click', showDailyLeaderboard);
+    }
+
+    // Join leaderboard button (for players who skipped name entry)
+    const joinLeaderboardBtn = document.getElementById('join-leaderboard-btn');
+    if (joinLeaderboardBtn) {
+        joinLeaderboardBtn.addEventListener('click', () => {
+            // Pre-fill saved name
+            const savedName = localStorage.getItem('playerName');
+            if (savedName) {
+                document.getElementById('daily-player-name').value = savedName;
+            }
+            document.getElementById('daily-name-modal').style.display = 'block';
+        });
     }
 
     if (dailyLeaderboardClose) {
@@ -585,10 +600,10 @@ function goBackToMenu() {
 }
 
 function updateMainMenuStats() {
-    // Update Day number (days since launch: Jan 1, 2025)
+    // Update Day number (days since v2 5-flag challenge launch)
     const dayNumberEl = document.getElementById('daily-day-number');
     if (dayNumberEl) {
-        const launchDate = new Date('2025-01-01');
+        const launchDate = new Date('2026-11-09'); // v2 launch date
         const today = new Date();
         const dayNumber = Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
         dayNumberEl.textContent = `Day #${dayNumber}`;
@@ -679,30 +694,29 @@ function startDailyChallenge() {
         showDailyComplete();
         return;
     }
-    
+
     gameMode = 'daily';
     isMultiplayerMode = false;
-    
+
     // Hide mode selection and show game
     document.getElementById('mode-selection').style.display = 'none';
     document.getElementById('game-container').style.display = 'flex';
     document.getElementById('top-bar').style.display = 'flex';
     document.getElementById('home-logo-btn').style.display = 'flex';
 
-    // Reset game state
+    // Start the new 5-flag daily challenge
+    currentCountry = dailyChallenge.startChallenge();
+    lives = dailyChallenge.MAX_LIVES;
     score = 0;
     streak = 0;
-    lives = 2; // Daily challenge has 2 attempts
     usedCountries = [];
-    
+
     // Update UI
-    document.getElementById('heading').textContent = 'Daily Flag Challenge';
-    document.getElementById('subHeading').textContent = 'One flag per day - can you guess it?';
+    const flagNum = dailyChallenge.getCurrentFlagNumber();
+    document.getElementById('heading').textContent = `Daily Challenge`;
+    document.getElementById('subHeading').textContent = `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
     document.getElementById('lives-display').style.display = 'flex';
     updateUI();
-    
-    // Get today's country (timing starts when flag loads in displayQuestion)
-    currentCountry = dailyChallenge.getTodaysCountry();
 
     displayQuestion();
 }
@@ -971,7 +985,7 @@ function selectAnswer(selectedAnswer) {
         button.disabled = true;
         button.classList.add('disabled');
     });
-    
+
     // Visual feedback
     optionButtons.forEach(button => {
         if (button.textContent === selectedAnswer) {
@@ -986,21 +1000,35 @@ function selectAnswer(selectedAnswer) {
             button.classList.add('correct-answer');
         }
     });
-    
-    // Handle answer
-    if (isCorrect) {
-        handleCorrectAnswer();
+
+    // For daily mode, use the new submit system
+    if (gameMode === 'daily') {
+        // Find the country code from the selected answer name
+        const selectedCode = Object.keys(countries).find(code => countries[code].name === selectedAnswer);
+        const result = dailyChallenge.submitAnswer(selectedCode || '');
+        lives = result.livesRemaining;
+
+        if (result.isCorrect) {
+            handleCorrectAnswer();
+        } else {
+            handleWrongAnswer();
+        }
+
+        // Check if daily challenge is complete
+        if (result.isGameOver) {
+            document.getElementById('next').dataset.dailyComplete = 'true';
+        }
     } else {
-        handleWrongAnswer();
+        // Practice mode - use original logic
+        if (isCorrect) {
+            handleCorrectAnswer();
+        } else {
+            handleWrongAnswer();
+        }
     }
 }
 
 function handleCorrectAnswer() {
-    // Lock in the time for daily challenge when correct answer is given
-    if (gameMode === 'daily') {
-        dailyChallenge.lockFinalTime();
-    }
-
     score++;
     streak++;
 
@@ -1009,54 +1037,60 @@ function handleCorrectAnswer() {
         bestStreak = streak;
         localStorage.setItem('bestStreak', bestStreak.toString());
     }
-    
+
     // Add to used countries for challenge mode
     if (gameMode === 'challenge') {
         usedCountries.push(currentCountry.alpha2Code);
     }
-    
+
     // Unlock country and check achievements
     achievementSystem.unlockCountry(currentCountry.alpha2Code, currentCountry);
     const newAchievements = achievementSystem.checkAchievements();
-    
+
     // Show achievement animations
     newAchievements.forEach(achievement => {
         if (typeof AnimationEffects !== 'undefined') {
             AnimationEffects.showAchievementUnlock(achievement);
         }
     });
-    
+
     // Add XP and check for level up
     const xpGained = 10;
     totalXP += xpGained;
     localStorage.setItem('totalXP', totalXP.toString());
-    
+
     const currentLevel = Math.floor(totalXP / 100) + 1;
     const previousLevel = Math.floor((totalXP - xpGained) / 100) + 1;
-    
+
     if (currentLevel > previousLevel && typeof AnimationEffects !== 'undefined') {
         AnimationEffects.showLevelUpAnimation(currentLevel);
     }
-    
+
     // Show confetti for correct answers
     if (typeof AnimationEffects !== 'undefined') {
         AnimationEffects.showConfetti();
     }
-    
+
     // Show streak confetti for milestones
     if (streak > 0 && streak % 5 === 0 && typeof AnimationEffects !== 'undefined') {
         AnimationEffects.showStreakConfetti();
         soundEffects.playStreak();
     }
-    
+
     updateUI();
     showFacts();
-    
+
     // Show next button
     const nextButton = document.getElementById('next');
     nextButton.hidden = false;
-    nextButton.textContent = gameMode === 'daily' ? 'Complete Challenge' : 'Next Flag';
-    
+
+    if (gameMode === 'daily') {
+        const flagNum = dailyChallenge.getCurrentFlagNumber();
+        nextButton.textContent = flagNum > dailyChallenge.FLAGS_PER_DAY ? 'See Results' : `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
+    } else {
+        nextButton.textContent = 'Next Flag';
+    }
+
     // Update message
     const messages = [
         "🎉 Correct!",
@@ -1070,39 +1104,48 @@ function handleCorrectAnswer() {
 
 function handleWrongAnswer() {
     lives--;
-    
-    if (gameMode === 'daily') {
-        // Daily challenge: reset timing for next attempt
-        dailyChallenge.resetQuestionTiming();
-    }
-    
     updateUI();
-    
-    if (lives <= 0) {
-        // Game over - but show the correct answer first
-        if (gameMode === 'daily') {
-            dailyChallenge.lockFinalTime();
-            endDailyChallenge(false);
+
+    if (gameMode === 'daily') {
+        // Daily challenge: show correct answer and move to next flag
+        showFacts();
+        const nextButton = document.getElementById('next');
+        nextButton.hidden = false;
+
+        if (lives <= 0) {
+            // Out of lives - game over
+            nextButton.textContent = 'See Results';
+            nextButton.dataset.gameOver = 'true';
+            document.getElementById('message').textContent = `❌ Out of lives! The answer was ${currentCountry.name}.`;
         } else {
-            // Show the correct answer before game over
+            // Still have lives - continue to next flag
+            const flagNum = dailyChallenge.getCurrentFlagNumber();
+            if (flagNum > dailyChallenge.FLAGS_PER_DAY) {
+                nextButton.textContent = 'See Results';
+                nextButton.dataset.gameOver = 'true';
+            } else {
+                nextButton.textContent = `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
+                nextButton.dataset.gameOver = 'false';
+            }
+            document.getElementById('message').textContent = `❌ Incorrect. The answer was ${currentCountry.name}. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
+        }
+    } else {
+        // Practice mode
+        if (lives <= 0) {
             showFacts();
             const nextButton = document.getElementById('next');
             nextButton.hidden = false;
             nextButton.textContent = 'See Results';
-            nextButton.dataset.gameOver = 'true'; // Mark for game over handling
-
+            nextButton.dataset.gameOver = 'true';
             document.getElementById('message').textContent = `❌ Game Over! The answer was ${currentCountry.name}.`;
+        } else {
+            showFacts();
+            const nextButton = document.getElementById('next');
+            nextButton.hidden = false;
+            nextButton.textContent = 'Next Flag';
+            nextButton.dataset.gameOver = 'false';
+            document.getElementById('message').textContent = `❌ Incorrect. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
         }
-    } else {
-        // Show facts and next button for another attempt
-        showFacts();
-        const nextButton = document.getElementById('next');
-        nextButton.hidden = false;
-        nextButton.textContent = gameMode === 'daily' ? 'Try Again' : 'Next Flag';
-        nextButton.dataset.gameOver = 'false';
-
-        // Update message
-        document.getElementById('message').textContent = `❌ Incorrect. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
     }
 }
 
@@ -1121,27 +1164,36 @@ function showFacts() {
 function nextQuestion() {
     const nextButton = document.getElementById('next');
 
-    // Check if this is a game over situation (player saw the answer, now go to results)
+    // Check if daily challenge is complete
+    if (gameMode === 'daily' && (nextButton.dataset.dailyComplete === 'true' || nextButton.dataset.gameOver === 'true')) {
+        nextButton.dataset.dailyComplete = 'false';
+        nextButton.dataset.gameOver = 'false';
+        endDailyChallenge();
+        return;
+    }
+
+    // Check if this is a game over situation for practice mode
     if (nextButton.dataset.gameOver === 'true') {
-        nextButton.dataset.gameOver = 'false'; // Reset the flag
-        if (gameMode === 'daily') {
-            endDailyChallenge(false);
-        } else {
-            endChallengeMode();
-        }
+        nextButton.dataset.gameOver = 'false';
+        endChallengeMode();
         return;
     }
 
     if (gameMode === 'daily') {
-        if (lives <= 0) {
-            endDailyChallenge(false);
-        } else if (score > 0) {
-            endDailyChallenge(true);
-        } else {
-            // Reset for another attempt
-            resetQuestionUI();
-            displayQuestion();
+        // Get the next flag for daily challenge
+        currentCountry = dailyChallenge.getCurrentFlag();
+        if (!currentCountry) {
+            // No more flags, end the challenge
+            endDailyChallenge();
+            return;
         }
+
+        // Update subheading with flag progress
+        const flagNum = dailyChallenge.getCurrentFlagNumber();
+        document.getElementById('subHeading').textContent = `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
+
+        resetQuestionUI();
+        displayQuestion();
     } else {
         // Challenge mode - continue to next question
         resetQuestionUI();
@@ -1170,38 +1222,22 @@ function updateUI() {
     document.getElementById('score-display').textContent = `Score: ${score}`;
 }
 
-async function endDailyChallenge(success) {
-    const attempts = 3 - lives; // Calculate attempts used
-    const timeSpent = dailyChallenge.getElapsedTime();
+async function endDailyChallenge() {
+    // Save the result
+    const result = dailyChallenge.saveResult();
 
-    // Submit result
-    await dailyChallenge.submitResult(success, attempts, Math.round(timeSpent / 1000));
-
-    if (success) {
-        // Show name input modal for successful completion
-        document.getElementById('daily-name-modal').style.display = 'block';
-    } else {
-        // Check if user has a streak to save
-        if (dailyChallenge.hasPendingStreakLoss()) {
-            const currentStreak = dailyChallenge.getPreLossStreak();
-            window.premiumManager.showStreakSaveModal(
-                currentStreak,
-                () => {
-                    // User saved their streak
-                    dailyChallenge.saveStreak();
-                    showDailyGameOver();
-                },
-                () => {
-                    // User chose not to save
-                    dailyChallenge.confirmStreakLoss();
-                    showDailyGameOver();
-                }
-            );
-        } else {
-            // No streak to save, proceed directly
-            showDailyGameOver();
-        }
+    if (!result) {
+        // Already played today
+        showDailyComplete();
+        return;
     }
+
+    // Pre-fill saved name and show modal
+    const savedName = localStorage.getItem('playerName');
+    if (savedName) {
+        document.getElementById('daily-player-name').value = savedName;
+    }
+    document.getElementById('daily-name-modal').style.display = 'block';
 }
 
 function endChallengeMode() {
@@ -1225,13 +1261,11 @@ function endChallengeMode() {
 }
 
 function showDailyComplete() {
-    const result = dailyChallenge.dailyStats.results[dailyChallenge.today];
-    const country = dailyChallenge.getTodaysCountry();
+    const result = dailyChallenge.getTodayResult();
 
-    // Safety check: if no valid result, clear stale data and let user play
-    if (!result || typeof result !== 'object' || !('correct' in result)) {
-        console.warn('No valid daily result found, clearing stale data');
-        localStorage.removeItem('dailyPlayedToday');
+    // Safety check: if no valid result, let user play
+    if (!result || typeof result !== 'object') {
+        console.warn('No valid daily result found');
         startDailyChallenge();
         return;
     }
@@ -1244,19 +1278,65 @@ function showDailyComplete() {
     // Show daily complete screen
     document.getElementById('daily-complete-screen').style.display = 'block';
 
-    // Update content
-    document.getElementById('daily-result-heading').textContent = result.correct ? 'Well Done!' : 'Better Luck Tomorrow!';
-    document.getElementById('daily-result-flag').src = country.flag.large;
-    document.getElementById('daily-result-country').textContent = country.name;
-    
-    // Show attempts
-    const attemptsText = result.attempts === 1 ? '1st try!' : `${result.attempts} tries`;
-    document.getElementById('daily-attempts-display').textContent = `Completed in ${attemptsText}`;
-    
+    // Generate result squares as HTML divs (matches flag dimensions exactly)
+    const squaresHtml = result.results.map(r => {
+        const color = r === 'correct' ? '#22c55e' : '#374151';
+        return `<div style="width: 44px; height: 44px; background: ${color}; border-radius: 6px; margin: 0 4px; display: inline-block;"></div>`;
+    }).join('');
+
+    // Update heading based on score
+    const isPerfect = result.score === result.total;
+    let heading;
+    if (isPerfect) {
+        heading = '🏆 Perfect!';
+    } else if (result.score >= 4) {
+        heading = '🌟 Great job!';
+    } else if (result.score >= 3) {
+        heading = '👍 Well done!';
+    } else if (result.score >= 1) {
+        heading = '😅 Keep practicing!';
+    } else {
+        heading = '💪 Better luck tomorrow!';
+    }
+    document.getElementById('daily-result-heading').textContent = heading;
+
+    // Show score and grid
+    const dayNum = dailyChallenge.getDayNumber();
+    const timeStr = (result.timeMs / 1000).toFixed(2) + 's';
+
+    // Update the result display elements
+    const flagContainer = document.getElementById('daily-result-flag');
+    if (flagContainer) {
+        // Replace flag image with result grid
+        flagContainer.style.display = 'none';
+    }
+
+    document.getElementById('daily-result-country').innerHTML = `
+        <div style="font-size: 14px; color: #667eea; margin-bottom: 8px;">Daily #${dayNum}</div>
+        <div style="display: flex; justify-content: center; margin-bottom: 12px;">${squaresHtml}</div>
+        <div style="font-size: 18px; color: #666; margin-top: 8px;">⚡ ${timeStr}</div>
+    `;
+
+    // Show circular flag images
+    const flagsHtml = result.flags.map(f => {
+        const flagSrc = countries[f.code]?.flag?.large || `flags/${f.code.toLowerCase()}.svg`;
+        return `<img src="${flagSrc}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; margin: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" alt="${f.name}">`;
+    }).join('');
+    document.getElementById('daily-attempts-display').innerHTML = `
+        <div style="display: flex; justify-content: center; margin-top: 16px;">${flagsHtml}</div>
+    `;
+
     // Show streak
-    const currentStreak = dailyChallenge.dailyStats.streak || 0;
-    document.getElementById('daily-streak-display').textContent = `🔥 Current streak: ${currentStreak} days`;
-    
+    const currentStreak = dailyChallenge.getCurrentStreak();
+    document.getElementById('daily-streak-display').textContent = `🔥 ${currentStreak} day streak`;
+
+    // Show "Add My Score" button if not yet submitted to leaderboard
+    const submittedToday = localStorage.getItem('leaderboardSubmittedDate') === dailyChallenge.today;
+    const joinBtn = document.getElementById('join-leaderboard-btn');
+    if (joinBtn) {
+        joinBtn.style.display = submittedToday ? 'none' : 'block';
+    }
+
     // Show countdown to next challenge
     document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
 
@@ -1269,6 +1349,9 @@ function showDailyComplete() {
     countdownIntervalId = setInterval(() => {
         document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
     }, 60000);
+
+    // Track analytics
+    window.analytics?.trackDailyComplete(result.score, result.total, result.timeMs, dayNum);
 }
 
 function showDailyGameOver() {
@@ -1287,15 +1370,18 @@ function showEndlessGameOver() {
     // Hide other screens
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('top-bar').style.display = 'none';
-    
+
     // Show endless game over screen
     document.getElementById('endless-game-over-screen').style.display = 'block';
-    
+
     // Update content
     const highestScore = parseInt(localStorage.getItem('challengeHighestScore') || '0');
     document.getElementById('endless-score-display').textContent = `Final Score: ${score}`;
     document.getElementById('endless-highest-score-display').textContent = `Best Score: ${Math.max(score, highestScore)}`;
     document.getElementById('final-streak-display').textContent = `Best Streak: ${bestStreak}`;
+
+    // Track analytics
+    window.analytics?.trackPracticeGame(score, bestStreak);
 }
 
 async function submitDailyNameHandler() {
@@ -1307,19 +1393,23 @@ async function submitDailyNameHandler() {
         return;
     }
     
-    if (playerName.length > 12) {
-        alert('Name must be 12 characters or less');
+    if (playerName.length > 10) {
+        alert('Name must be 10 characters or less');
         return;
     }
     
-    // Submit to leaderboard - use saved time from result, not current elapsed time
-    const todayResult = dailyChallenge.dailyStats.results[dailyChallenge.today];
-    const attempts = todayResult?.attempts || (3 - lives);
-    const timeSpent = todayResult?.timeSpent || Math.round(dailyChallenge.getElapsedTime() / 1000);
+    // Submit to leaderboard - use saved result data
+    const todayResult = dailyChallenge.getTodayResult();
+    const wrongCount = todayResult?.results?.filter(r => r === 'wrong').length || 0;
+    const attempts = wrongCount + 1; // 1 attempt if no wrongs, 2 if 1 wrong, etc.
+    const timeSpent = todayResult?.timeMs ? Math.round(todayResult.timeMs / 1000) : 0;
 
     const result = await dailyChallenge.submitToLeaderboard(playerName, timeSpent, attempts);
-    
+
     if (result.success) {
+        // Save name for next time and mark as submitted
+        localStorage.setItem('playerName', playerName);
+        localStorage.setItem('leaderboardSubmittedDate', dailyChallenge.today);
         document.getElementById('daily-name-modal').style.display = 'none';
         showDailyComplete();
     } else {
@@ -1330,19 +1420,32 @@ async function submitDailyNameHandler() {
 async function showDailyLeaderboard() {
     const modal = document.getElementById('daily-leaderboard-modal');
     const list = document.getElementById('daily-leaderboard-list');
-    
+
     modal.style.display = 'block';
     list.innerHTML = '<div class="leaderboard-empty">Loading leaderboard...</div>';
+
+    // Track analytics
+    window.analytics?.trackLeaderboardView();
     
     try {
         const leaderboardData = await dailyChallenge.getLeaderboard();
         
-        if (leaderboardData.entries.length === 0) {
+        // Deduplicate by player name (keep best score per player)
+        const uniqueEntries = [];
+        const seenPlayers = new Set();
+        for (const entry of leaderboardData.entries) {
+            if (!seenPlayers.has(entry.name)) {
+                seenPlayers.add(entry.name);
+                uniqueEntries.push(entry);
+            }
+        }
+
+        if (uniqueEntries.length === 0) {
             list.innerHTML = '<div class="leaderboard-empty">No players yet - be the first! 🚀</div>';
         } else {
             list.innerHTML = '';
-            
-            leaderboardData.entries.slice(0, 50).forEach((entry, index) => {
+
+            uniqueEntries.slice(0, 50).forEach((entry, index) => {
                 const rank = index + 1;
                 const isCurrentPlayer = entry.name === document.getElementById('daily-player-name')?.value;
                 
@@ -1350,14 +1453,15 @@ async function showDailyLeaderboard() {
                 entryDiv.className = `leaderboard-item ${isCurrentPlayer ? 'your-entry' : ''}`;
                 
                 const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
-                const timeDisplay = `${entry.time}s`;
-                const attemptsDisplay = entry.attempts === 1 ? '(1st try!)' : `(${entry.attempts} tries)`;
+                // Show milliseconds for precision (timeMs if available, otherwise time * 1000)
+                const timeMs = entry.timeMs || (entry.time * 1000);
+                const timeDisplay = `${(timeMs / 1000).toFixed(2)}s`;
                 const flagEmoji = entry.country !== 'Unknown' ? countryCodeToFlag(entry.country) : '';
 
                 entryDiv.innerHTML = `
                     <div class="rank">${rankEmoji}</div>
                     <div class="player-name">${entry.name} ${flagEmoji}</div>
-                    <div class="player-time">${timeDisplay} ${attemptsDisplay}</div>
+                    <div class="player-time">${timeDisplay}</div>
                 `;
                 
                 list.appendChild(entryDiv);
@@ -1392,20 +1496,232 @@ function shareEndlessResultHandler() {
     }
 }
 
-function shareDailyResultHandler() {
-    const result = dailyChallenge.dailyStats.results[dailyChallenge.today];
+async function shareDailyResultHandler() {
+    const result = dailyChallenge.getTodayResult();
+    if (!result) {
+        showToast('No result to share');
+        return;
+    }
+
+    // Generate visual share card
+    try {
+        const canvas = await generateDailyShareCard(result);
+
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                // Fallback to text
+                shareTextFallback(result);
+                return;
+            }
+
+            const file = new File([blob], 'flagtriv-daily.png', { type: 'image/png' });
+            const shareText = dailyChallenge.getShareText(result);
+
+            if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: 'Flagtriv Daily Challenge',
+                        text: shareText,
+                        files: [file]
+                    });
+                    window.analytics?.trackShare('daily', 'native');
+                    return;
+                } catch (e) {
+                    console.log('Share cancelled or failed:', e);
+                }
+            }
+
+            // Fallback: download the image
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'flagtriv-daily.png';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('📸 Image saved! Share it on social media');
+            window.analytics?.trackShare('daily', 'download');
+        }, 'image/png');
+    } catch (error) {
+        console.error('Error generating daily share card:', error);
+        shareTextFallback(result);
+    }
+}
+
+function shareTextFallback(result) {
     const shareText = dailyChallenge.getShareText(result);
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'Flagtriv Daily Challenge',
-            text: shareText
-        });
-    } else if (navigator.clipboard) {
+    if (navigator.clipboard) {
         navigator.clipboard.writeText(shareText).then(() => {
             showToast('📋 Result copied to clipboard!');
         });
     }
+}
+
+async function generateDailyShareCard(result) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1080; // Square for Instagram
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Subtle pattern (seeded for consistency)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    const patternPositions = [
+        [120, 180, 70], [900, 120, 90], [180, 850, 80],
+        [920, 900, 65], [540, 950, 75], [80, 500, 60],
+        [1000, 540, 85]
+    ];
+    patternPositions.forEach(([x, y, size]) => {
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // White card
+    const cardX = 60;
+    const cardY = 170;
+    const cardWidth = canvas.width - 120;
+    const cardHeight = 560;
+
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
+    ctx.fill();
+
+    // Logo
+    const logoSize = 100;
+    const logoX = canvas.width / 2;
+    const logoY = 85;
+
+    ctx.beginPath();
+    ctx.arc(logoX, logoY, logoSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFC00';
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    ctx.font = 'bold 60px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#000';
+    ctx.strokeText('F', logoX, logoY);
+    ctx.fillStyle = 'white';
+    ctx.fillText('F', logoX, logoY);
+    ctx.textBaseline = 'alphabetic';
+
+    // Day number - purple to match passport card
+    const dayNum = dailyChallenge.getDayNumber();
+    ctx.font = '28px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#667eea';
+    ctx.fillText(`DAILY #${dayNum}`, canvas.width / 2, cardY + 55);
+
+    // Draw result squares - same size as flag circles for alignment
+    const squareSize = 90;  // Match flag size
+    const squareGap = 24;   // Match flag gap
+    const totalSquaresWidth = (squareSize * 5) + (squareGap * 4);
+    const squaresStartX = (canvas.width - totalSquaresWidth) / 2;
+    const squaresY = cardY + 115;
+
+    result.results.forEach((r, i) => {
+        const x = squaresStartX + (i * (squareSize + squareGap));
+
+        // Draw square with gradient effect
+        if (r === 'correct') {
+            const squareGrad = ctx.createLinearGradient(x, squaresY, x, squaresY + squareSize);
+            squareGrad.addColorStop(0, '#22c55e');
+            squareGrad.addColorStop(1, '#16a34a');
+            ctx.fillStyle = squareGrad;
+        } else if (r === 'wrong') {
+            ctx.fillStyle = '#1f2937';
+        } else {
+            ctx.fillStyle = '#dc2626';
+        }
+
+        ctx.beginPath();
+        ctx.roundRect(x, squaresY, squareSize, squareSize, 16);
+        ctx.fill();
+
+        // Add subtle highlight for correct squares
+        if (r === 'correct') {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.beginPath();
+            ctx.roundRect(x + 6, squaresY + 6, squareSize - 12, squareSize / 2 - 6, 10);
+            ctx.fill();
+        }
+    });
+
+    // Time - the competitive element
+    const timeStr = (result.timeMs / 1000).toFixed(2) + 's';
+    ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#667eea';
+    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 305);
+
+    // Draw actual flag images in circles - aligned with squares above
+    const flagSize = 90;
+    const flagGap = 24;
+    const totalFlagsWidth = (flagSize * 5) + (flagGap * 4);
+    const flagsStartX = (canvas.width - totalFlagsWidth) / 2;
+    const flagsY = cardY + 360;
+
+    for (let i = 0; i < result.flags.length; i++) {
+        const flag = result.flags[i];
+        const x = flagsStartX + (i * (flagSize + flagGap)) + flagSize / 2;
+        const y = flagsY + flagSize / 2;
+
+        try {
+            const flagSrc = countries[flag.code]?.flag?.large || `flags/${flag.code.toLowerCase()}.svg`;
+            const flagImg = await loadImage(flagSrc);
+
+            // Draw circular flag with shadow
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.15)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 3;
+
+            ctx.beginPath();
+            ctx.arc(x, y, flagSize / 2, 0, Math.PI * 2);
+            ctx.clip();
+
+            // Draw flag image scaled to cover circle
+            const imgSize = Math.max(flagImg.width, flagImg.height);
+            const scale = flagSize / Math.min(flagImg.width, flagImg.height) * 1.2;
+            const drawWidth = flagImg.width * scale;
+            const drawHeight = flagImg.height * scale;
+            ctx.drawImage(flagImg, x - drawWidth / 2, y - drawHeight / 2, drawWidth, drawHeight);
+
+            ctx.restore();
+
+            // Draw border
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, flagSize / 2, 0, Math.PI * 2);
+            ctx.stroke();
+        } catch (e) {
+            // Fallback: draw placeholder circle
+            ctx.fillStyle = '#e5e7eb';
+            ctx.beginPath();
+            ctx.arc(x, y, flagSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+
+    // Footer - detect platform
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const storeName = isAndroid ? 'Google Play' : 'the App Store';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = '34px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(`📲 Download Flagtriv on ${storeName}`, canvas.width / 2, canvas.height - 55);
+
+    return canvas;
 }
 
 function showToast(message) {
@@ -1447,10 +1763,11 @@ function updateStatsDisplay() {
     if (dailyChallenge) {
         document.getElementById('daily-current-streak').textContent = dailyChallenge.dailyStats.streak || '0';
         document.getElementById('daily-games-played').textContent = dailyChallenge.dailyStats.totalPlayed || '0';
-        
-        const successRate = dailyChallenge.dailyStats.totalPlayed > 0 ? 
-            Math.round((dailyChallenge.dailyStats.totalCorrect / dailyChallenge.dailyStats.totalPlayed) * 100) : 0;
-        document.getElementById('daily-success-rate').textContent = successRate + '%';
+
+        // Calculate success rate based on perfect games
+        const perfectRate = dailyChallenge.dailyStats.totalPlayed > 0 ?
+            Math.round((dailyChallenge.dailyStats.totalPerfect / dailyChallenge.dailyStats.totalPlayed) * 100) : 0;
+        document.getElementById('daily-success-rate').textContent = perfectRate + '% perfect';
     }
     
     // Achievements
@@ -1587,11 +1904,23 @@ function switchTab(tabName) {
     // Remove active class from all tabs and contents
     document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    
+
     // Add active class to selected tab and content
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     document.getElementById(`${tabName}-stats`).classList.add('active');
-    
+
+    // Reset scroll position to top when switching tabs
+    const modalContent = document.querySelector('#stats-modal .modal-content');
+    if (modalContent) {
+        modalContent.scrollTop = 0;
+    }
+
+    // Only show share button on passport tab
+    const shareContainer = document.getElementById('share-button-container');
+    if (shareContainer) {
+        shareContainer.style.display = tabName === 'passport' ? 'block' : 'none';
+    }
+
     // Update displays for the active tab
     if (tabName === 'achievements') {
         updateAchievementsDisplay();
@@ -1600,23 +1929,449 @@ function switchTab(tabName) {
     }
 }
 
-function shareStats() {
+async function shareStats() {
+    const activeTab = document.querySelector('.tab-button.active')?.dataset?.tab;
+    console.log('Sharing tab:', activeTab);
+
+    try {
+        // Generate the share card image
+        const canvas = await generateShareCard(activeTab);
+        console.log('Canvas generated for tab:', activeTab);
+
+        // Convert canvas to blob
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                console.error('Failed to create blob from canvas');
+                showToast('Failed to create image');
+                return;
+            }
+
+            const file = new File([blob], 'flagtriv-stats.png', { type: 'image/png' });
+
+            const appStoreLink = 'https://apps.apple.com/app/flagtriv';
+            const shareText = activeTab === 'passport'
+                ? `🌍 I've discovered ${achievementSystem.getCorrectlyAnsweredCountries().size} flags on Flagtriv! How many can you get?\n\n${appStoreLink}`
+                : `🏆 I've unlocked ${achievementSystem.getProgress().unlocked} achievements on Flagtriv!\n\n${appStoreLink}`;
+
+            // Try native share with image
+            if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: 'My Flagtriv Stats',
+                        text: shareText,
+                        files: [file]
+                    });
+                    return;
+                } catch (e) {
+                    console.log('Share cancelled or failed:', e);
+                }
+            }
+
+            // Fallback: download the image
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'flagtriv-stats.png';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('📸 Image saved! Share it on Instagram');
+        }, 'image/png');
+    } catch (error) {
+        console.error('Error generating share card:', error);
+        showToast('Failed to generate share image');
+    }
+}
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+async function generateShareCard(tabType) {
+    const canvas = document.createElement('canvas');
+    // Instagram story size (1080x1920) or square (1080x1080)
+    canvas.width = 1080;
+    canvas.height = 1350; // 4:5 ratio - good for Instagram feed
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#667eea');
+    gradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Add subtle pattern overlay
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    for (let i = 0; i < 20; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = Math.random() * 100 + 50;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // White card
+    const cardX = 60;
+    const cardY = 200;
+    const cardWidth = canvas.width - 120;
+    const cardHeight = canvas.height - 400;
+
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
+    ctx.fill();
+
+    // Draw Flagtriv logo (yellow circle with white F, black outline)
+    const logoSize = 120;
+    const logoX = canvas.width / 2;
+    const logoY = 110;
+
+    // Yellow circle with black border
+    ctx.beginPath();
+    ctx.arc(logoX, logoY, logoSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFC00';
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // White F with black outline (stroke first, then fill)
+    ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#000';
+    ctx.strokeText('F', logoX, logoY);
+    ctx.fillStyle = 'white';
+    ctx.fillText('F', logoX, logoY);
+    ctx.textBaseline = 'alphabetic';
+
+    if (tabType === 'passport') {
+        await drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight);
+    } else if (tabType === 'achievements') {
+        await drawAchievementsCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight);
+    } else {
+        await drawStatsCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight);
+    }
+
+    // Footer
+    // Footer - detect platform
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const storeName = isAndroid ? 'Google Play' : 'the App Store';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.font = '36px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`📲 Download Flagtriv on ${storeName}`, canvas.width / 2, canvas.height - 80);
+
+    return canvas;
+}
+
+async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight) {
+    const discoveredSet = achievementSystem.getCorrectlyAnsweredCountries();
+    const countriesCount = discoveredSet.size;
+    const isComplete = countriesCount >= 250;
+
+    ctx.textAlign = 'center';
+
+    // Rank title - the status/brag
+    let rank;
+    if (countriesCount >= 250) rank = 'WORLD CHAMPION';
+    else if (countriesCount >= 200) rank = 'FLAG MASTER';
+    else if (countriesCount >= 150) rank = 'GLOBE TROTTER';
+    else if (countriesCount >= 100) rank = 'EXPLORER';
+    else if (countriesCount >= 50) rank = 'ADVENTURER';
+    else if (countriesCount >= 25) rank = 'TRAVELER';
+    else if (countriesCount >= 10) rank = 'TOURIST';
+    else rank = 'ROOKIE';
+
+    ctx.font = '600 24px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#667eea';
+    ctx.letterSpacing = '3px';
+    ctx.fillText(rank, canvas.width / 2, cardY + 50);
+
+    // Big bold number
+    if (isComplete) {
+        const goldGrad = ctx.createLinearGradient(canvas.width/2 - 100, 0, canvas.width/2 + 100, 0);
+        goldGrad.addColorStop(0, '#FFD700');
+        goldGrad.addColorStop(0.5, '#FFF8DC');
+        goldGrad.addColorStop(1, '#FFD700');
+        ctx.fillStyle = goldGrad;
+    } else {
+        ctx.fillStyle = '#1a1a2e';
+    }
+    ctx.font = 'bold 120px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(countriesCount.toString(), canvas.width / 2, cardY + 155);
+
+    // "flags" label
+    ctx.font = '32px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#666';
+    ctx.fillText('flags', canvas.width / 2, cardY + 195);
+
+    // Challenge hook
+    ctx.font = 'italic 28px Georgia, serif';
+    ctx.fillStyle = '#888';
+    ctx.fillText(isComplete ? '👑 All flags discovered!' : 'Think you can beat me?', canvas.width / 2, cardY + 240);
+
+    // Flag mosaic - the visual proof
+    const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
+    const allCodes = Object.keys(countryDetails);
+
+    // Available space for flags - start right after header
+    const flagAreaTop = cardY + 265;
+    const flagAreaBottom = cardY + cardHeight - 25;
+    const flagAreaHeight = flagAreaBottom - flagAreaTop;
+    const maxGridWidth = cardWidth - 60;
+
+    // Calculate grid that fills the space well
+    // Work backwards from available space to determine flag size
+    let flagsPerRow, maxRows;
+
+    if (countriesCount === 1) {
+        flagsPerRow = 1; maxRows = 1;
+    } else if (countriesCount <= 4) {
+        flagsPerRow = 2; maxRows = 2;
+    } else if (countriesCount <= 9) {
+        flagsPerRow = 3; maxRows = 3;
+    } else if (countriesCount <= 20) {
+        flagsPerRow = 5; maxRows = 4;
+    } else if (countriesCount <= 36) {
+        flagsPerRow = 6; maxRows = 6;
+    } else if (countriesCount <= 63) {
+        flagsPerRow = 9; maxRows = 7;
+    } else if (countriesCount <= 120) {
+        flagsPerRow = 10; maxRows = 12;
+    } else {
+        flagsPerRow = 12; maxRows = 14;
+    }
+
+    const flagsToShow = Math.min(countriesCount, flagsPerRow * maxRows);
+    const actualRows = Math.ceil(flagsToShow / flagsPerRow);
+
+    // Calculate flag size to fill available space
+    const gapRatio = 0.12; // gap as fraction of flag size
+    const availableWidth = maxGridWidth;
+    const availableHeight = flagAreaHeight - (countriesCount > flagsToShow ? 50 : 0); // room for "+X more"
+
+    // Solve for flag size: rows * (h + gap) = availableHeight, cols * (w + gap) = availableWidth
+    const flagWidth = Math.floor(availableWidth / (flagsPerRow * (1 + gapRatio)));
+    const flagHeightFromWidth = Math.round(flagWidth * 0.67);
+    const flagHeightFromRows = Math.floor(availableHeight / (actualRows * (1 + gapRatio * 0.67)));
+
+    // Use smaller of the two to fit both constraints
+    const finalFlagHeight = Math.min(flagHeightFromWidth, flagHeightFromRows, 160);
+    const finalFlagSize = Math.round(finalFlagHeight / 0.67);
+    const finalFlagGap = Math.max(8, Math.round(finalFlagSize * gapRatio));
+
+    const gridWidth = flagsPerRow * finalFlagSize + (flagsPerRow - 1) * finalFlagGap;
+    const gridHeight = actualRows * finalFlagHeight + (actualRows - 1) * finalFlagGap;
+
+    // Position grid - horizontally centered, vertically centered in available space
+    const gridX = cardX + (cardWidth - gridWidth) / 2;
+    const verticalSpace = flagAreaHeight - gridHeight;
+    const gridY = flagAreaTop + Math.max(10, verticalSpace / 2); // true center
+
+    // Sort flags for display
+    const sortedCodes = [...allCodes].sort((a, b) => {
+        const hashA = a.charCodeAt(0) * 31 + (a.charCodeAt(1) || 0);
+        const hashB = b.charCodeAt(0) * 31 + (b.charCodeAt(1) || 0);
+        return hashA - hashB;
+    }).slice(0, flagsToShow);
+
+    for (let i = 0; i < sortedCodes.length; i++) {
+        const code = sortedCodes[i];
+        const row = Math.floor(i / flagsPerRow);
+        const col = i % flagsPerRow;
+
+        // Center incomplete rows
+        const flagsInThisRow = Math.min(flagsPerRow, sortedCodes.length - row * flagsPerRow);
+        const rowWidth = flagsInThisRow * finalFlagSize + (flagsInThisRow - 1) * finalFlagGap;
+        const rowX = cardX + (cardWidth - rowWidth) / 2;
+
+        const x = rowX + col * (finalFlagSize + finalFlagGap);
+        const y = gridY + row * (finalFlagHeight + finalFlagGap);
+
+        try {
+            const flagSrc = countries[code]?.flag?.large || `flags/${code.toLowerCase()}.svg`;
+            const flagImg = await loadImage(flagSrc);
+
+            ctx.shadowColor = 'rgba(0,0,0,0.15)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 3;
+
+            // Rounded corners
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(x, y, finalFlagSize, finalFlagHeight, 4);
+            ctx.clip();
+            ctx.drawImage(flagImg, x, y, finalFlagSize, finalFlagHeight);
+            ctx.restore();
+
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+        } catch (e) {
+            ctx.fillStyle = '#f0f0f0';
+            ctx.beginPath();
+            ctx.roundRect(x, y, finalFlagSize, finalFlagHeight, 4);
+            ctx.fill();
+        }
+    }
+
+    // Show "+X more" if not all flags shown
+    if (countriesCount > flagsToShow) {
+        ctx.fillStyle = '#888';
+        ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`+${countriesCount - flagsToShow} more`, canvas.width / 2, gridY + gridHeight + 45);
+    }
+}
+
+async function drawAchievementsCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight) {
+    const progress = achievementSystem.getProgress();
+
+    // Title
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('My Achievements', canvas.width / 2, cardY + 80);
+
+    // Big number
+    ctx.font = 'bold 180px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#667eea';
+    ctx.fillText(progress.unlocked.toString(), canvas.width / 2, cardY + 280);
+
+    ctx.font = '48px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#666';
+    ctx.fillText(`of ${progress.total} unlocked`, canvas.width / 2, cardY + 350);
+
+    // Progress bar
+    const progressRatio = progress.unlocked / progress.total;
+    const barWidth = cardWidth - 120;
+    const barHeight = 30;
+    const barX = cardX + 60;
+    const barY = cardY + 400;
+
+    ctx.fillStyle = '#e0e0e0';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth, barHeight, 15);
+    ctx.fill();
+
+    const progressGradient = ctx.createLinearGradient(barX, 0, barX + barWidth * progressRatio, 0);
+    progressGradient.addColorStop(0, '#667eea');
+    progressGradient.addColorStop(1, '#764ba2');
+    ctx.fillStyle = progressGradient;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth * progressRatio, barHeight, 15);
+    ctx.fill();
+
+    // List unlocked achievements
+    const unlockedAchievements = achievementSystem.achievements.filter(a => a.unlocked);
+    let yPos = cardY + 500;
+
+    ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'left';
+
+    for (const achievement of unlockedAchievements.slice(0, 6)) {
+        ctx.fillStyle = '#333';
+        ctx.fillText(`${achievement.icon} ${achievement.name}`, cardX + 80, yPos);
+
+        ctx.fillStyle = '#22c55e';
+        ctx.textAlign = 'right';
+        ctx.fillText('✓', cardX + cardWidth - 80, yPos);
+        ctx.textAlign = 'left';
+
+        yPos += 60;
+    }
+
+    if (unlockedAchievements.length > 6) {
+        ctx.fillStyle = '#999';
+        ctx.textAlign = 'center';
+        ctx.fillText(`+${unlockedAchievements.length - 6} more`, canvas.width / 2, yPos + 20);
+    }
+}
+
+async function drawStatsCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight) {
     const level = Math.floor(totalXP / 100) + 1;
     const countriesCount = achievementSystem.getCorrectlyAnsweredCountries().size;
     const achievementsCount = achievementSystem.getProgress().unlocked;
-    
-    const shareText = `🌍 My Flagtriv Stats:\n🏆 Level ${level}\n🗺️ ${countriesCount} flags discovered\n🎯 ${achievementsCount} achievements unlocked\n🔥 Best streak: ${bestStreak}\n\nPlay at flagtriv.com`;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'My Flagtriv Stats',
-            text: shareText
-        });
-    } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareText).then(() => {
-            showToast('📋 Stats copied to clipboard!');
+
+    // Title
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('My Stats', canvas.width / 2, cardY + 80);
+
+    // Stats grid
+    const stats = [
+        { icon: '🏆', label: 'Level', value: level },
+        { icon: '🔥', label: 'Best Streak', value: bestStreak },
+        { icon: '🗺️', label: 'Flags', value: countriesCount },
+        { icon: '🎯', label: 'Achievements', value: achievementsCount }
+    ];
+
+    const gridStartY = cardY + 180;
+    const cellWidth = cardWidth / 2;
+    const cellHeight = 200;
+
+    stats.forEach((stat, i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const x = cardX + col * cellWidth + cellWidth / 2;
+        const y = gridStartY + row * cellHeight;
+
+        // Icon
+        ctx.font = '64px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(stat.icon, x, y);
+
+        // Value
+        ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillStyle = '#667eea';
+        ctx.fillText(stat.value.toString(), x, y + 80);
+
+        // Label
+        ctx.font = '32px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillStyle = '#666';
+        ctx.fillText(stat.label, x, y + 120);
+    });
+}
+
+function getContinentProgress() {
+    const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
+
+    const continents = {
+        'Africa': { emoji: '🌍', total: 59, unlocked: 0 },
+        'Asia': { emoji: '🌏', total: 50, unlocked: 0 },
+        'Europe': { emoji: '🇪🇺', total: 53, unlocked: 0 },
+        'Americas': { emoji: '🌎', total: 56, unlocked: 0 },
+        'Oceania': { emoji: '🏝️', total: 27, unlocked: 0 }
+    };
+
+    // Count total countries per continent from countries array
+    if (typeof countries !== 'undefined' && Array.isArray(countries)) {
+        // Reset totals and count from actual data
+        Object.keys(continents).forEach(k => continents[k].total = 0);
+        countries.forEach(country => {
+            if (continents[country.region]) {
+                continents[country.region].total++;
+            }
         });
     }
+
+    // Count unlocked countries per continent
+    Object.values(countryDetails).forEach(country => {
+        if (continents[country.region]) {
+            continents[country.region].unlocked++;
+        }
+    });
+
+    return continents;
 }
 
 // ========== Premium Modal Functions ==========

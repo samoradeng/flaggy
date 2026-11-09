@@ -83,6 +83,7 @@ class GlobalLeaderboard {
 
     // Submit score to global leaderboard with retries
     // timeMs: time in milliseconds (precise)
+    // Only keeps best score per player per day
     async submitScore(playerName, timeMs, attempts, date) {
         // Check if Supabase is available
         if (!this.validateSupabaseConnection()) {
@@ -99,6 +100,28 @@ class GlobalLeaderboard {
 
             const timeMilliseconds = Math.round(timeMs);
             const score = this.calculateScore(timeMilliseconds, attempts);
+
+            // Check if player already has an entry for today
+            const { data: existing } = await this.supabase
+                .from('daily_leaderboard')
+                .select('id, score')
+                .eq('player_name', playerName)
+                .eq('date', date)
+                .single();
+
+            // If existing entry has better (lower) score, keep it
+            if (existing && existing.score <= score) {
+                console.log('📊 Existing score is better, keeping it');
+                return { success: true, global: true, message: 'Your previous score was better!' };
+            }
+
+            // Delete existing entry if any (we'll insert the new better one)
+            if (existing) {
+                await this.supabase
+                    .from('daily_leaderboard')
+                    .delete()
+                    .eq('id', existing.id);
+            }
 
             const entry = {
                 player_name: playerName,
@@ -117,7 +140,7 @@ class GlobalLeaderboard {
                 penalty: (attempts - 1) * 10000,
                 finalScore: score
             });
-            
+
             // Use retry mechanism for submission
             const result = await this.retryOperation(async () => {
                 const { data, error } = await this.supabase
@@ -135,13 +158,13 @@ class GlobalLeaderboard {
 
             console.log('✅ Score submitted to global leaderboard successfully');
             return { success: true, global: true };
-            
+
         } catch (error) {
             console.error('❌ Failed to submit to global leaderboard after retries:', error);
-            return { 
-                success: false, 
-                global: false, 
-                error: `Failed to submit to global leaderboard: ${error.message}. Please try again.` 
+            return {
+                success: false,
+                global: false,
+                error: `Failed to submit to global leaderboard: ${error.message}. Please try again.`
             };
         }
     }

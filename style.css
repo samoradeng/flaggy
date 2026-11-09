@@ -747,6 +747,7 @@ body {
     max-height: calc(100% - 80px);
     border-radius: 24px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
@@ -756,9 +757,11 @@ body {
     justify-content: space-between;
     align-items: center;
     position: sticky;
-    top: 0;
+    top: -20px;
     background: white;
+    padding-top: 20px;
     padding-bottom: 10px;
+    margin-top: -20px;
     margin-bottom: 10px;
     z-index: 10;
 }
@@ -795,6 +798,7 @@ body {
 .challenge-modal-content {
     max-width: 500px;
     text-align: center;
+    max-height: calc(100vh - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
 .challenge-description {
@@ -1380,8 +1384,13 @@ body {
     justify-content: flex-start;
     margin-bottom: 24px;
     border-bottom: 2px solid #f0f0f0;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+    position: sticky;
+    top: 42px;
+    background: white;
+    z-index: 9;
+    padding-top: 5px;
+    margin-top: -5px;
 }
 
 .tab-button {
@@ -1639,6 +1648,22 @@ body {
     box-sizing: border-box;
 }
 
+.app-footer {
+    margin-top: 24px;
+    padding-top: 16px;
+}
+
+.footer-link {
+    color: #9ca3af;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.footer-link:hover {
+    color: #667eea;
+    text-decoration: underline;
+}
+
 #mode-buttons {
     display: flex;
     flex-direction: column;
@@ -1805,16 +1830,20 @@ body {
     border: 2px solid transparent;
 }
 
-#view-leaderboard-btn {
-    background-color: #4CAF50;
-    color: white;
+#view-leaderboard-btn,
+#join-leaderboard-btn {
+    background-color: white;
+    color: #667eea;
+    border: 2px solid #667eea;
 }
 
-#view-leaderboard-btn:hover {
-    background-color: #45a049;
+#view-leaderboard-btn:hover,
+#join-leaderboard-btn:hover {
+    background-color: #f5f5ff;
 }
 
-#view-leaderboard-btn:active {
+#view-leaderboard-btn:active,
+#join-leaderboard-btn:active {
     transform: scale(0.98);
 }
 
@@ -1858,25 +1887,36 @@ body {
 
 /* Daily complete screen buttons - consistent styling */
 #share-daily-result {
-    background-color: white;
-    color: #333;
-    border: 2px solid #e0e0e0;
+    background-color: #667eea;
+    color: white;
+    border: 2px solid #667eea;
 }
 
 #share-daily-result:hover {
-    background-color: #f0f0f0;
-    border-color: #333;
+    background-color: #5a6fd6;
+    border-color: #5a6fd6;
     transform: translateY(-2px);
 }
 
 #play-endless-from-daily {
-    background-color: #0052FF;
-    color: white;
+    background-color: white;
+    color: #666;
+    border: 2px solid #ddd;
 }
 
 #play-endless-from-daily:hover {
-    background-color: #014cec;
+    background-color: #f5f5f5;
+    border-color: #999;
     transform: translateY(-2px);
+}
+
+#share-button-container {
+    position: sticky;
+    bottom: -20px;
+    background: white;
+    padding: 16px 20px 20px 20px;
+    margin: 0 -20px -20px -20px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 }
 
 #share-button {
@@ -1889,7 +1929,6 @@ body {
     font-family: 'Roboto', arial, sans-serif;
     cursor: pointer;
     padding: 12px 24px;
-    margin-top: 20px;
     width: 100%;
     transition: background-color 0.3s ease;
 }
@@ -1901,17 +1940,17 @@ body {
 /* Toast notification */
 #resultsToast {
     visibility: hidden;
-    min-width: 250px;
-    margin-left: -125px;
+    max-width: 90%;
     background-color: #333;
     color: #fff;
     text-align: center;
     border-radius: 8px;
-    padding: 16px;
+    padding: 16px 24px;
     position: fixed;
     z-index: 1001;
     left: 50%;
     bottom: 30px;
+    transform: translateX(-50%);
 }
 
 #resultsToast.show {
@@ -2108,9 +2147,9 @@ body {
         width: calc(100vw - 32px);
         max-width: calc(100vw - 32px);
         padding: 20px;
-        max-height: calc(100vh - 64px);
+        max-height: calc(100vh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         left: 50%;
-        top: 50%;
+        top: calc(50% + env(safe-area-inset-top) / 2);
         transform: translate(-50%, -50%);
         position: fixed;
         box-sizing: border-box;
@@ -2122,6 +2161,7 @@ body {
     .daily-name-content,
     .daily-leaderboard-content {
         max-width: none;
+        max-height: calc(100vh - 60px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     }
     
     #mode-buttons {
@@ -2144,15 +2184,15 @@ body {
     
     .tabs {
         flex-wrap: nowrap;
-        gap: 4px;
+        gap: 8px;
         padding-bottom: 8px;
     }
-    
+
     .tab-button {
-        flex: 1;
-        min-width: 80px;
-        margin-right: 4px;
-        padding: 10px 8px;
+        flex: 0 0 auto;
+        min-width: auto;
+        margin-right: 0;
+        padding: 10px 14px;
         font-size: 14px;
     }
     
@@ -3584,6 +3624,290 @@ body {
 .user-info-inline button:hover {
     color: #666;
     text-decoration: underline;
+}
+
+/* Home Header with Profile */
+#home-header {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 16px;
+    z-index: 100;
+}
+
+#header-spacer {
+    display: none;
+}
+
+#header-profile {
+    position: relative;
+}
+
+.sign-in-prompt-header button {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #222;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    transition: box-shadow 0.2s;
+}
+
+.sign-in-prompt-header button:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+/* Profile Button & Menu - Airbnb-inspired */
+.user-info-header {
+    position: relative;
+}
+
+.profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: white;
+    border: 1px solid #ddd;
+    padding: 4px;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 500;
+    color: #222;
+    cursor: pointer;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.profile-btn #user-name-display,
+.profile-btn .profile-arrow {
+    display: none;
+}
+
+.profile-btn:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border-color: #ccc;
+}
+
+.profile-avatar {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+}
+
+.profile-arrow {
+    color: #666;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.profile-btn.open .profile-arrow {
+    transform: rotate(180deg);
+}
+
+.profile-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0,0,0,0.04);
+    width: 260px;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+    transform-origin: top right;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.profile-menu.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.profile-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-avatar-large {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.profile-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #222;
+}
+
+.profile-email {
+    font-size: 13px;
+    color: #717171;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profile-actions {
+    padding: 8px 0;
+}
+
+.profile-actions button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    font-size: 15px;
+    color: #222;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.profile-actions button:hover {
+    background: #f7f7f7;
+}
+
+.profile-actions button svg {
+    color: #717171;
+    flex-shrink: 0;
+}
+
+.profile-actions .sign-out-btn {
+    color: #C13515;
+}
+
+.profile-actions .sign-out-btn svg {
+    color: #C13515;
+}
+
+/* Email Sign In */
+.sign-in-divider {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    color: #999;
+    font-size: 13px;
+}
+
+.sign-in-divider::before,
+.sign-in-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+}
+
+.sign-in-divider span {
+    padding: 0 12px;
+}
+
+.email-sign-in {
+    width: 100%;
+}
+
+.sign-in-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.sign-in-input:focus {
+    outline: none;
+    border-color: #7B68EE;
+}
+
+.sign-in-email-btn,
+.sign-in-verify-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #7B68EE 0%, #9B7BEE 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sign-in-email-btn:hover,
+.sign-in-verify-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(123, 104, 238, 0.3);
+}
+
+.email-sent-msg {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.email-sent-msg span {
+    font-weight: 600;
+    color: #333;
+}
+
+.sign-in-resend {
+    background: none;
+    border: none;
+    color: #7B68EE;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 12px;
+    padding: 0;
+}
+
+.sign-in-resend:hover {
+    text-decoration: underline;
+}
+
+#sign-in-code {
+    text-align: center;
+    letter-spacing: 8px;
+    font-size: 24px;
+    font-weight: 600;
 }
 
 /* Auth Toast */
