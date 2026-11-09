@@ -1691,25 +1691,28 @@ async function generateShareCard(tabType) {
     ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
     ctx.fill();
 
-    // Draw Flagtriv logo (yellow circle with white F)
-    const logoSize = 100;
+    // Draw Flagtriv logo (yellow circle with white F, black outline)
+    const logoSize = 120;
     const logoX = canvas.width / 2;
-    const logoY = 100;
+    const logoY = 110;
 
-    // Yellow circle
+    // Yellow circle with black border
     ctx.beginPath();
     ctx.arc(logoX, logoY, logoSize / 2, 0, Math.PI * 2);
     ctx.fillStyle = '#FFFC00';
     ctx.fill();
     ctx.strokeStyle = '#000';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 5;
     ctx.stroke();
 
-    // White F
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 60px -apple-system, BlinkMacSystemFont, sans-serif';
+    // White F with black outline (stroke first, then fill)
+    ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#000';
+    ctx.strokeText('F', logoX, logoY);
+    ctx.fillStyle = 'white';
     ctx.fillText('F', logoX, logoY);
     ctx.textBaseline = 'alphabetic';
 
@@ -1731,8 +1734,8 @@ async function generateShareCard(tabType) {
 }
 
 async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight) {
-    const countries = achievementSystem.getCorrectlyAnsweredCountries();
-    const countriesCount = countries.size;
+    const discoveredSet = achievementSystem.getCorrectlyAnsweredCountries();
+    const countriesCount = discoveredSet.size;
 
     // Title
     ctx.fillStyle = '#333';
@@ -1795,29 +1798,36 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
 
     // Draw discovered flags grid
     const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
-    const discoveredCountries = Object.values(countryDetails).slice(0, 12); // Show up to 12 flags
+    const discoveredEntries = Object.entries(countryDetails).slice(0, 12); // Show up to 12 flags
 
-    if (discoveredCountries.length > 0) {
+    if (discoveredEntries.length > 0) {
         const flagSize = 70;
         const flagsPerRow = 6;
         const flagGap = 15;
         const startX = cardX + (cardWidth - (flagsPerRow * flagSize + (flagsPerRow - 1) * flagGap)) / 2;
         const startY = yPos + 30;
 
-        for (let i = 0; i < discoveredCountries.length; i++) {
-            const country = discoveredCountries[i];
+        for (let i = 0; i < discoveredEntries.length; i++) {
+            const [code, details] = discoveredEntries[i];
             const row = Math.floor(i / flagsPerRow);
             const col = i % flagsPerRow;
             const x = startX + col * (flagSize + flagGap);
             const y = startY + row * (flagSize + flagGap);
 
             try {
-                const flagImg = await loadImage(`flags/${country.code?.toLowerCase() || 'unknown'}.svg`);
+                // Use global countries object to get flag URL, fallback to local SVG
+                const flagSrc = countries[code]?.flag?.large || `flags/${code.toLowerCase()}.svg`;
+                const flagImg = await loadImage(flagSrc);
                 ctx.drawImage(flagImg, x, y, flagSize, flagSize * 0.67);
             } catch (e) {
-                // Draw placeholder if flag fails to load
+                // Draw placeholder with country code if flag fails to load
                 ctx.fillStyle = '#f0f0f0';
                 ctx.fillRect(x, y, flagSize, flagSize * 0.67);
+                ctx.fillStyle = '#999';
+                ctx.font = '14px -apple-system';
+                ctx.textAlign = 'center';
+                ctx.fillText(code, x + flagSize/2, y + flagSize * 0.67 / 2 + 5);
+                ctx.textAlign = 'left';
             }
         }
     }
