@@ -17,6 +17,10 @@
  * - Hints
  */
 
+// Set to true to enable premium gates (practice limits, challenge limits, etc.)
+// For launch: false (everything free, but still tracking usage for analytics)
+const GATES_ENABLED = false;
+
 class PremiumManager {
     constructor() {
         this.loadState();
@@ -107,39 +111,41 @@ class PremiumManager {
     // ========== Practice Mode Limits ==========
 
     canPlayPractice() {
+        if (!GATES_ENABLED) return true; // Gates disabled for launch
         if (this.isPremium()) return true;
         return this.state.practiceCountToday < 5;
     }
 
     getPracticeRemaining() {
+        if (!GATES_ENABLED) return Infinity; // Gates disabled for launch
         if (this.isPremium()) return Infinity;
         return Math.max(0, 5 - this.state.practiceCountToday);
     }
 
     recordPracticeGame() {
-        if (!this.isPremium()) {
-            this.state.practiceCountToday++;
-            this.saveState();
-        }
+        // Always track for analytics, even when gates disabled
+        this.state.practiceCountToday++;
+        this.saveState();
     }
 
     // ========== Challenge Creation Limits ==========
 
     canCreateChallenge() {
+        if (!GATES_ENABLED) return true; // Gates disabled for launch
         if (this.isPremium()) return true;
         return this.state.challengesCreatedToday < 2;
     }
 
     getChallengesRemaining() {
+        if (!GATES_ENABLED) return Infinity; // Gates disabled for launch
         if (this.isPremium()) return Infinity;
         return Math.max(0, 2 - this.state.challengesCreatedToday);
     }
 
     recordChallengeCreated() {
-        if (!this.isPremium()) {
-            this.state.challengesCreatedToday++;
-            this.saveState();
-        }
+        // Always track for analytics, even when gates disabled
+        this.state.challengesCreatedToday++;
+        this.saveState();
     }
 
     // ========== Streak Save ==========
@@ -149,6 +155,7 @@ class PremiumManager {
     }
 
     getStreakSaveMethod() {
+        if (!GATES_ENABLED) return 'free'; // Gates disabled for launch
         if (this.isPremium() && this.state.streakSavesThisWeek < 1) {
             return 'free'; // Premium gets 1 free save per week
         }
@@ -168,6 +175,7 @@ class PremiumManager {
     // ========== Offline Mode ==========
 
     canUseOffline() {
+        if (!GATES_ENABLED) return true; // Gates disabled for launch
         return this.isPremium();
     }
 
