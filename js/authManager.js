@@ -194,23 +194,28 @@ class AuthManager {
 
             // Import the native plugin
             const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+            console.log('🍎 SignInWithApple plugin loaded:', !!SignInWithApple);
 
-            // Request authorization
-            const result = await SignInWithApple.authorize({
-                clientId: 'com.flagtriv.app',
-                redirectURI: 'https://piydwvszbczwaqerxhvd.supabase.co/auth/v1/callback',
+            // Generate a random nonce for security
+            const rawNonce = this.generateNonce();
+            console.log('🍎 Generated nonce');
+
+            // Request authorization - for native iOS, only scopes and nonce are needed
+            const options = {
                 scopes: 'email name',
-                state: '12345',
-                nonce: 'nonce'
-            });
+                nonce: rawNonce
+            };
+            console.log('🍎 Calling authorize with options:', JSON.stringify(options));
 
-            console.log('🍎 Apple auth result:', result.response);
+            const result = await SignInWithApple.authorize(options);
+
+            console.log('🍎 Apple auth result:', JSON.stringify(result));
 
             // Exchange the Apple credential with Supabase
             const { data, error } = await this.supabase.auth.signInWithIdToken({
                 provider: 'apple',
                 token: result.response.identityToken,
-                nonce: 'nonce'
+                nonce: rawNonce
             });
 
             if (error) {
@@ -224,10 +229,13 @@ class AuthManager {
             return { success: true };
 
         } catch (error) {
-            console.error('Native Apple Sign In error:', error);
+            console.error('Native Apple Sign In error:', JSON.stringify(error));
+            console.error('Error name:', error.name);
+            console.error('Error message:', error.message);
+            console.error('Error code:', error.code);
 
             // User cancelled or error occurred
-            if (error.message?.includes('canceled') || error.message?.includes('cancelled')) {
+            if (error.message?.includes('canceled') || error.message?.includes('cancelled') || error.code === 1001) {
                 return { success: false, error: 'Sign in cancelled' };
             }
 
@@ -548,6 +556,17 @@ class AuthManager {
             if (signInPrompt) signInPrompt.style.display = 'flex';
             if (userInfo) userInfo.style.display = 'none';
         }
+    }
+
+    generateNonce(length = 32) {
+        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        const values = new Uint8Array(length);
+        crypto.getRandomValues(values);
+        for (let i = 0; i < length; i++) {
+            result += charset[values[i] % charset.length];
+        }
+        return result;
     }
 
     showToast(message) {
