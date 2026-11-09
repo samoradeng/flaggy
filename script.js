@@ -1280,7 +1280,7 @@ function showDailyComplete() {
 
     // Generate result squares as HTML divs (matches flag dimensions exactly)
     const squaresHtml = result.results.map(r => {
-        const color = r === 'correct' ? '#22c55e' : '#374151';
+        const color = r === 'correct' ? '#78b159' : '#2c2f33';
         return `<div style="width: 44px; height: 44px; background: ${color}; border-radius: 6px; margin: 0 4px; display: inline-block;"></div>`;
     }).join('');
 
