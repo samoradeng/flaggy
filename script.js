@@ -1443,7 +1443,9 @@ async function showDailyLeaderboard() {
                 entryDiv.className = `leaderboard-item ${isCurrentPlayer ? 'your-entry' : ''}`;
                 
                 const rankEmoji = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
-                const timeDisplay = `${entry.time}s`;
+                // Show milliseconds for precision (timeMs if available, otherwise time * 1000)
+                const timeMs = entry.timeMs || (entry.time * 1000);
+                const timeDisplay = `${(timeMs / 1000).toFixed(2)}s`;
                 const attemptsDisplay = entry.attempts === 1 ? '(1st try!)' : `(${entry.attempts} tries)`;
                 const flagEmoji = entry.country !== 'Unknown' ? countryCodeToFlag(entry.country) : '';
 
