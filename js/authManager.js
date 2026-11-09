@@ -159,14 +159,14 @@ class AuthManager {
         }
 
         console.log('🍎 Signing in with Apple...');
-        const redirectTo = this.getRedirectUrl();
-        console.log('📍 Redirect URL:', redirectTo);
 
-        // On native platforms, use Browser plugin to open Safari for OAuth
-        if (window.Capacitor?.isNativePlatform()) {
-            return this.openOAuthInBrowser('apple', redirectTo);
+        // On iOS, use native Apple Sign In (stays in-app with Face ID/Touch ID)
+        if (window.Capacitor?.isNativePlatform() && window.Capacitor?.getPlatform() === 'ios') {
+            return this.nativeAppleSignIn();
         }
 
+        // On web/Android, use OAuth redirect
+        const redirectTo = this.getRedirectUrl();
         const { data, error } = await this.supabase.auth.signInWithOAuth({
             provider: 'apple',
             options: {
@@ -180,6 +180,53 @@ class AuthManager {
         }
 
         return { success: true };
+    }
+
+    async nativeAppleSignIn() {
+        try {
+            console.log('🍎 Using native Apple Sign In...');
+
+            // Import the native plugin
+            const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+
+            // Request authorization
+            const result = await SignInWithApple.authorize({
+                clientId: 'com.flagtriv.app',
+                redirectURI: 'https://piydwvszbczwaqerxhvd.supabase.co/auth/v1/callback',
+                scopes: 'email name',
+                state: '12345',
+                nonce: 'nonce'
+            });
+
+            console.log('🍎 Apple auth result:', result.response);
+
+            // Exchange the Apple credential with Supabase
+            const { data, error } = await this.supabase.auth.signInWithIdToken({
+                provider: 'apple',
+                token: result.response.identityToken,
+                nonce: 'nonce'
+            });
+
+            if (error) {
+                console.error('Supabase token exchange error:', error);
+                return { success: false, error: error.message };
+            }
+
+            console.log('✅ Native Apple Sign In successful');
+            this.hideSignInModal();
+            this.showToast('✅ Signed in with Apple!');
+            return { success: true };
+
+        } catch (error) {
+            console.error('Native Apple Sign In error:', error);
+
+            // User cancelled or error occurred
+            if (error.message?.includes('canceled') || error.message?.includes('cancelled')) {
+                return { success: false, error: 'Sign in cancelled' };
+            }
+
+            return { success: false, error: error.message || 'Apple Sign In failed' };
+        }
     }
 
     async signInWithGoogle() {
