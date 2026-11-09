@@ -423,12 +423,14 @@ function initializeEventListeners() {
     if (skipDailyName) {
         skipDailyName.addEventListener('click', () => {
             document.getElementById('daily-name-modal').style.display = 'none';
+            showDailyComplete();
         });
     }
 
     if (dailyNameClose) {
         dailyNameClose.addEventListener('click', () => {
             document.getElementById('daily-name-modal').style.display = 'none';
+            showDailyComplete();
         });
     }
 
@@ -1217,8 +1219,8 @@ async function endDailyChallenge() {
         return;
     }
 
-    // Show the daily complete screen with results
-    showDailyComplete();
+    // Show name modal for leaderboard
+    document.getElementById('daily-name-modal').style.display = 'block';
 }
 
 function endChallengeMode() {
@@ -1506,7 +1508,7 @@ function shareTextFallback(result) {
 async function generateDailyShareCard(result) {
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
-    canvas.height = 1350;
+    canvas.height = 1080; // Square for Instagram
     const ctx = canvas.getContext('2d');
 
     // Background gradient
@@ -1517,11 +1519,11 @@ async function generateDailyShareCard(result) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Subtle pattern (seeded for consistency)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
     const patternPositions = [
-        [150, 200, 80], [800, 150, 100], [200, 900, 90],
-        [850, 800, 70], [500, 1100, 85], [100, 500, 75],
-        [900, 500, 95], [400, 300, 60], [700, 1000, 80]
+        [120, 180, 70], [900, 120, 90], [180, 850, 80],
+        [920, 900, 65], [540, 950, 75], [80, 500, 60],
+        [1000, 540, 85]
     ];
     patternPositions.forEach(([x, y, size]) => {
         ctx.beginPath();
@@ -1529,11 +1531,11 @@ async function generateDailyShareCard(result) {
         ctx.fill();
     });
 
-    // White card
+    // White card - tighter
     const cardX = 60;
-    const cardY = 200;
+    const cardY = 160;
     const cardWidth = canvas.width - 120;
-    const cardHeight = canvas.height - 400;
+    const cardHeight = 680;
 
     ctx.fillStyle = 'white';
     ctx.beginPath();
@@ -1541,9 +1543,9 @@ async function generateDailyShareCard(result) {
     ctx.fill();
 
     // Logo
-    const logoSize = 120;
+    const logoSize = 100;
     const logoX = canvas.width / 2;
-    const logoY = 110;
+    const logoY = 85;
 
     ctx.beginPath();
     ctx.arc(logoX, logoY, logoSize / 2, 0, Math.PI * 2);
@@ -1553,10 +1555,10 @@ async function generateDailyShareCard(result) {
     ctx.lineWidth = 5;
     ctx.stroke();
 
-    ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = 'bold 60px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 5;
     ctx.strokeStyle = '#000';
     ctx.strokeText('F', logoX, logoY);
     ctx.fillStyle = 'white';
@@ -1566,20 +1568,20 @@ async function generateDailyShareCard(result) {
     // Day number and streak
     const dayNum = dailyChallenge.getDayNumber();
     const streak = dailyChallenge.getCurrentStreak();
-    ctx.font = '28px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = '26px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#888';
     let headerText = `DAILY #${dayNum}`;
     if (streak > 1) {
         headerText += `  •  🔥 ${streak} day streak`;
     }
-    ctx.fillText(headerText, canvas.width / 2, cardY + 60);
+    ctx.fillText(headerText, canvas.width / 2, cardY + 45);
 
     // Draw result squares as colored rounded rectangles
-    const squareSize = 70;
-    const squareGap = 20;
+    const squareSize = 65;
+    const squareGap = 18;
     const totalSquaresWidth = (squareSize * 5) + (squareGap * 4);
     const squaresStartX = (canvas.width - totalSquaresWidth) / 2;
-    const squaresY = cardY + 110;
+    const squaresY = cardY + 80;
 
     result.results.forEach((r, i) => {
         const x = squaresStartX + (i * (squareSize + squareGap));
@@ -1610,22 +1612,22 @@ async function generateDailyShareCard(result) {
     });
 
     // Score
-    ctx.font = 'bold 120px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = 'bold 100px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = result.score === result.total ? '#22c55e' : '#667eea';
-    ctx.fillText(`${result.score}/${result.total}`, canvas.width / 2, cardY + 310);
+    ctx.fillText(`${result.score}/${result.total}`, canvas.width / 2, cardY + 240);
 
     // Time with lightning bolt
     const timeStr = (result.timeMs / 1000).toFixed(2) + 's';
-    ctx.font = '48px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.font = '42px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#666';
-    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 390);
+    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 310);
 
     // Draw actual flag images in circles
-    const flagSize = 90;
-    const flagGap = 25;
+    const flagSize = 85;
+    const flagGap = 22;
     const totalFlagsWidth = (flagSize * 5) + (flagGap * 4);
     const flagsStartX = (canvas.width - totalFlagsWidth) / 2;
-    const flagsY = cardY + 450;
+    const flagsY = cardY + 365;
 
     for (let i = 0; i < result.flags.length; i++) {
         const flag = result.flags[i];
@@ -1671,14 +1673,14 @@ async function generateDailyShareCard(result) {
     }
 
     // Challenge text
-    ctx.font = 'italic 32px Georgia, serif';
+    ctx.font = 'italic 30px Georgia, serif';
     ctx.fillStyle = '#888';
-    ctx.fillText('Can you beat my time?', canvas.width / 2, cardY + 620);
+    ctx.fillText('Can you beat my time?', canvas.width / 2, cardY + 530);
 
     // Footer
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.font = '36px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText('📲 Download Flagtriv on the App Store', canvas.width / 2, canvas.height - 80);
+    ctx.font = '34px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText('📲 Download Flagtriv on the App Store', canvas.width / 2, canvas.height - 55);
 
     return canvas;
 }
