@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flagtriv - App Store Screenshots</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: #1a1a2e;
+            padding: 40px;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .instructions {
+            color: #888;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+        .screenshots {
+            display: flex;
+            gap: 40px;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+        .screenshot {
+            flex-shrink: 0;
+            width: 350px;
+            height: 700px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 40px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .screenshot.yellow {
+            background: linear-gradient(135deg, #FFFC00 0%, #FFD600 100%);
+        }
+        .screenshot.green {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+        .screenshot.orange {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+        .screenshot.blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        .caption {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .caption h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .caption p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .screenshot.yellow .caption {
+            color: #1a1a1a;
+        }
+        .screenshot.yellow .caption p {
+            opacity: 0.7;
+        }
+        .phone-frame {
+            background: white;
+            border-radius: 30px;
+            width: 100%;
+            flex: 1;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .phone-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .logo {
+            width: 200px;
+            height: 60px;
+            background: #FFFC00;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 24px;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            border: 3px solid #1a1a1a;
+        }
+        .tagline {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .day-badge {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .day-badge span {
+            color: #666;
+            font-size: 14px;
+        }
+        .streak-badge {
+            background: #fff3e0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-secondary {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+        .btn-tertiary {
+            background: #f3f4f6;
+            color: #666;
+        }
+        .flag-large {
+            width: 180px;
+            height: 120px;
+            background: linear-gradient(180deg, #fff 0%, #fff 33%, #0055a4 33%, #0055a4 66%, #ef4444 66%, #ef4444 100%);
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .flag-france {
+            background: linear-gradient(90deg, #0055a4 0%, #0055a4 33%, #fff 33%, #fff 66%, #ef4444 66%, #ef4444 100%);
+        }
+        .flag-japan {
+            background: white;
+            position: relative;
+        }
+        .flag-japan::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: #bc002d;
+            border-radius: 50%;
+        }
+        .options {
+            width: 100%;
+        }
+        .option {
+            background: #f8f9fa;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 15px;
+            color: #333;
+            text-align: center;
+        }
+        .option.correct {
+            background: #22c55e;
+            color: white;
+        }
+        .result-squares {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .square {
+            width: 44px;
+            height: 44px;
+            background: #22c55e;
+            border-radius: 6px;
+        }
+        .square.wrong {
+            background: #374151;
+        }
+        .result-time {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        .result-flags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .mini-flag {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(90deg, #0055a4 33%, #fff 33%, #fff 66%, #ef4444 66%);
+        }
+        .mini-flag:nth-child(2) {
+            background: linear-gradient(180deg, #ef4444 50%, #fff 50%);
+        }
+        .mini-flag:nth-child(3) {
+            background: #22c55e;
+        }
+        .mini-flag:nth-child(4) {
+            background: linear-gradient(180deg, #000 33%, #ef4444 33%, #ef4444 66%, #fcd116 66%);
+        }
+        .mini-flag:nth-child(5) {
+            background: linear-gradient(180deg, #fff 50%, #ef4444 50%);
+        }
+        .share-btn {
+            background: #667eea;
+            color: white;
+            padding: 14px 32px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+        .leaderboard-item.gold {
+            background: #fef3c7;
+        }
+        .rank {
+            font-size: 20px;
+            width: 36px;
+        }
+        .player-name {
+            flex: 1;
+            font-weight: 500;
+            text-align: left;
+        }
+        .player-time {
+            color: #667eea;
+            font-weight: 600;
+        }
+        .vs-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .player-card {
+            text-align: center;
+        }
+        .player-avatar {
+            width: 60px;
+            height: 60px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .vs-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flagtriv - App Store Screenshots</h1>
+    <p class="instructions">Each screenshot is 350x700px. Take a screenshot of each one, or export for your designer.</p>
+
+    <div class="screenshots">
+        <!-- Screenshot 1: Hero -->
+        <div class="screenshot yellow">
+            <div class="caption">
+                <h2>Guess the World's Flags</h2>
+                <p>Daily challenges for flag lovers</p>
+            </div>
+            <div class="phone-frame">
+                <div class="phone-content">
+                    <div class="logo">FLAGTRIV</div>
+                    <div class="tagline">Guess the world flags!</div>
+                    <div class="day-badge">
+                        <span>Day #1</span>
+                        <span class="streak-badge">🔥 5</span>
+                    </div>
+                    <button class="btn btn-primary">Daily Flag</button>
+                    <button class="btn btn-secondary">🎮 Practice Mode</button>
+                    <button class="btn btn-tertiary">⚔️ Challenge Friends</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screenshot 2: Gameplay -->
+        <div class="screenshot">
+            <div class="caption">
+                <h2>Test Your Knowledge</h2>
+                <p>250+ flags from around the world</p>
+            </div>
+            <div class="phone-frame">
+                <div class="phone-content">
+                    <div class="flag-large flag-japan"></div>
+                    <div class="options">
+                        <div class="option">South Korea</div>
+                        <div class="option correct">Japan ✓</div>
+                        <div class="option">China</div>
+                        <div class="option">Vietnam</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screenshot 3: Results -->
+        <div class="screenshot green">
+            <div class="caption">
+                <h2>Share Your Results</h2>
+                <p>Compete with friends daily</p>
+            </div>
+            <div class="phone-frame">
+                <div class="phone-content">
+                    <p style="color: #667eea; font-size: 14px; margin-bottom: 8px;">Daily #1</p>
+                    <p style="font-size: 28px; margin-bottom: 12px;">🏆 Perfect!</p>
+                    <div class="result-squares">
+                        <div class="square"></div>
+                        <div class="square"></div>
+                        <div class="square"></div>
+                        <div class="square"></div>
+                        <div class="square"></div>
+                    </div>
+                    <div class="result-time">⚡ 12.34s</div>
+                    <div class="result-flags">
+                        <div class="mini-flag"></div>
+                        <div class="mini-flag"></div>
+                        <div class="mini-flag"></div>
+                        <div class="mini-flag"></div>
+                        <div class="mini-flag"></div>
+                    </div>
+                    <div class="share-btn">📤 Share Result</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screenshot 4: Leaderboard -->
+        <div class="screenshot orange">
+            <div class="caption">
+                <h2>Global Leaderboard</h2>
+                <p>See how you rank worldwide</p>
+            </div>
+            <div class="phone-frame">
+                <div class="phone-content" style="justify-content: flex-start; padding-top: 30px;">
+                    <p style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">🏆 Today's Best</p>
+                    <div class="leaderboard-item gold">
+                        <span class="rank">🥇</span>
+                        <span class="player-name">FlagMaster</span>
+                        <span class="player-time">8.42s</span>
+                    </div>
+                    <div class="leaderboard-item">
+                        <span class="rank">🥈</span>
+                        <span class="player-name">GeoWhiz</span>
+                        <span class="player-time">9.15s</span>
+                    </div>
+                    <div class="leaderboard-item">
+                        <span class="rank">🥉</span>
+                        <span class="player-name">WorldTraveler</span>
+                        <span class="player-time">10.33s</span>
+                    </div>
+                    <div class="leaderboard-item">
+                        <span class="rank">4.</span>
+                        <span class="player-name">You</span>
+                        <span class="player-time">12.34s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screenshot 5: Challenge Friends -->
+        <div class="screenshot blue">
+            <div class="caption">
+                <h2>Challenge Friends</h2>
+                <p>Same flags, who's faster?</p>
+            </div>
+            <div class="phone-frame">
+                <div class="phone-content">
+                    <div class="vs-container">
+                        <div class="player-card">
+                            <div class="player-avatar">Y</div>
+                            <p style="font-weight: 600;">You</p>
+                            <p style="color: #22c55e; font-weight: 600;">12.34s</p>
+                        </div>
+                        <span class="vs-text">VS</span>
+                        <div class="player-card">
+                            <div class="player-avatar" style="background: #f97316;">M</div>
+                            <p style="font-weight: 600;">Mike</p>
+                            <p style="color: #ef4444; font-weight: 600;">15.21s</p>
+                        </div>
+                    </div>
+                    <p style="color: #22c55e; font-size: 24px; font-weight: 700;">You Win! 🎉</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
