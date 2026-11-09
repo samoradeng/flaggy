@@ -1531,11 +1531,11 @@ async function generateDailyShareCard(result) {
         ctx.fill();
     });
 
-    // White card - compact
+    // White card
     const cardX = 60;
     const cardY = 170;
     const cardWidth = canvas.width - 120;
-    const cardHeight = 520;
+    const cardHeight = 560;
 
     ctx.fillStyle = 'white';
     ctx.beginPath();
@@ -1571,12 +1571,12 @@ async function generateDailyShareCard(result) {
     ctx.fillStyle = '#667eea';
     ctx.fillText(`DAILY #${dayNum}`, canvas.width / 2, cardY + 55);
 
-    // Draw result squares - clean and prominent
-    const squareSize = 75;
-    const squareGap = 20;
+    // Draw result squares - same size as flag circles for alignment
+    const squareSize = 90;  // Match flag size
+    const squareGap = 24;   // Match flag gap
     const totalSquaresWidth = (squareSize * 5) + (squareGap * 4);
     const squaresStartX = (canvas.width - totalSquaresWidth) / 2;
-    const squaresY = cardY + 95;
+    const squaresY = cardY + 85;
 
     result.results.forEach((r, i) => {
         const x = squaresStartX + (i * (squareSize + squareGap));
@@ -1594,14 +1594,14 @@ async function generateDailyShareCard(result) {
         }
 
         ctx.beginPath();
-        ctx.roundRect(x, squaresY, squareSize, squareSize, 12);
+        ctx.roundRect(x, squaresY, squareSize, squareSize, 16);
         ctx.fill();
 
         // Add subtle highlight for correct squares
         if (r === 'correct') {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.beginPath();
-            ctx.roundRect(x + 5, squaresY + 5, squareSize - 10, squareSize / 2 - 5, 8);
+            ctx.roundRect(x + 6, squaresY + 6, squareSize - 12, squareSize / 2 - 6, 10);
             ctx.fill();
         }
     });
@@ -1610,14 +1610,14 @@ async function generateDailyShareCard(result) {
     const timeStr = (result.timeMs / 1000).toFixed(2) + 's';
     ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#667eea';
-    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 260);
+    ctx.fillText(`⚡ ${timeStr}`, canvas.width / 2, cardY + 275);
 
-    // Draw actual flag images in circles
+    // Draw actual flag images in circles - aligned with squares above
     const flagSize = 90;
     const flagGap = 24;
     const totalFlagsWidth = (flagSize * 5) + (flagGap * 4);
     const flagsStartX = (canvas.width - totalFlagsWidth) / 2;
-    const flagsY = cardY + 310;
+    const flagsY = cardY + 330;
 
     for (let i = 0; i < result.flags.length; i++) {
         const flag = result.flags[i];
