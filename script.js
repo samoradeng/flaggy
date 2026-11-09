@@ -1392,12 +1392,22 @@ async function showDailyLeaderboard() {
     try {
         const leaderboardData = await dailyChallenge.getLeaderboard();
         
-        if (leaderboardData.entries.length === 0) {
+        // Deduplicate by player name (keep best score per player)
+        const uniqueEntries = [];
+        const seenPlayers = new Set();
+        for (const entry of leaderboardData.entries) {
+            if (!seenPlayers.has(entry.name)) {
+                seenPlayers.add(entry.name);
+                uniqueEntries.push(entry);
+            }
+        }
+
+        if (uniqueEntries.length === 0) {
             list.innerHTML = '<div class="leaderboard-empty">No players yet - be the first! 🚀</div>';
         } else {
             list.innerHTML = '';
-            
-            leaderboardData.entries.slice(0, 50).forEach((entry, index) => {
+
+            uniqueEntries.slice(0, 50).forEach((entry, index) => {
                 const rank = index + 1;
                 const isCurrentPlayer = entry.name === document.getElementById('daily-player-name')?.value;
                 

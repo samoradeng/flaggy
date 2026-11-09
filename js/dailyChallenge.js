@@ -292,8 +292,10 @@ class DailyChallenge {
     async submitToLeaderboard(playerName, timeSeconds, attempts) {
         if (window.GlobalLeaderboard) {
             const leaderboard = new window.GlobalLeaderboard();
-            const timeMs = this.getElapsedTimeMs();
-            return await leaderboard.submitScore(playerName, this.today, timeMs, attempts);
+            const result = this.getTodayResult();
+            const timeMs = result?.timeMs || this.getElapsedTimeMs();
+            // Correct parameter order: playerName, timeMs, attempts, date
+            return await leaderboard.submitScore(playerName, timeMs, attempts, this.today);
         }
         return { success: false, error: 'Leaderboard not available' };
     }
