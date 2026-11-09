@@ -2108,8 +2108,7 @@ body {
         width: calc(100vw - 32px);
         max-width: calc(100vw - 32px);
         padding: 20px;
-        padding-top: calc(20px + env(safe-area-inset-top));
-        max-height: calc(100vh - 64px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        max-height: calc(100vh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         left: 50%;
         top: calc(50% + env(safe-area-inset-top) / 2);
         transform: translate(-50%, -50%);
@@ -2349,7 +2348,6 @@ body {
         width: calc(100vw - 24px);
         max-width: calc(100vw - 24px);
         padding: 16px;
-        padding-top: calc(16px + env(safe-area-inset-top));
     }
     
     /* Very small mobile timer */
