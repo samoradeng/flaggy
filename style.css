@@ -3586,33 +3586,50 @@ body {
     text-decoration: underline;
 }
 
-/* Profile Button & Menu */
+/* Profile Button & Menu - Airbnb-inspired */
+.user-info-inline {
+    position: relative;
+}
+
 .profile-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: #f0f0f5;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 20px;
+    gap: 10px;
+    background: white;
+    border: 1px solid #ddd;
+    padding: 5px 12px 5px 5px;
+    border-radius: 24px;
     font-size: 14px;
-    color: #333;
+    font-weight: 500;
+    color: #222;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 .profile-btn:hover {
-    background: #e5e5eb;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border-color: #ccc;
 }
 
 .profile-avatar {
-    font-size: 16px;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
 }
 
 .profile-arrow {
-    font-size: 10px;
-    color: #999;
-    transition: transform 0.2s;
+    color: #666;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
 }
 
 .profile-btn.open .profile-arrow {
@@ -3624,59 +3641,100 @@ body {
     top: calc(100% + 8px);
     right: 0;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    min-width: 200px;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0,0,0,0.04);
+    min-width: 240px;
     z-index: 1000;
-    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.profile-menu.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
 }
 
 .profile-header {
-    padding: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
     border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-avatar-large {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #7B68EE 0%, #9B59B6 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.profile-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+    min-width: 0;
+}
+
+.profile-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #222;
 }
 
 .profile-email {
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-    word-break: break-all;
+    font-size: 13px;
+    color: #717171;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.sync-status {
-    font-size: 12px;
-    color: #4CAF50;
+.profile-actions {
+    padding: 8px 0;
 }
 
-.profile-menu button {
+.profile-actions button {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     width: 100%;
-    padding: 14px 16px;
+    padding: 12px 20px;
     background: none;
     border: none;
-    font-size: 14px;
-    color: #333;
+    font-size: 15px;
+    color: #222;
     cursor: pointer;
     text-align: left;
-    transition: background 0.2s;
+    transition: background 0.15s;
 }
 
-.profile-menu button:hover {
-    background: #f5f5f5;
+.profile-actions button:hover {
+    background: #f7f7f7;
 }
 
-.profile-menu .sign-out-btn {
-    color: #e74c3c;
-    border-top: 1px solid #f0f0f0;
+.profile-actions button svg {
+    color: #717171;
+    flex-shrink: 0;
 }
 
-.user-info-inline {
-    position: relative;
+.profile-actions .sign-out-btn {
+    color: #C13515;
+}
+
+.profile-actions .sign-out-btn svg {
+    color: #C13515;
 }
 
 /* Email Sign In */
