@@ -7,7 +7,7 @@
     "dev": "npx serve -s . -l 3000",
     "start": "npx serve -s . -l 3000",
     "build": "npm run build:web",
-    "build:web": "rm -rf www && mkdir -p www && cp -r index.html style.css script.js countries.json js images flags sounds www/ 2>/dev/null || cp -r index.html style.css script.js countries.json js images flags www/",
+    "build:web": "rm -rf www && mkdir -p www && cp -r index.html style.css script.js countries.json js images flags sounds www/ 2>/dev/null || cp -r index.html style.css script.js countries.json js images flags www/ && sed -i '' '/<div id=\"app-footer\"/,/<\\/div>/d' www/index.html 2>/dev/null || sed -i '/<div id=\"app-footer\"/,/<\\/div>/d' www/index.html",
     "preview": "npx serve -s . -l 4173",
     "cap:sync": "npm run build && npx cap sync",
     "cap:ios": "npm run build && npx cap sync ios && npx cap open ios",
