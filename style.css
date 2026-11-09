@@ -1383,8 +1383,7 @@ body {
     justify-content: flex-start;
     margin-bottom: 24px;
     border-bottom: 2px solid #f0f0f0;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
     position: sticky;
     top: 42px;
     background: white;
@@ -1890,12 +1889,11 @@ body {
 
 #share-button-container {
     position: sticky;
-    bottom: 0;
+    bottom: -20px;
     background: white;
-    padding: 16px 0 4px 0;
+    padding: 16px 20px 20px 20px;
     margin: 0 -20px -20px -20px;
-    padding-left: 20px;
-    padding-right: 20px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 }
 
 #share-button {

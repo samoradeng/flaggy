@@ -1616,9 +1616,10 @@ async function shareStats() {
     canvas.toBlob(async (blob) => {
         const file = new File([blob], 'flagtriv-stats.png', { type: 'image/png' });
 
+        const appStoreLink = 'https://apps.apple.com/app/flagtriv';
         const shareText = activeTab === 'passport'
-            ? `🌍 I've discovered ${achievementSystem.getCorrectlyAnsweredCountries().size} flags on Flagtriv! How many can you get?\n\nPlay at flagtriv.com`
-            : `🏆 I've unlocked ${achievementSystem.getProgress().unlocked} achievements on Flagtriv!\n\nPlay at flagtriv.com`;
+            ? `🌍 I've discovered ${achievementSystem.getCorrectlyAnsweredCountries().size} flags on Flagtriv! How many can you get?\n\n${appStoreLink}`
+            : `🏆 I've unlocked ${achievementSystem.getProgress().unlocked} achievements on Flagtriv!\n\n${appStoreLink}`;
 
         // Try native share with image
         if (navigator.share && navigator.canShare?.({ files: [file] })) {
@@ -1682,10 +1683,10 @@ async function generateShareCard(tabType) {
     ctx.fill();
 
     // App logo/title
-    ctx.fillStyle = '#333';
+    ctx.fillStyle = 'white';
     ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('🏳️ Flagtriv', canvas.width / 2, 130);
+    ctx.fillText('🌍 Flagtriv', canvas.width / 2, 130);
 
     if (tabType === 'passport') {
         await drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight);
@@ -1699,7 +1700,7 @@ async function generateShareCard(tabType) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '36px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('flagtriv.com', canvas.width / 2, canvas.height - 80);
+    ctx.fillText('📲 Download Flagtriv on the App Store', canvas.width / 2, canvas.height - 80);
 
     return canvas;
 }
@@ -1755,17 +1756,9 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     ctx.fillStyle = '#333';
     ctx.textAlign = 'left';
 
-    const continentEmojis = {
-        'Africa': '🌍',
-        'Asia': '🌏',
-        'Europe': '🇪🇺',
-        'Americas': '🌎',
-        'Oceania': '🏝️'
-    };
-
     for (const [continent, data] of Object.entries(continentData)) {
         ctx.fillStyle = '#333';
-        ctx.fillText(`${continentEmojis[continent] || '🌐'} ${continent}`, cardX + 80, yPos);
+        ctx.fillText(`${data.emoji || '🌐'} ${continent}`, cardX + 80, yPos);
 
         ctx.fillStyle = '#667eea';
         ctx.textAlign = 'right';
@@ -1887,36 +1880,31 @@ async function drawStatsCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight) {
 }
 
 function getContinentProgress() {
-    const correctCountries = achievementSystem.getCorrectlyAnsweredCountries();
-    const continents = {};
+    const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
 
-    const continentMapping = {
-        'Africa': [],
-        'Asia': [],
-        'Europe': [],
-        'Americas': [],
-        'Oceania': []
+    const continents = {
+        'Africa': { emoji: '🌍', total: 0, unlocked: 0 },
+        'Asia': { emoji: '🌏', total: 0, unlocked: 0 },
+        'Europe': { emoji: '🇪🇺', total: 0, unlocked: 0 },
+        'Americas': { emoji: '🌎', total: 0, unlocked: 0 },
+        'Oceania': { emoji: '🏝️', total: 0, unlocked: 0 }
     };
 
-    // Build continent lists from countries data
+    // Count total countries per continent
     if (window.countries) {
-        window.countries.forEach(country => {
-            const continent = country.region || 'Other';
-            if (continentMapping[continent]) {
-                continentMapping[continent].push(country.name);
-            } else if (continent === 'North America' || continent === 'South America') {
-                continentMapping['Americas'].push(country.name);
+        Object.values(window.countries).forEach(country => {
+            if (continents[country.region]) {
+                continents[country.region].total++;
             }
         });
     }
 
-    for (const [continent, countryList] of Object.entries(continentMapping)) {
-        const unlocked = countryList.filter(c => correctCountries.has(c)).length;
-        continents[continent] = {
-            unlocked,
-            total: countryList.length || 1
-        };
-    }
+    // Count unlocked countries per continent
+    Object.values(countryDetails).forEach(country => {
+        if (continents[country.region]) {
+            continents[country.region].unlocked++;
+        }
+    });
 
     return continents;
 }
