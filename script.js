@@ -1663,10 +1663,12 @@ async function generateDailyShareCard(result) {
     }
 
 
-    // Footer
+    // Footer - detect platform
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const storeName = isAndroid ? 'Google Play' : 'the App Store';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '34px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText('📲 Download Flagtriv on the App Store', canvas.width / 2, canvas.height - 55);
+    ctx.fillText(`📲 Download Flagtriv on ${storeName}`, canvas.width / 2, canvas.height - 55);
 
     return canvas;
 }
@@ -2008,10 +2010,13 @@ async function generateShareCard(tabType) {
     }
 
     // Footer
+    // Footer - detect platform
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const storeName = isAndroid ? 'Google Play' : 'the App Store';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.font = '36px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('📲 Download Flagtriv on the App Store', canvas.width / 2, canvas.height - 80);
+    ctx.fillText(`📲 Download Flagtriv on ${storeName}`, canvas.width / 2, canvas.height - 80);
 
     return canvas;
 }

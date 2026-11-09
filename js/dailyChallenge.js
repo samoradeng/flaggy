@@ -278,6 +278,25 @@ class DailyChallenge {
     getCurrentStreak() {
         return this.dailyStats.streak;
     }
+
+    // Get leaderboard for today
+    async getLeaderboard() {
+        if (window.GlobalLeaderboard) {
+            const leaderboard = new window.GlobalLeaderboard();
+            return await leaderboard.getLeaderboard(this.today);
+        }
+        return { entries: [], isGlobal: false, error: 'Leaderboard not available' };
+    }
+
+    // Submit score to leaderboard
+    async submitToLeaderboard(playerName, timeSeconds, attempts) {
+        if (window.GlobalLeaderboard) {
+            const leaderboard = new window.GlobalLeaderboard();
+            const timeMs = this.getElapsedTimeMs();
+            return await leaderboard.submitScore(playerName, this.today, timeMs, attempts);
+        }
+        return { success: false, error: 'Leaderboard not available' };
+    }
 }
 
 window.DailyChallenge = DailyChallenge;
