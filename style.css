@@ -756,9 +756,11 @@ body {
     justify-content: space-between;
     align-items: center;
     position: sticky;
-    top: 0;
+    top: -20px;
     background: white;
+    padding-top: 20px;
     padding-bottom: 10px;
+    margin-top: -20px;
     margin-bottom: 10px;
     z-index: 10;
 }
@@ -795,6 +797,7 @@ body {
 .challenge-modal-content {
     max-width: 500px;
     text-align: center;
+    max-height: calc(100vh - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
 .challenge-description {
@@ -1382,6 +1385,12 @@ body {
     border-bottom: 2px solid #f0f0f0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    position: sticky;
+    top: 42px;
+    background: white;
+    z-index: 9;
+    padding-top: 5px;
+    margin-top: -5px;
 }
 
 .tab-button {
@@ -2122,6 +2131,7 @@ body {
     .daily-name-content,
     .daily-leaderboard-content {
         max-width: none;
+        max-height: calc(100vh - 60px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     }
     
     #mode-buttons {
