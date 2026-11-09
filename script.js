@@ -1315,7 +1315,6 @@ function showDailyComplete() {
     document.getElementById('daily-result-country').innerHTML = `
         <div style="font-size: 14px; color: #667eea; margin-bottom: 8px;">Daily #${dayNum}</div>
         <div style="font-size: 40px; letter-spacing: 8px; margin-bottom: 12px;">${squares}</div>
-        <div style="font-size: 32px; font-weight: bold; color: #667eea;">${result.score}/${result.total}</div>
         <div style="font-size: 18px; color: #666; margin-top: 8px;">⚡ ${timeStr}</div>
     `;
 
