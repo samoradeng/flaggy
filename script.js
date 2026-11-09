@@ -1691,19 +1691,27 @@ async function generateShareCard(tabType) {
     ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
     ctx.fill();
 
-    // App logo/title - load and draw logo
-    try {
-        const logo = await loadImage('images/og-image.png');
-        const logoHeight = 80;
-        const logoWidth = (logo.width / logo.height) * logoHeight;
-        ctx.drawImage(logo, (canvas.width - logoWidth) / 2, 50, logoWidth, logoHeight);
-    } catch (e) {
-        // Fallback to text if image fails
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('🌍 Flagtriv', canvas.width / 2, 130);
-    }
+    // Draw Flagtriv logo (yellow circle with white F)
+    const logoSize = 100;
+    const logoX = canvas.width / 2;
+    const logoY = 100;
+
+    // Yellow circle
+    ctx.beginPath();
+    ctx.arc(logoX, logoY, logoSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFC00';
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // White F
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 60px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('F', logoX, logoY);
+    ctx.textBaseline = 'alphabetic';
 
     if (tabType === 'passport') {
         await drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight);
@@ -1783,6 +1791,35 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
         ctx.textAlign = 'left';
 
         yPos += 60;
+    }
+
+    // Draw discovered flags grid
+    const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
+    const discoveredCountries = Object.values(countryDetails).slice(0, 12); // Show up to 12 flags
+
+    if (discoveredCountries.length > 0) {
+        const flagSize = 70;
+        const flagsPerRow = 6;
+        const flagGap = 15;
+        const startX = cardX + (cardWidth - (flagsPerRow * flagSize + (flagsPerRow - 1) * flagGap)) / 2;
+        const startY = yPos + 30;
+
+        for (let i = 0; i < discoveredCountries.length; i++) {
+            const country = discoveredCountries[i];
+            const row = Math.floor(i / flagsPerRow);
+            const col = i % flagsPerRow;
+            const x = startX + col * (flagSize + flagGap);
+            const y = startY + row * (flagSize + flagGap);
+
+            try {
+                const flagImg = await loadImage(`flags/${country.code?.toLowerCase() || 'unknown'}.svg`);
+                ctx.drawImage(flagImg, x, y, flagSize, flagSize * 0.67);
+            } catch (e) {
+                // Draw placeholder if flag fails to load
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(x, y, flagSize, flagSize * 0.67);
+            }
+        }
     }
 }
 
