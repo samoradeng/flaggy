@@ -494,10 +494,8 @@ class AuthManager {
     // ========== UI ==========
 
     showSignInModal() {
-        // Disabled for launch - uncomment to re-enable
-        // const modal = document.getElementById('sign-in-modal');
-        // if (modal) modal.style.display = 'flex';
-        return;
+        const modal = document.getElementById('sign-in-modal');
+        if (modal) modal.style.display = 'flex';
     }
 
     hideSignInModal() {
@@ -506,8 +504,19 @@ class AuthManager {
     }
 
     showSignInPrompt(reason = 'general') {
-        // Disabled for launch
-        return;
+        const reasons = {
+            'streak': '🔥 Sign in to protect your streak across devices!',
+            'sync': 'Sign in to sync your progress across devices!',
+            'leaderboard': '🏆 Sign in to compete on global leaderboards!',
+            'general': '✨ Sign in to never lose your progress!'
+        };
+
+        const reasonText = document.getElementById('sign-in-reason');
+        if (reasonText) {
+            reasonText.textContent = reasons[reason] || reasons.general;
+        }
+
+        this.showSignInModal();
     }
 
     updateUI() {
