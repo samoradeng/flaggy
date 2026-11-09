@@ -228,16 +228,15 @@ class AuthManager {
             }
 
             if (data?.url) {
-                console.log('🌐 Opening OAuth URL in browser:', data.url);
-                // Open in Safari using Capacitor Browser plugin
-                const { Browser } = await import('@capacitor/browser');
-                await Browser.open({ url: data.url });
+                console.log('🌐 Opening OAuth URL:', data.url);
+                // Navigate to OAuth URL - on iOS Capacitor this opens Safari
+                window.location.href = data.url;
                 return { success: true };
             }
 
             return { success: false, error: 'No OAuth URL returned' };
         } catch (err) {
-            console.error('Browser open error:', err);
+            console.error('OAuth error:', err);
             return { success: false, error: err.message };
         }
     }
@@ -468,56 +467,51 @@ window.authManager = new AuthManager();
 
 // Handle deep links for OAuth callback (Capacitor apps)
 if (window.Capacitor?.isNativePlatform()) {
-    Promise.all([
-        import('@capacitor/app'),
-        import('@capacitor/browser')
-    ]).then(([{ App }, { Browser }]) => {
-        App.addListener('appUrlOpen', async (event) => {
-            console.log('🔗 Deep link received:', event.url);
+    // Use the global Capacitor.Plugins.App directly
+    const setupDeepLinkHandler = () => {
+        if (window.Capacitor?.Plugins?.App) {
+            window.Capacitor.Plugins.App.addListener('appUrlOpen', async (event) => {
+                console.log('🔗 Deep link received:', event.url);
 
-            // Close the browser window
-            try {
-                await Browser.close();
-            } catch (e) {
-                console.log('Browser already closed');
-            }
+                // Check if this is an auth callback
+                if (event.url.includes('auth-callback') || event.url.includes('access_token') || event.url.includes('code=')) {
+                    // Extract the hash or query params
+                    const url = new URL(event.url);
+                    const hashParams = new URLSearchParams(url.hash.substring(1));
 
-            // Check if this is an auth callback
-            if (event.url.includes('auth-callback') || event.url.includes('access_token') || event.url.includes('code=')) {
-                // Extract the hash or query params
-                const url = new URL(event.url);
-                const hashParams = new URLSearchParams(url.hash.substring(1));
-                const queryParams = url.searchParams;
+                    // Get access token from hash (implicit flow)
+                    const accessToken = hashParams.get('access_token');
+                    const refreshToken = hashParams.get('refresh_token');
 
-                // Get access token from hash (implicit flow) or handle code (PKCE flow)
-                const accessToken = hashParams.get('access_token');
-                const refreshToken = hashParams.get('refresh_token');
+                    if (accessToken && window.authManager?.supabase) {
+                        console.log('🔑 Setting session from deep link...');
+                        const { data, error } = await window.authManager.supabase.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken
+                        });
 
-                if (accessToken && window.authManager?.supabase) {
-                    console.log('🔑 Setting session from deep link...');
-                    const { data, error } = await window.authManager.supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken
-                    });
-
-                    if (error) {
-                        console.error('Error setting session:', error);
-                        window.authManager.showToast('❌ Sign in failed');
+                        if (error) {
+                            console.error('Error setting session:', error);
+                            window.authManager.showToast('❌ Sign in failed');
+                        } else {
+                            console.log('✅ Session set successfully');
+                            window.authManager.hideSignInModal();
+                            window.authManager.showToast('✅ Signed in successfully!');
+                        }
                     } else {
-                        console.log('✅ Session set successfully');
-                        window.authManager.hideSignInModal();
-                        window.authManager.showToast('✅ Signed in successfully!');
+                        // Supabase may handle the session automatically
+                        console.log('🔄 Checking session...');
+                        window.authManager?.supabase?.auth.getSession();
                     }
-                } else {
-                    // Supabase may handle the session automatically
-                    console.log('🔄 Checking session...');
-                    window.authManager?.supabase?.auth.getSession();
                 }
-            }
-        });
-    }).catch(err => {
-        console.log('Capacitor plugins not available:', err);
-    });
+            });
+            console.log('✅ Deep link handler registered');
+        } else {
+            // Retry after a short delay if plugins not ready
+            setTimeout(setupDeepLinkHandler, 100);
+        }
+    };
+    setupDeepLinkHandler();
 }
 
 // Auto-sync on page unload
