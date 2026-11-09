@@ -1608,42 +1608,55 @@ function switchTab(tabName) {
 
 async function shareStats() {
     const activeTab = document.querySelector('.tab-button.active')?.dataset?.tab;
+    console.log('Sharing tab:', activeTab);
 
-    // Generate the share card image
-    const canvas = await generateShareCard(activeTab);
+    try {
+        // Generate the share card image
+        const canvas = await generateShareCard(activeTab);
+        console.log('Canvas generated for tab:', activeTab);
 
-    // Convert canvas to blob
-    canvas.toBlob(async (blob) => {
-        const file = new File([blob], 'flagtriv-stats.png', { type: 'image/png' });
-
-        const appStoreLink = 'https://apps.apple.com/app/flagtriv';
-        const shareText = activeTab === 'passport'
-            ? `🌍 I've discovered ${achievementSystem.getCorrectlyAnsweredCountries().size} flags on Flagtriv! How many can you get?\n\n${appStoreLink}`
-            : `🏆 I've unlocked ${achievementSystem.getProgress().unlocked} achievements on Flagtriv!\n\n${appStoreLink}`;
-
-        // Try native share with image
-        if (navigator.share && navigator.canShare?.({ files: [file] })) {
-            try {
-                await navigator.share({
-                    title: 'My Flagtriv Stats',
-                    text: shareText,
-                    files: [file]
-                });
+        // Convert canvas to blob
+        canvas.toBlob(async (blob) => {
+            if (!blob) {
+                console.error('Failed to create blob from canvas');
+                showToast('Failed to create image');
                 return;
-            } catch (e) {
-                console.log('Share cancelled or failed:', e);
             }
-        }
 
-        // Fallback: download the image
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'flagtriv-stats.png';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('📸 Image saved! Share it on Instagram');
-    }, 'image/png');
+            const file = new File([blob], 'flagtriv-stats.png', { type: 'image/png' });
+
+            const appStoreLink = 'https://apps.apple.com/app/flagtriv';
+            const shareText = activeTab === 'passport'
+                ? `🌍 I've discovered ${achievementSystem.getCorrectlyAnsweredCountries().size} flags on Flagtriv! How many can you get?\n\n${appStoreLink}`
+                : `🏆 I've unlocked ${achievementSystem.getProgress().unlocked} achievements on Flagtriv!\n\n${appStoreLink}`;
+
+            // Try native share with image
+            if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        title: 'My Flagtriv Stats',
+                        text: shareText,
+                        files: [file]
+                    });
+                    return;
+                } catch (e) {
+                    console.log('Share cancelled or failed:', e);
+                }
+            }
+
+            // Fallback: download the image
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'flagtriv-stats.png';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('📸 Image saved! Share it on Instagram');
+        }, 'image/png');
+    } catch (error) {
+        console.error('Error generating share card:', error);
+        showToast('Failed to generate share image');
+    }
 }
 
 function loadImage(src) {
