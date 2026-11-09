@@ -144,16 +144,29 @@ class AuthManager {
 
     // ========== Sign In Methods ==========
 
+    getRedirectUrl() {
+        // For Capacitor iOS/Android apps, use the custom URL scheme
+        if (window.Capacitor?.isNativePlatform()) {
+            return 'com.flagtriv.app://auth-callback';
+        }
+        // For web, use the current origin
+        return window.location.origin;
+    }
+
     async signInWithApple() {
         if (!this.isConfigured || !this.supabase) {
             return this.simulateSignIn('apple');
         }
 
         console.log('🍎 Signing in with Apple...');
+        const redirectTo = this.getRedirectUrl();
+        console.log('📍 Redirect URL:', redirectTo);
+
         const { data, error } = await this.supabase.auth.signInWithOAuth({
             provider: 'apple',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: redirectTo,
+                skipBrowserRedirect: window.Capacitor?.isNativePlatform() ? false : false
             }
         });
 
@@ -171,10 +184,13 @@ class AuthManager {
         }
 
         console.log('🔵 Signing in with Google...');
+        const redirectTo = this.getRedirectUrl();
+        console.log('📍 Redirect URL:', redirectTo);
+
         const { data, error } = await this.supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: redirectTo
             }
         });
 
@@ -409,6 +425,45 @@ class AuthManager {
 
 // Global instance
 window.authManager = new AuthManager();
+
+// Handle deep links for OAuth callback (Capacitor apps)
+if (window.Capacitor?.isNativePlatform()) {
+    import('@capacitor/app').then(({ App }) => {
+        App.addListener('appUrlOpen', async (event) => {
+            console.log('🔗 Deep link received:', event.url);
+
+            // Check if this is an auth callback
+            if (event.url.includes('auth-callback') || event.url.includes('access_token') || event.url.includes('code=')) {
+                // Extract the hash or query params
+                const url = new URL(event.url);
+                const hashParams = new URLSearchParams(url.hash.substring(1));
+                const queryParams = url.searchParams;
+
+                // Get access token from hash (implicit flow) or handle code (PKCE flow)
+                const accessToken = hashParams.get('access_token');
+                const refreshToken = hashParams.get('refresh_token');
+
+                if (accessToken && window.authManager?.supabase) {
+                    console.log('🔑 Setting session from deep link...');
+                    const { data, error } = await window.authManager.supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken
+                    });
+
+                    if (error) {
+                        console.error('Error setting session:', error);
+                    } else {
+                        console.log('✅ Session set successfully');
+                        window.authManager.hideSignInModal();
+                        window.authManager.showToast('✅ Signed in successfully!');
+                    }
+                }
+            }
+        });
+    }).catch(err => {
+        console.log('App plugin not available:', err);
+    });
+}
 
 // Auto-sync on page unload
 window.addEventListener('beforeunload', () => {
