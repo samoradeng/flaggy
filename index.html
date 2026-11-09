@@ -555,7 +555,23 @@
 
         <!-- User Info (shown when signed in) -->
         <div id="user-info" class="user-info-inline" style="display: none;">
-            <span>Synced as <span id="user-name-display">User</span></span>
+            <button class="profile-btn" onclick="toggleProfileMenu()">
+                <span class="profile-avatar">👤</span>
+                <span id="user-name-display">User</span>
+                <span class="profile-arrow">▼</span>
+            </button>
+            <div id="profile-menu" class="profile-menu" style="display: none;">
+                <div class="profile-header">
+                    <span class="profile-email" id="user-email-display"></span>
+                    <span class="sync-status">☁️ Synced</span>
+                </div>
+                <button onclick="window.authManager.syncToCloud(); window.authManager.showToast('☁️ Progress synced!')">
+                    🔄 Sync Now
+                </button>
+                <button onclick="confirmSignOut()" class="sign-out-btn">
+                    🚪 Sign Out
+                </button>
+            </div>
         </div>
     </div>
 
@@ -904,6 +920,39 @@
                 originalShowSignInModal?.call(this);
             };
         }
+
+        // Profile menu functions
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profile-menu');
+            const btn = document.querySelector('.profile-btn');
+            const isOpen = menu.style.display === 'block';
+
+            menu.style.display = isOpen ? 'none' : 'block';
+            btn.classList.toggle('open', !isOpen);
+
+            // Update email display
+            if (!isOpen && window.authManager?.currentUser?.email) {
+                document.getElementById('user-email-display').textContent =
+                    window.authManager.currentUser.email;
+            }
+        }
+
+        function confirmSignOut() {
+            if (confirm('Sign out? Your local progress will be kept.')) {
+                window.authManager.signOut();
+                document.getElementById('profile-menu').style.display = 'none';
+            }
+        }
+
+        // Close profile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('profile-menu');
+            const btn = document.querySelector('.profile-btn');
+            if (menu && !menu.contains(e.target) && !btn?.contains(e.target)) {
+                menu.style.display = 'none';
+                btn?.classList.remove('open');
+            }
+        });
     </script>
 
     <!-- Register Service Worker for PWA -->
