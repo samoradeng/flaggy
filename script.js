@@ -1319,10 +1319,13 @@ function showDailyComplete() {
         <div style="font-size: 18px; color: #666; margin-top: 8px;">⚡ ${timeStr}</div>
     `;
 
-    // Show flag emojis
-    const flagEmojis = result.flags.map(f => dailyChallenge.getCountryEmoji(f.code)).join(' ');
+    // Show circular flag images
+    const flagsHtml = result.flags.map(f => {
+        const flagSrc = countries[f.code]?.flag?.large || `flags/${f.code.toLowerCase()}.svg`;
+        return `<img src="${flagSrc}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; margin: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" alt="${f.name}">`;
+    }).join('');
     document.getElementById('daily-attempts-display').innerHTML = `
-        <div style="font-size: 24px; margin-top: 16px;">${flagEmojis}</div>
+        <div style="display: flex; justify-content: center; margin-top: 16px;">${flagsHtml}</div>
     `;
 
     // Show streak
