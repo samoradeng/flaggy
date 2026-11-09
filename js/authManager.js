@@ -202,14 +202,16 @@ class AuthManager {
 
             // Generate a random nonce for security
             const rawNonce = this.generateNonce();
-            console.log('🍎 Generated nonce');
+            // Hash the nonce with SHA256 for Apple (Supabase gets the raw nonce)
+            const hashedNonce = await this.sha256(rawNonce);
+            console.log('🍎 Generated nonce, hashed for Apple');
 
-            // Request authorization - for native iOS, only scopes and nonce are needed
+            // Request authorization - send HASHED nonce to Apple
             const options = {
                 scopes: 'email name',
-                nonce: rawNonce
+                nonce: hashedNonce
             };
-            console.log('🍎 Calling authorize with options:', JSON.stringify(options));
+            console.log('🍎 Calling authorize with hashed nonce');
 
             const result = await SignInWithApple.authorize(options);
 
@@ -571,6 +573,13 @@ class AuthManager {
             result += charset[values[i] % charset.length];
         }
         return result;
+    }
+
+    async sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
     showToast(message) {
