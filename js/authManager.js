@@ -506,7 +506,7 @@ class AuthManager {
     showSignInPrompt(reason = 'general') {
         const reasons = {
             'streak': '🔥 Sign in to protect your streak across devices!',
-            'sync': '☁️ Sign in to sync your progress to the cloud!',
+            'sync': 'Sign in to sync your progress across devices!',
             'leaderboard': '🏆 Sign in to compete on global leaderboards!',
             'general': '✨ Sign in to never lose your progress!'
         };
