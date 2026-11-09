@@ -1646,6 +1646,15 @@ async function shareStats() {
     }, 'image/png');
 }
 
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
 async function generateShareCard(tabType) {
     const canvas = document.createElement('canvas');
     // Instagram story size (1080x1920) or square (1080x1080)
@@ -1682,11 +1691,19 @@ async function generateShareCard(tabType) {
     ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
     ctx.fill();
 
-    // App logo/title
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🌍 Flagtriv', canvas.width / 2, 130);
+    // App logo/title - load and draw logo
+    try {
+        const logo = await loadImage('images/og-image.png');
+        const logoHeight = 80;
+        const logoWidth = (logo.width / logo.height) * logoHeight;
+        ctx.drawImage(logo, (canvas.width - logoWidth) / 2, 50, logoWidth, logoHeight);
+    } catch (e) {
+        // Fallback to text if image fails
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🌍 Flagtriv', canvas.width / 2, 130);
+    }
 
     if (tabType === 'passport') {
         await drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight);
@@ -1883,16 +1900,18 @@ function getContinentProgress() {
     const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
 
     const continents = {
-        'Africa': { emoji: '🌍', total: 0, unlocked: 0 },
-        'Asia': { emoji: '🌏', total: 0, unlocked: 0 },
-        'Europe': { emoji: '🇪🇺', total: 0, unlocked: 0 },
-        'Americas': { emoji: '🌎', total: 0, unlocked: 0 },
-        'Oceania': { emoji: '🏝️', total: 0, unlocked: 0 }
+        'Africa': { emoji: '🌍', total: 59, unlocked: 0 },
+        'Asia': { emoji: '🌏', total: 50, unlocked: 0 },
+        'Europe': { emoji: '🇪🇺', total: 53, unlocked: 0 },
+        'Americas': { emoji: '🌎', total: 56, unlocked: 0 },
+        'Oceania': { emoji: '🏝️', total: 27, unlocked: 0 }
     };
 
-    // Count total countries per continent
-    if (window.countries) {
-        Object.values(window.countries).forEach(country => {
+    // Count total countries per continent from countries array
+    if (typeof countries !== 'undefined' && Array.isArray(countries)) {
+        // Reset totals and count from actual data
+        Object.keys(continents).forEach(k => continents[k].total = 0);
+        countries.forEach(country => {
             if (continents[country.region]) {
                 continents[country.region].total++;
             }
