@@ -159,11 +159,17 @@ class AuthManager {
         }
 
         console.log('🍎 Signing in with Apple...');
+        console.log('📱 Capacitor exists:', !!window.Capacitor);
+        console.log('📱 isNativePlatform:', window.Capacitor?.isNativePlatform?.());
+        console.log('📱 getPlatform:', window.Capacitor?.getPlatform?.());
 
         // On iOS, use native Apple Sign In (stays in-app with Face ID/Touch ID)
-        if (window.Capacitor?.isNativePlatform() && window.Capacitor?.getPlatform() === 'ios') {
+        if (window.Capacitor?.isNativePlatform?.() && window.Capacitor?.getPlatform?.() === 'ios') {
+            console.log('🍏 Using NATIVE Apple Sign In');
             return this.nativeAppleSignIn();
         }
+
+        console.log('🌐 Using OAuth Apple Sign In (not iOS native)');
 
         // On web/Android, use OAuth redirect
         const redirectTo = this.getRedirectUrl();
