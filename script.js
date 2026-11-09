@@ -1750,50 +1750,54 @@ async function drawPassportCard(ctx, canvas, cardX, cardY, cardWidth, cardHeight
     const discoveredSet = achievementSystem.getCorrectlyAnsweredCountries();
     const countriesCount = discoveredSet.size;
     const isComplete = countriesCount >= 250;
-    const progress = countriesCount / 250;
 
-    // --- HEADER ---
     ctx.textAlign = 'center';
 
-    // Rank title - gives people something to brag about
+    // Rank title - the status/brag
     let rank;
-    if (countriesCount >= 250) rank = 'World Champion';
-    else if (countriesCount >= 200) rank = 'Flag Master';
-    else if (countriesCount >= 150) rank = 'Globe Trotter';
-    else if (countriesCount >= 100) rank = 'Explorer';
-    else if (countriesCount >= 50) rank = 'Adventurer';
-    else if (countriesCount >= 25) rank = 'Traveler';
-    else if (countriesCount >= 10) rank = 'Tourist';
-    else rank = 'Beginner';
+    if (countriesCount >= 250) rank = 'WORLD CHAMPION';
+    else if (countriesCount >= 200) rank = 'FLAG MASTER';
+    else if (countriesCount >= 150) rank = 'GLOBE TROTTER';
+    else if (countriesCount >= 100) rank = 'EXPLORER';
+    else if (countriesCount >= 50) rank = 'ADVENTURER';
+    else if (countriesCount >= 25) rank = 'TRAVELER';
+    else if (countriesCount >= 10) rank = 'TOURIST';
+    else rank = 'ROOKIE';
 
-    ctx.font = '26px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillStyle = '#888';
-    ctx.fillText(rank.toUpperCase(), canvas.width / 2, cardY + 45);
+    ctx.font = '600 24px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#667eea';
+    ctx.letterSpacing = '3px';
+    ctx.fillText(rank, canvas.width / 2, cardY + 50);
 
-    // Big number
+    // Big bold number
     if (isComplete) {
-        const goldGrad = ctx.createLinearGradient(canvas.width/2 - 80, 0, canvas.width/2 + 80, 0);
+        const goldGrad = ctx.createLinearGradient(canvas.width/2 - 100, 0, canvas.width/2 + 100, 0);
         goldGrad.addColorStop(0, '#FFD700');
         goldGrad.addColorStop(0.5, '#FFF8DC');
         goldGrad.addColorStop(1, '#FFD700');
         ctx.fillStyle = goldGrad;
     } else {
-        ctx.fillStyle = '#667eea';
+        ctx.fillStyle = '#1a1a2e';
     }
-    ctx.font = 'bold 80px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText(countriesCount.toString(), canvas.width / 2, cardY + 115);
+    ctx.font = 'bold 120px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText(countriesCount.toString(), canvas.width / 2, cardY + 155);
 
-    // Subtitle with challenge
-    ctx.font = '28px -apple-system, BlinkMacSystemFont, sans-serif';
+    // "flags" label
+    ctx.font = '32px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = '#666';
-    ctx.fillText(`of 250 flags`, canvas.width / 2, cardY + 150);
+    ctx.fillText('flags', canvas.width / 2, cardY + 195);
 
-    // Flag mosaic - scales based on count
+    // Challenge hook
+    ctx.font = 'italic 28px Georgia, serif';
+    ctx.fillStyle = '#888';
+    ctx.fillText(isComplete ? '👑 All flags discovered!' : 'Think you can beat me?', canvas.width / 2, cardY + 240);
+
+    // Flag mosaic - the visual proof
     const countryDetails = JSON.parse(localStorage.getItem('countryDetails') || '{}');
     const allCodes = Object.keys(countryDetails);
 
-    // Available space for flags - start after header
-    const flagAreaTop = cardY + 170;
+    // Available space for flags - start right after header
+    const flagAreaTop = cardY + 265;
     const flagAreaBottom = cardY + cardHeight - 25;
     const flagAreaHeight = flagAreaBottom - flagAreaTop;
     const maxGridWidth = cardWidth - 60;
