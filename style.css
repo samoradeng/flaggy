@@ -1924,17 +1924,17 @@ body {
 /* Toast notification */
 #resultsToast {
     visibility: hidden;
-    min-width: 250px;
-    margin-left: -125px;
+    max-width: 90%;
     background-color: #333;
     color: #fff;
     text-align: center;
     border-radius: 8px;
-    padding: 16px;
+    padding: 16px 24px;
     position: fixed;
     z-index: 1001;
     left: 50%;
     bottom: 30px;
+    transform: translateX(-50%);
 }
 
 #resultsToast.show {

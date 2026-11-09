@@ -600,10 +600,10 @@ function goBackToMenu() {
 }
 
 function updateMainMenuStats() {
-    // Update Day number (days since launch: Jan 1, 2025)
+    // Update Day number (days since v2 5-flag challenge launch)
     const dayNumberEl = document.getElementById('daily-day-number');
     if (dayNumberEl) {
-        const launchDate = new Date('2025-01-01');
+        const launchDate = new Date('2026-11-09'); // v2 launch date
         const today = new Date();
         const dayNumber = Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
         dayNumberEl.textContent = `Day #${dayNumber}`;
