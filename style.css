@@ -3588,18 +3588,14 @@ body {
 
 /* Home Header with Profile */
 #home-header {
-    position: absolute;
-    top: calc(16px + env(safe-area-inset-top));
-    left: 16px;
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
     right: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     z-index: 100;
 }
 
 #header-spacer {
-    width: 40px;
+    display: none;
 }
 
 #header-profile {
