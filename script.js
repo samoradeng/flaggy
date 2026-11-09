@@ -447,6 +447,11 @@ function initializeEventListeners() {
     const joinLeaderboardBtn = document.getElementById('join-leaderboard-btn');
     if (joinLeaderboardBtn) {
         joinLeaderboardBtn.addEventListener('click', () => {
+            // Pre-fill saved name
+            const savedName = localStorage.getItem('playerName');
+            if (savedName) {
+                document.getElementById('daily-player-name').value = savedName;
+            }
             document.getElementById('daily-name-modal').style.display = 'block';
         });
     }
@@ -1227,7 +1232,11 @@ async function endDailyChallenge() {
         return;
     }
 
-    // Show name modal for leaderboard
+    // Pre-fill saved name and show modal
+    const savedName = localStorage.getItem('playerName');
+    if (savedName) {
+        document.getElementById('daily-player-name').value = savedName;
+    }
     document.getElementById('daily-name-modal').style.display = 'block';
 }
 
@@ -1391,7 +1400,8 @@ async function submitDailyNameHandler() {
     const result = await dailyChallenge.submitToLeaderboard(playerName, timeSpent, attempts);
 
     if (result.success) {
-        // Mark as submitted so we hide "Add My Score" button
+        // Save name for next time and mark as submitted
+        localStorage.setItem('playerName', playerName);
         localStorage.setItem('leaderboardSubmittedDate', dailyChallenge.today);
         document.getElementById('daily-name-modal').style.display = 'none';
         showDailyComplete();
