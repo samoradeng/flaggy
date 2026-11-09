@@ -1278,11 +1278,10 @@ function showDailyComplete() {
     // Show daily complete screen
     document.getElementById('daily-complete-screen').style.display = 'block';
 
-    // Generate result squares
-    const squares = result.results.map(r => {
-        if (r === 'correct') return '🟩';
-        if (r === 'wrong') return '⬛';
-        return '❌';
+    // Generate result squares as HTML divs (matches flag dimensions exactly)
+    const squaresHtml = result.results.map(r => {
+        const color = r === 'correct' ? '#22c55e' : '#374151';
+        return `<div style="width: 44px; height: 44px; background: ${color}; border-radius: 6px; margin: 0 4px; display: inline-block;"></div>`;
     }).join('');
 
     // Update heading based on score
@@ -1314,7 +1313,7 @@ function showDailyComplete() {
 
     document.getElementById('daily-result-country').innerHTML = `
         <div style="font-size: 14px; color: #667eea; margin-bottom: 8px;">Daily #${dayNum}</div>
-        <div style="font-size: 32px; letter-spacing: 12px; margin-bottom: 12px;">${squares}</div>
+        <div style="display: flex; justify-content: center; margin-bottom: 12px;">${squaresHtml}</div>
         <div style="font-size: 18px; color: #666; margin-top: 8px;">⚡ ${timeStr}</div>
     `;
 
