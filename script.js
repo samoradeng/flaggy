@@ -1279,8 +1279,15 @@ function showDailyComplete() {
     document.getElementById('daily-complete-screen').style.display = 'block';
 
     // Generate result squares as HTML divs (matches flag dimensions exactly)
-    const squaresHtml = result.results.map(r => {
-        const color = r === 'correct' ? '#22c55e' : '#374151';
+    // Ensure we always show 5 squares
+    const resultsToShow = result.results.length >= 5 ? result.results :
+        [...result.results, ...Array(5 - result.results.length).fill('skipped')];
+
+    const squaresHtml = resultsToShow.map(r => {
+        let color;
+        if (r === 'correct') color = '#22c55e';
+        else if (r === 'wrong') color = '#374151';
+        else color = '#9ca3af'; // skipped - lighter gray
         return `<div style="width: 44px; height: 44px; background: ${color}; border-radius: 6px; margin: 0 4px; display: inline-block;"></div>`;
     }).join('');
 
