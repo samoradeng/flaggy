@@ -241,11 +241,13 @@ class DailyChallenge {
         };
     }
 
-    // Get elapsed time in milliseconds
+    // Get elapsed time in milliseconds (capped at 5 minutes to handle app backgrounding)
     getElapsedTimeMs() {
         if (!this.startTimeStamp) return 0;
         const endPoint = this.endTime || Date.now();
-        return Math.round(endPoint - this.startTimeStamp);
+        const elapsed = Math.round(endPoint - this.startTimeStamp);
+        const MAX_TIME_MS = 5 * 60 * 1000; // 5 minutes cap
+        return Math.min(elapsed, MAX_TIME_MS);
     }
 
     // Get formatted time string (e.g., "8.42s")
