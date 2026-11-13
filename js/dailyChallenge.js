@@ -10,7 +10,8 @@ class DailyChallenge {
         this.currentFlagIndex = 0;
         this.lives = this.MAX_LIVES;
         this.results = []; // Array of 'correct', 'wrong', or 'skipped'
-        this.startTimeStamp = null;
+        this.accumulatedTimeMs = 0; // Time from previous sessions
+        this.sessionStartTime = null; // When current session started
         this.endTime = null;
         this.todaysFlags = null; // Cache today's flags
 
@@ -53,14 +54,18 @@ class DailyChallenge {
         localStorage.setItem('dailyStatsV2', JSON.stringify(this.dailyStats));
     }
 
-    // Save in-progress game state
+    // Save in-progress game state (pauses the timer)
     saveInProgress() {
+        // Calculate total accumulated time including current session
+        const currentSessionTime = this.sessionStartTime ? (Date.now() - this.sessionStartTime) : 0;
+        const totalAccumulated = (this.accumulatedTimeMs || 0) + currentSessionTime;
+
         const state = {
             date: this.today,
             currentFlagIndex: this.currentFlagIndex,
             lives: this.lives,
             results: [...this.results],
-            startTimeStamp: this.startTimeStamp // Absolute timestamp, not performance.now()
+            accumulatedTimeMs: totalAccumulated // Save total play time so far
         };
         localStorage.setItem(this.inProgressKey, JSON.stringify(state));
     }
@@ -160,15 +165,17 @@ class DailyChallenge {
             this.currentFlagIndex = inProgress.currentFlagIndex;
             this.lives = inProgress.lives;
             this.results = inProgress.results;
-            this.startTimeStamp = inProgress.startTimeStamp;
+            this.accumulatedTimeMs = inProgress.accumulatedTimeMs || 0;
+            this.sessionStartTime = Date.now(); // Start new session timer
             this.endTime = null;
-            console.log('📅 Resuming daily challenge from flag', this.currentFlagIndex + 1);
+            console.log('📅 Resuming daily challenge from flag', this.currentFlagIndex + 1, 'with', this.accumulatedTimeMs, 'ms accumulated');
         } else {
-            // Fresh start - don't set timer yet, wait for startTiming()
+            // Fresh start
             this.currentFlagIndex = 0;
             this.lives = this.MAX_LIVES;
             this.results = [];
-            this.startTimeStamp = null;
+            this.accumulatedTimeMs = 0;
+            this.sessionStartTime = null; // Wait for startTiming()
             this.endTime = null;
         }
 
@@ -178,11 +185,11 @@ class DailyChallenge {
     // Start the timer (called when first flag is visible)
     startTiming() {
         // Only set timer if not already set (fresh game, not resumed)
-        if (!this.startTimeStamp) {
-            this.startTimeStamp = Date.now();
+        if (!this.sessionStartTime) {
+            this.sessionStartTime = Date.now();
             // Save immediately to prevent restart exploit
             this.saveInProgress();
-            console.log('⏱️ Timer started at', this.startTimeStamp);
+            console.log('⏱️ Timer started');
         }
     }
 
@@ -241,11 +248,14 @@ class DailyChallenge {
         };
     }
 
-    // Get elapsed time in milliseconds
+    // Get elapsed time in milliseconds (accumulated + current session)
     getElapsedTimeMs() {
-        if (!this.startTimeStamp) return 0;
+        const accumulated = this.accumulatedTimeMs || 0;
+        if (!this.sessionStartTime) return accumulated;
+
         const endPoint = this.endTime || Date.now();
-        return Math.round(endPoint - this.startTimeStamp);
+        const currentSession = endPoint - this.sessionStartTime;
+        return Math.round(accumulated + currentSession);
     }
 
     // Get formatted time string (e.g., "8.42s")

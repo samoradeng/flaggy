@@ -61,6 +61,10 @@ let multiplayerGame;
 // Configure Capacitor plugins for native app
 async function initializeCapacitor() {
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        // Hide privacy footer in native app (it's only for the website)
+        const footer = document.getElementById('app-footer');
+        if (footer) footer.style.display = 'none';
+
         try {
             const { StatusBar } = window.Capacitor.Plugins;
             if (StatusBar) {
