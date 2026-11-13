@@ -790,11 +790,13 @@ function getRandomCountry() {
             // Mark Perfect Run achievement if they completed all 250 flags
             if (totalFlags >= 250) {
                 localStorage.setItem('perfectRunCompleted', 'true');
-                // Check for new achievements
-                const newAchievements = achievementSystem.checkAchievements();
-                newAchievements.forEach(achievement => {
-                    AnimationEffects.showAchievementUnlock(achievement);
-                });
+                // Check for new achievements (not during daily challenge)
+                if (gameMode !== 'daily') {
+                    const newAchievements = achievementSystem.checkAchievements();
+                    newAchievements.forEach(achievement => {
+                        AnimationEffects.showAchievementUnlock(achievement);
+                    });
+                }
             }
         }
 
@@ -1051,12 +1053,14 @@ function handleCorrectAnswer() {
     achievementSystem.unlockCountry(currentCountry.alpha2Code, currentCountry);
     const newAchievements = achievementSystem.checkAchievements();
 
-    // Show achievement animations
-    newAchievements.forEach(achievement => {
-        if (typeof AnimationEffects !== 'undefined') {
-            AnimationEffects.showAchievementUnlock(achievement);
-        }
-    });
+    // Show achievement animations (but not during daily challenge - don't interrupt timed play)
+    if (gameMode !== 'daily') {
+        newAchievements.forEach(achievement => {
+            if (typeof AnimationEffects !== 'undefined') {
+                AnimationEffects.showAchievementUnlock(achievement);
+            }
+        });
+    }
 
     // Add XP and check for level up
     const xpGained = 10;
