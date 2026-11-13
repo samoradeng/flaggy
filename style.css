@@ -1664,6 +1664,12 @@ body {
     text-decoration: underline;
 }
 
+.footer-separator {
+    color: #9ca3af;
+    margin: 0 8px;
+    font-size: 12px;
+}
+
 #mode-buttons {
     display: flex;
     flex-direction: column;
