@@ -88,17 +88,46 @@ class MultiplayerGame {
 
         // Handle URL parameters for joining games
         this.checkForGameInvite();
+
+        // Listen for deep links when app is opened from closed state (Capacitor)
+        this.setupDeepLinkListener();
+    }
+
+    setupDeepLinkListener() {
+        // Check if Capacitor App plugin is available
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+            const { App } = window.Capacitor.Plugins;
+
+            // Listen for app URL open events (deep links)
+            App.addListener('appUrlOpen', (event) => {
+                console.log('🔗 Deep link received:', event.url);
+
+                try {
+                    const url = new URL(event.url);
+                    const gameId = url.searchParams.get('game');
+
+                    if (gameId) {
+                        console.log('🎮 Joining game from deep link:', gameId);
+                        this.joinChallengeFromLink(gameId);
+                    }
+                } catch (error) {
+                    console.error('Failed to parse deep link URL:', error);
+                }
+            });
+
+            console.log('✅ Deep link listener registered');
+        }
     }
 
     checkForGameInvite() {
         const urlParams = new URLSearchParams(window.location.search);
         const gameId = urlParams.get('game');
-        
+
         if (gameId) {
             // Auto-open join modal
             document.getElementById('join-game-id').value = gameId;
             document.getElementById('join-challenge-modal').style.display = 'block';
-            
+
             // Clear URL parameters
             window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -516,19 +545,22 @@ class MultiplayerGame {
         window.isMultiplayerMode = true;
         this.gameEnded = false; // Reset game ended flag
         this.lastFlagIndex = -1; // Reset flag tracking
-        
+
         // Store total flags for UI display
         this.totalFlagsInGame = gameState.totalFlags;
-        
+
         // Hide lobby
         document.getElementById('multiplayer-lobby').style.display = 'none';
-        
+
         // Show game container
         document.getElementById('game-container').style.display = 'flex';
         document.getElementById('top-bar').style.display = 'flex';
 
         // Hide home button in multiplayer gameplay (results screen will show it)
         document.getElementById('home-logo-btn').style.display = 'none';
+
+        // Hide sign-in header during multiplayer (it overlaps with timer)
+        document.getElementById('home-header').style.display = 'none';
 
         // Create and show timer element
         this.createTimerElement();
@@ -1191,6 +1223,13 @@ class MultiplayerGame {
             // Clean up current sync but keep settings
             this.multiplayerSync.stopSync();
 
+            // Reset game state for rematch (critical for detecting game start)
+            this.gameStartTime = null;
+            this.gameEnded = false;
+            this.lastFlagIndex = -1;
+            this.currentFlagIndex = 0;
+            this.playerAnswers = [];
+
             // Create new game with same settings
             const result = await this.multiplayerSync.createGame(
                 this.lastGameSettings.flagCount,
@@ -1327,6 +1366,13 @@ class MultiplayerGame {
             // Clean up current state
             this.multiplayerSync.cleanup();
 
+            // Reset game state for rematch (critical for detecting game start)
+            this.gameStartTime = null;
+            this.gameEnded = false;
+            this.lastFlagIndex = -1;
+            this.currentFlagIndex = 0;
+            this.playerAnswers = [];
+
             // Join the rematch game
             const result = await this.multiplayerSync.joinGame(this.pendingRematchGameId, nickname);
 
@@ -1380,6 +1426,9 @@ class MultiplayerGame {
         // Return to main menu
         document.getElementById('multiplayer-results').style.display = 'none';
         document.getElementById('mode-selection').style.display = 'flex';
+
+        // Restore sign-in header
+        document.getElementById('home-header').style.display = '';
 
         // Reset game state
         this.currentFlag = null;

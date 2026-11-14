@@ -250,20 +250,35 @@ class MultiplayerSync {
 
                         // Add player to the game
                         const playerNickname = nickname || `Player ${Date.now().toString().slice(-4)}`;
-                        const { error: playerError } = await this.supabase
-                            .from('multiplayer_players')
-                            .insert({
-                                game_id: this.gameId,
-                                player_id: this.playerId,
-                                nickname: playerNickname,
-                                is_host: false,
-                                score: 0,
-                                answers: []
-                            });
 
-                        if (playerError) {
-                            console.error('Failed to add player:', playerError);
-                            throw new Error(`Failed to join: ${playerError.message}`);
+                        // Check if player with same nickname already exists (rejoin scenario)
+                        const { data: existingPlayers } = await this.supabase
+                            .from('multiplayer_players')
+                            .select('player_id')
+                            .eq('game_id', this.gameId)
+                            .eq('nickname', playerNickname);
+
+                        if (existingPlayers && existingPlayers.length > 0) {
+                            // Reuse existing player ID to prevent duplicates
+                            this.playerId = existingPlayers[0].player_id;
+                            console.log('🔄 Rejoining as existing player:', this.playerId);
+                        } else {
+                            // New player - insert
+                            const { error: playerError } = await this.supabase
+                                .from('multiplayer_players')
+                                .insert({
+                                    game_id: this.gameId,
+                                    player_id: this.playerId,
+                                    nickname: playerNickname,
+                                    is_host: false,
+                                    score: 0,
+                                    answers: []
+                                });
+
+                            if (playerError) {
+                                console.error('Failed to add player:', playerError);
+                                throw new Error(`Failed to join: ${playerError.message}`);
+                            }
                         }
 
                         // Get current game state
@@ -339,17 +354,30 @@ class MultiplayerSync {
                 this.localGameState = JSON.parse(gameData);
             }
 
-            // Add this player to the game
+            // Add this player to the game (check for duplicates by nickname)
             const playerNickname = nickname || `Player ${Object.keys(this.localGameState.players).length + 1}`;
-            this.localGameState.players[this.playerId] = {
-                id: this.playerId,
-                nickname: playerNickname,
-                isHost: false,
-                score: 0,
-                answers: [],
-                connected: true,
-                joinedAt: Date.now()
-            };
+
+            // Check if player with same nickname already exists (rejoin scenario)
+            const existingPlayer = Object.values(this.localGameState.players).find(
+                p => p.nickname === playerNickname
+            );
+
+            if (existingPlayer) {
+                // Reuse existing player ID to prevent duplicates
+                this.playerId = existingPlayer.id;
+                console.log('🔄 Rejoining as existing player:', this.playerId);
+            } else {
+                // New player
+                this.localGameState.players[this.playerId] = {
+                    id: this.playerId,
+                    nickname: playerNickname,
+                    isHost: false,
+                    score: 0,
+                    answers: [],
+                    connected: true,
+                    joinedAt: Date.now()
+                };
+            }
 
             // Save updated game state
             localStorage.setItem(storageKey, JSON.stringify(this.localGameState));
