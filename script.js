@@ -1472,11 +1472,13 @@ async function showDailyLeaderboard() {
                 const timeMs = entry.timeMs || (entry.time * 1000);
                 const timeDisplay = `${(timeMs / 1000).toFixed(2)}s`;
                 const flagEmoji = entry.country !== 'Unknown' ? countryCodeToFlag(entry.country) : '';
+                // Show score (correct answers out of 5) - attempts field stores correct count
+                const scoreDisplay = entry.attempts ? `${entry.attempts}/5` : '';
 
                 entryDiv.innerHTML = `
                     <div class="rank">${rankEmoji}</div>
                     <div class="player-name">${entry.name} ${flagEmoji}</div>
-                    <div class="player-time">${timeDisplay}</div>
+                    <div class="player-time">${scoreDisplay} ${timeDisplay}</div>
                 `;
                 
                 list.appendChild(entryDiv);

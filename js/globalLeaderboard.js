@@ -74,11 +74,13 @@ class GlobalLeaderboard {
     }
 
     // Calculate fair score (lower is better)
+    // attempts = number of correct answers (1-5 for daily challenge)
     calculateScore(timeMilliseconds, attempts) {
         // Base score is time in milliseconds
-        // Add penalty: (attempts - 1) * 10000ms (10 seconds per extra attempt)
-        // This ensures first-attempt accuracy is always rewarded
-        return timeMilliseconds + ((attempts - 1) * 10000);
+        // Add penalty for WRONG answers: (5 - attempts) * 10000ms (10 seconds per wrong answer)
+        // 5/5 correct = no penalty, 4/5 = +10s penalty, etc.
+        // This ensures accuracy is rewarded over speed
+        return timeMilliseconds + ((5 - attempts) * 10000);
     }
 
     // Submit score to global leaderboard with retries
@@ -99,6 +101,19 @@ class GlobalLeaderboard {
             const country = await this.getUserCountry();
 
             const timeMilliseconds = Math.round(timeMs);
+
+            // Anti-cheat: minimum 0.5 seconds per flag (2.5s for 5 flags)
+            const MIN_TIME_PER_FLAG = 500; // ms
+            const minTime = attempts * MIN_TIME_PER_FLAG;
+            if (timeMilliseconds < minTime) {
+                console.warn(`⚠️ Suspicious time: ${timeMilliseconds}ms for ${attempts} flags (min: ${minTime}ms)`);
+                return {
+                    success: false,
+                    global: false,
+                    error: 'Invalid submission time'
+                };
+            }
+
             const score = this.calculateScore(timeMilliseconds, attempts);
 
             // Check if player already has an entry for today
