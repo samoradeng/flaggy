@@ -1472,8 +1472,9 @@ async function showDailyLeaderboard() {
                 const timeMs = entry.timeMs || (entry.time * 1000);
                 const timeDisplay = `${(timeMs / 1000).toFixed(2)}s`;
                 const flagEmoji = entry.country !== 'Unknown' ? countryCodeToFlag(entry.country) : '';
-                // Show score (correct answers out of 5) - attempts field stores correct count
-                const scoreDisplay = entry.attempts ? `${entry.attempts}/5` : '';
+                // Convert attempts to correct count: attempts = wrongCount+1, so correct = 6 - attempts
+                const correctCount = entry.attempts ? Math.max(0, 6 - entry.attempts) : 5;
+                const scoreDisplay = `${correctCount}/5`;
 
                 entryDiv.innerHTML = `
                     <div class="rank">${rankEmoji}</div>

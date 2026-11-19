@@ -74,13 +74,12 @@ class GlobalLeaderboard {
     }
 
     // Calculate fair score (lower is better)
-    // attempts = number of correct answers (1-5 for daily challenge)
+    // attempts = wrongCount + 1 (1 = perfect, 2 = 1 wrong, etc.)
     calculateScore(timeMilliseconds, attempts) {
         // Base score is time in milliseconds
-        // Add penalty for WRONG answers: (5 - attempts) * 10000ms (10 seconds per wrong answer)
-        // 5/5 correct = no penalty, 4/5 = +10s penalty, etc.
-        // This ensures accuracy is rewarded over speed
-        return timeMilliseconds + ((5 - attempts) * 10000);
+        // Add penalty: (attempts - 1) * 10000ms (10 seconds per wrong answer)
+        // attempts=1 (0 wrong) = no penalty, attempts=2 (1 wrong) = +10s, etc.
+        return timeMilliseconds + ((attempts - 1) * 10000);
     }
 
     // Submit score to global leaderboard with retries
@@ -103,10 +102,9 @@ class GlobalLeaderboard {
             const timeMilliseconds = Math.round(timeMs);
 
             // Anti-cheat: minimum 0.5 seconds per flag (2.5s for 5 flags)
-            const MIN_TIME_PER_FLAG = 500; // ms
-            const minTime = attempts * MIN_TIME_PER_FLAG;
-            if (timeMilliseconds < minTime) {
-                console.warn(`⚠️ Suspicious time: ${timeMilliseconds}ms for ${attempts} flags (min: ${minTime}ms)`);
+            const MIN_TOTAL_TIME = 2500; // 2.5 seconds minimum for 5 flags
+            if (timeMilliseconds < MIN_TOTAL_TIME) {
+                console.warn(`⚠️ Suspicious time: ${timeMilliseconds}ms (min: ${MIN_TOTAL_TIME}ms)`);
                 return {
                     success: false,
                     global: false,
