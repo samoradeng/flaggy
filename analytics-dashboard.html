@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flagtriv Analytics Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
     <style>
         :root {
             --bg: #0f172a;
@@ -473,18 +473,27 @@
         const DASHBOARD_PASSWORD = 'flagtriv2024';
 
         function login() {
-            const password = document.getElementById('password').value;
-            if (password === DASHBOARD_PASSWORD) {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
-                initSupabase();
-                loadData();
-            } else {
-                alert('Incorrect password');
+            try {
+                const password = document.getElementById('password').value;
+                if (password === DASHBOARD_PASSWORD) {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    initSupabase();
+                    loadData();
+                } else {
+                    alert('Incorrect password');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+                console.error(err);
             }
         }
 
         function initSupabase() {
+            if (!window.supabase) {
+                alert('Supabase library failed to load. Please refresh the page.');
+                return;
+            }
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
 
