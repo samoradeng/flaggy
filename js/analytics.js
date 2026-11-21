@@ -405,7 +405,19 @@ class Analytics {
 // Global instance
 window.analytics = new Analytics();
 
-// Track app open on load
+// Track app open on load - wait for Supabase to initialize
 document.addEventListener('DOMContentLoaded', () => {
-    window.analytics?.trackAppOpen();
+    // Give Supabase a moment to initialize (it also runs on DOMContentLoaded)
+    const waitForSupabase = (retries = 10) => {
+        if (window.supabase) {
+            window.analytics?.trackAppOpen();
+            window.analytics?.flushQueue();
+        } else if (retries > 0) {
+            setTimeout(() => waitForSupabase(retries - 1), 100);
+        } else {
+            // Send anyway - will queue if Supabase not available
+            window.analytics?.trackAppOpen();
+        }
+    };
+    waitForSupabase();
 });
