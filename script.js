@@ -1103,11 +1103,11 @@ function handleCorrectAnswer() {
         const isGameOver = flagNum > dailyChallenge.FLAGS_PER_DAY;
         nextButton.textContent = isGameOver ? 'See Results' : `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
 
-        // Auto-advance for daily mode (1.2s delay for correct answers)
+        // Auto-advance for daily mode (fast since it's timed)
         if (!isGameOver) {
             setTimeout(() => {
                 if (gameMode === 'daily') nextQuestion();
-            }, 1200);
+            }, 700);
         }
     } else {
         nextButton.textContent = 'Next Flag';
@@ -1150,10 +1150,10 @@ function handleWrongAnswer() {
                 nextButton.textContent = `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
                 nextButton.dataset.gameOver = 'false';
 
-                // Auto-advance for daily mode (2s delay for wrong answers to see correct answer)
+                // Auto-advance for daily mode (1.2s to glimpse correct answer)
                 setTimeout(() => {
                     if (gameMode === 'daily') nextQuestion();
-                }, 2000);
+                }, 1200);
             }
             document.getElementById('message').textContent = `❌ Incorrect. The answer was ${currentCountry.name}. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
         }
