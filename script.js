@@ -1100,7 +1100,15 @@ function handleCorrectAnswer() {
 
     if (gameMode === 'daily') {
         const flagNum = dailyChallenge.getCurrentFlagNumber();
-        nextButton.textContent = flagNum > dailyChallenge.FLAGS_PER_DAY ? 'See Results' : `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
+        const isGameOver = flagNum > dailyChallenge.FLAGS_PER_DAY;
+        nextButton.textContent = isGameOver ? 'See Results' : `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
+
+        // Auto-advance for daily mode (1.2s delay for correct answers)
+        if (!isGameOver) {
+            setTimeout(() => {
+                if (gameMode === 'daily') nextQuestion();
+            }, 1200);
+        }
     } else {
         nextButton.textContent = 'Next Flag';
     }
@@ -1134,12 +1142,18 @@ function handleWrongAnswer() {
         } else {
             // Still have lives - continue to next flag
             const flagNum = dailyChallenge.getCurrentFlagNumber();
-            if (flagNum > dailyChallenge.FLAGS_PER_DAY) {
+            const isGameOver = flagNum > dailyChallenge.FLAGS_PER_DAY;
+            if (isGameOver) {
                 nextButton.textContent = 'See Results';
                 nextButton.dataset.gameOver = 'true';
             } else {
                 nextButton.textContent = `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
                 nextButton.dataset.gameOver = 'false';
+
+                // Auto-advance for daily mode (2s delay for wrong answers to see correct answer)
+                setTimeout(() => {
+                    if (gameMode === 'daily') nextQuestion();
+                }, 2000);
             }
             document.getElementById('message').textContent = `❌ Incorrect. The answer was ${currentCountry.name}. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
         }
