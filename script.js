@@ -1092,36 +1092,43 @@ function handleCorrectAnswer() {
     }
 
     updateUI();
-    showFacts();
-
-    // Show next button
-    const nextButton = document.getElementById('next');
-    nextButton.hidden = false;
 
     if (gameMode === 'daily') {
+        // Daily mode: no facts, no next button (auto-advance)
         const flagNum = dailyChallenge.getCurrentFlagNumber();
         const isGameOver = flagNum > dailyChallenge.FLAGS_PER_DAY;
-        nextButton.textContent = isGameOver ? 'See Results' : `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
 
-        // Auto-advance for daily mode (fast since it's timed)
-        if (!isGameOver) {
+        // Brief "Correct!" message
+        document.getElementById('message').textContent = '✅ Correct!';
+
+        if (isGameOver) {
+            // Show See Results button at end
+            const nextButton = document.getElementById('next');
+            nextButton.hidden = false;
+            nextButton.textContent = 'See Results';
+        } else {
+            // Auto-advance quickly
             setTimeout(() => {
                 if (gameMode === 'daily') nextQuestion();
             }, 700);
         }
     } else {
+        // Practice mode: show facts and next button
+        showFacts();
+        const nextButton = document.getElementById('next');
+        nextButton.hidden = false;
         nextButton.textContent = 'Next Flag';
-    }
 
-    // Update message
-    const messages = [
-        "🎉 Correct!",
-        "✅ Well done!",
-        "🌟 Excellent!",
-        "🎯 Perfect!",
-        "👏 Great job!"
-    ];
-    document.getElementById('message').textContent = messages[Math.floor(Math.random() * messages.length)];
+        // Update message
+        const messages = [
+            "🎉 Correct!",
+            "✅ Well done!",
+            "🌟 Excellent!",
+            "🎯 Perfect!",
+            "👏 Great job!"
+        ];
+        document.getElementById('message').textContent = messages[Math.floor(Math.random() * messages.length)];
+    }
 }
 
 function handleWrongAnswer() {
@@ -1129,33 +1136,24 @@ function handleWrongAnswer() {
     updateUI();
 
     if (gameMode === 'daily') {
-        // Daily challenge: show correct answer and move to next flag
-        showFacts();
-        const nextButton = document.getElementById('next');
-        nextButton.hidden = false;
+        // Daily mode: no facts, no next button, always play all 5 flags
+        const flagNum = dailyChallenge.getCurrentFlagNumber();
+        const isGameOver = flagNum > dailyChallenge.FLAGS_PER_DAY;
 
-        if (lives <= 0) {
-            // Out of lives - game over
+        // Show what the correct answer was
+        document.getElementById('message').textContent = `❌ It was ${currentCountry.name}`;
+
+        if (isGameOver) {
+            // Show See Results button at end
+            const nextButton = document.getElementById('next');
+            nextButton.hidden = false;
             nextButton.textContent = 'See Results';
             nextButton.dataset.gameOver = 'true';
-            document.getElementById('message').textContent = `❌ Out of lives! The answer was ${currentCountry.name}.`;
         } else {
-            // Still have lives - continue to next flag
-            const flagNum = dailyChallenge.getCurrentFlagNumber();
-            const isGameOver = flagNum > dailyChallenge.FLAGS_PER_DAY;
-            if (isGameOver) {
-                nextButton.textContent = 'See Results';
-                nextButton.dataset.gameOver = 'true';
-            } else {
-                nextButton.textContent = `Flag ${flagNum} of ${dailyChallenge.FLAGS_PER_DAY}`;
-                nextButton.dataset.gameOver = 'false';
-
-                // Auto-advance for daily mode (1.2s to glimpse correct answer)
-                setTimeout(() => {
-                    if (gameMode === 'daily') nextQuestion();
-                }, 1200);
-            }
-            document.getElementById('message').textContent = `❌ Incorrect. The answer was ${currentCountry.name}. ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`;
+            // Auto-advance after brief pause to see correct answer
+            setTimeout(() => {
+                if (gameMode === 'daily') nextQuestion();
+            }, 1200);
         }
     } else {
         // Practice mode
