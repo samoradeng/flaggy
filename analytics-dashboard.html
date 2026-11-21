@@ -244,6 +244,8 @@
             cursor: pointer;
             width: 100%;
             font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .hidden { display: none !important; }
@@ -285,7 +287,7 @@
             <h2>🌍 Flagtriv Analytics</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px;">Enter password to access dashboard</p>
             <input type="password" id="password" placeholder="Password" onkeypress="if(event.key==='Enter')login()">
-            <button onclick="login()">Access Dashboard</button>
+            <button type="button" onclick="login()">Access Dashboard</button>
         </div>
     </div>
 
