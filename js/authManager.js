@@ -154,12 +154,20 @@ class AuthManager {
     }
 
     async signInWithApple() {
+        console.log('🍎 signInWithApple called');
+        console.log('🍎 isConfigured:', this.isConfigured);
+        console.log('🍎 Capacitor available:', !!window.Capacitor);
+        console.log('🍎 isNativePlatform:', window.Capacitor?.isNativePlatform?.());
+        console.log('🍎 Platform:', window.Capacitor?.getPlatform?.());
+
         if (!this.isConfigured || !this.supabase) {
+            console.log('🍎 Not configured, using simulate mode');
             return this.simulateSignIn('apple');
         }
 
         // On iOS, use native Apple Sign In (stays in-app with Face ID/Touch ID)
         if (window.Capacitor?.isNativePlatform?.() && window.Capacitor?.getPlatform?.() === 'ios') {
+            console.log('🍎 Using native Apple Sign In');
             return this.nativeAppleSignIn();
         }
 
@@ -182,21 +190,32 @@ class AuthManager {
 
     async nativeAppleSignIn() {
         try {
+            console.log('🍎 nativeAppleSignIn started');
+            console.log('🍎 Capacitor.Plugins:', window.Capacitor?.Plugins);
+
             const SignInWithApple = window.Capacitor?.Plugins?.SignInWithApple;
+            console.log('🍎 SignInWithApple plugin:', SignInWithApple);
+
             if (!SignInWithApple) {
-                throw new Error('SignInWithApple plugin not available');
+                const errorMsg = 'SignInWithApple plugin not available';
+                console.error('🍎', errorMsg);
+                this.showToast('❌ ' + errorMsg);
+                throw new Error(errorMsg);
             }
 
             // Generate nonce and hash it for Apple (raw nonce goes to Supabase)
             const rawNonce = this.generateNonce();
             const hashedNonce = await this.sha256(rawNonce);
+            console.log('🍎 Nonce generated, calling authorize...');
 
             const result = await SignInWithApple.authorize({
                 scopes: 'email name',
                 nonce: hashedNonce
             });
+            console.log('🍎 Apple authorize result:', result);
 
             // Exchange the Apple credential with Supabase
+            console.log('🍎 Exchanging token with Supabase...');
             const { data, error } = await this.supabase.auth.signInWithIdToken({
                 provider: 'apple',
                 token: result.response.identityToken,
@@ -204,18 +223,23 @@ class AuthManager {
             });
 
             if (error) {
+                console.error('🍎 Supabase error:', error);
+                this.showToast('❌ ' + error.message);
                 return { success: false, error: error.message };
             }
 
+            console.log('🍎 Sign in successful!');
             this.hideSignInModal();
             this.showToast('✅ Signed in with Apple!');
             return { success: true };
 
         } catch (error) {
+            console.error('🍎 Apple Sign In error:', error);
             // User cancelled or error occurred
             if (error.message?.includes('canceled') || error.message?.includes('cancelled') || error.code === 1001) {
                 return { success: false, error: 'Sign in cancelled' };
             }
+            this.showToast('❌ ' + (error.message || 'Apple Sign In failed'));
             return { success: false, error: error.message || 'Apple Sign In failed' };
         }
     }

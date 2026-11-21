@@ -699,6 +699,9 @@ function startDailyChallenge() {
         return;
     }
 
+    // Track game start
+    window.analytics?.trackGameStart('daily');
+
     gameMode = 'daily';
     isMultiplayerMode = false;
 
@@ -730,6 +733,9 @@ function startChallengeMode() {
     if (!checkPracticeLimit()) {
         return; // Premium modal will show
     }
+
+    // Track game start
+    window.analytics?.trackGameStart('practice');
 
     // Record this practice session
     recordPracticeGame();
@@ -1472,11 +1478,14 @@ async function showDailyLeaderboard() {
                 const timeMs = entry.timeMs || (entry.time * 1000);
                 const timeDisplay = `${(timeMs / 1000).toFixed(2)}s`;
                 const flagEmoji = entry.country !== 'Unknown' ? countryCodeToFlag(entry.country) : '';
+                // Convert attempts to correct count: attempts = wrongCount+1, so correct = 6 - attempts
+                const correctCount = entry.attempts ? Math.max(0, 6 - entry.attempts) : 5;
+                const scoreDisplay = `${correctCount}/5`;
 
                 entryDiv.innerHTML = `
                     <div class="rank">${rankEmoji}</div>
                     <div class="player-name">${entry.name} ${flagEmoji}</div>
-                    <div class="player-time">${timeDisplay}</div>
+                    <div class="player-time">${scoreDisplay} ${timeDisplay}</div>
                 `;
                 
                 list.appendChild(entryDiv);
@@ -1497,7 +1506,8 @@ async function showDailyLeaderboard() {
 }
 
 function shareEndlessResultHandler() {
-    const shareText = `🌍 I scored ${score} points in Flagtriv Practice Mode!\n🔥 Best streak: ${bestStreak}\n\nCan you beat my score? Play at flagtriv.com`;
+    const shareLink = window.analytics?.getShareLink('practice') || 'flagtriv.com';
+    const shareText = `🌍 I scored ${score} points in Flagtriv Practice Mode!\n🔥 Best streak: ${bestStreak}\n\nCan you beat my score? ${shareLink}`;
     
     if (navigator.share) {
         navigator.share({

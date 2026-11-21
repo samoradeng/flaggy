@@ -74,10 +74,11 @@ class GlobalLeaderboard {
     }
 
     // Calculate fair score (lower is better)
+    // attempts = wrongCount + 1 (1 = perfect, 2 = 1 wrong, etc.)
     calculateScore(timeMilliseconds, attempts) {
         // Base score is time in milliseconds
-        // Add penalty: (attempts - 1) * 10000ms (10 seconds per extra attempt)
-        // This ensures first-attempt accuracy is always rewarded
+        // Add penalty: (attempts - 1) * 10000ms (10 seconds per wrong answer)
+        // attempts=1 (0 wrong) = no penalty, attempts=2 (1 wrong) = +10s, etc.
         return timeMilliseconds + ((attempts - 1) * 10000);
     }
 
@@ -99,6 +100,18 @@ class GlobalLeaderboard {
             const country = await this.getUserCountry();
 
             const timeMilliseconds = Math.round(timeMs);
+
+            // Anti-cheat: minimum 0.5 seconds per flag (2.5s for 5 flags)
+            const MIN_TOTAL_TIME = 2500; // 2.5 seconds minimum for 5 flags
+            if (timeMilliseconds < MIN_TOTAL_TIME) {
+                console.warn(`⚠️ Suspicious time: ${timeMilliseconds}ms (min: ${MIN_TOTAL_TIME}ms)`);
+                return {
+                    success: false,
+                    global: false,
+                    error: 'Invalid submission time'
+                };
+            }
+
             const score = this.calculateScore(timeMilliseconds, attempts);
 
             // Check if player already has an entry for today
@@ -259,7 +272,8 @@ class GlobalLeaderboard {
             });
         }
         
-        text += '\nPlay at flagtriv.com 🌍';
+        const shareLink = window.analytics?.getShareLink('leaderboard') || 'flagtriv.com';
+        text += `\n${shareLink} 🌍`;
         return text;
     }
 
