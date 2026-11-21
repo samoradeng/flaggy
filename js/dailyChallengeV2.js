@@ -159,7 +159,9 @@ class DailyChallengeV2 {
         const timeMs = this.v1.getFinalTime();
         const timeStr = typeof formatTimeMs === 'function' ? formatTimeMs(timeMs) : `${(timeMs / 1000).toFixed(2)}s`;
 
-        return `🏁 Flagtriv #${dayNumber}\n${squaresStr} ${scoreStr}\n⏱️ ${timeStr}\n\nflagtriv.com`;
+        // Use referral link for viral tracking
+        const shareLink = window.analytics?.getShareLink('daily') || 'flagtriv.com';
+        return `🏁 Flagtriv #${dayNumber}\n${squaresStr} ${scoreStr}\n⏱️ ${timeStr}\n\n${shareLink}`;
     }
 
     // Filter country names for autocomplete

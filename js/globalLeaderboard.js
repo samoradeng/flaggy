@@ -272,7 +272,8 @@ class GlobalLeaderboard {
             });
         }
         
-        text += '\nPlay at flagtriv.com 🌍';
+        const shareLink = window.analytics?.getShareLink('leaderboard') || 'flagtriv.com';
+        text += `\n${shareLink} 🌍`;
         return text;
     }
 

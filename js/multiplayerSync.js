@@ -937,8 +937,9 @@ class MultiplayerSync {
             shareText += `🥉 Made it to the podium!\n`;
         }
         
-        shareText += `\nPlay at flagtriv.com`;
-        
+        const shareLink = window.analytics?.getShareLink('challenge') || 'flagtriv.com';
+        shareText += `\n${shareLink}`;
+
         return shareText;
     }
 

@@ -699,6 +699,9 @@ function startDailyChallenge() {
         return;
     }
 
+    // Track game start
+    window.analytics?.trackGameStart('daily');
+
     gameMode = 'daily';
     isMultiplayerMode = false;
 
@@ -730,6 +733,9 @@ function startChallengeMode() {
     if (!checkPracticeLimit()) {
         return; // Premium modal will show
     }
+
+    // Track game start
+    window.analytics?.trackGameStart('practice');
 
     // Record this practice session
     recordPracticeGame();
@@ -1500,7 +1506,8 @@ async function showDailyLeaderboard() {
 }
 
 function shareEndlessResultHandler() {
-    const shareText = `🌍 I scored ${score} points in Flagtriv Practice Mode!\n🔥 Best streak: ${bestStreak}\n\nCan you beat my score? Play at flagtriv.com`;
+    const shareLink = window.analytics?.getShareLink('practice') || 'flagtriv.com';
+    const shareText = `🌍 I scored ${score} points in Flagtriv Practice Mode!\n🔥 Best streak: ${bestStreak}\n\nCan you beat my score? ${shareLink}`;
     
     if (navigator.share) {
         navigator.share({

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flagtriv Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --green: #22c55e;
+            --yellow: #eab308;
+            --red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .refresh-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .refresh-btn:hover {
+            opacity: 0.9;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-filter select, .date-filter input {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .card-label {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .card-change {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .card-change.positive { color: var(--green); }
+        .card-change.negative { color: var(--red); }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--text-muted);
+        }
+
+        .table-container {
+            background: var(--card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: rgba(0,0,0,0.2);
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .funnel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .funnel-step {
+            background: var(--card);
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+            min-width: 120px;
+        }
+
+        .funnel-step .value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .funnel-step .label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .funnel-arrow {
+            color: var(--text-muted);
+            font-size: 20px;
+        }
+
+        .funnel-rate {
+            font-size: 11px;
+            color: var(--accent);
+        }
+
+        .chart-placeholder {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        .login-box {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .login-box h2 {
+            margin-bottom: 20px;
+        }
+
+        .login-box input {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 16px;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .login-box button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .hidden { display: none !important; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-new { background: var(--green); color: white; }
+        .badge-returning { background: var(--accent); color: white; }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .two-col { grid-template-columns: 1fr; }
+            .funnel { flex-direction: column; }
+            .funnel-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-box">
+            <h2>🌍 Flagtriv Analytics</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Enter password to access dashboard</p>
+            <input type="password" id="password" placeholder="Password" onkeypress="if(event.key==='Enter')login()">
+            <button onclick="login()">Access Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="container hidden">
+        <header>
+            <h1>🌍 Flagtriv Analytics</h1>
+            <div class="date-filter">
+                <select id="timeRange" onchange="loadData()">
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="all">All time</option>
+                </select>
+                <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+            </div>
+        </header>
+
+        <!-- Key Metrics -->
+        <div class="grid">
+            <div class="card">
+                <div class="card-label">Total Users</div>
+                <div class="card-value" id="totalUsers">-</div>
+                <div class="card-change" id="totalUsersChange"></div>
+            </div>
+            <div class="card">
+                <div class="card-label">New Users</div>
+                <div class="card-value" id="newUsers">-</div>
+                <div class="card-change" id="newUsersChange"></div>
+            </div>
+            <div class="card">
+                <div class="card-label">Returning Users</div>
+                <div class="card-value" id="returningUsers">-</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Games Played</div>
+                <div class="card-value" id="gamesPlayed">-</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Shares</div>
+                <div class="card-value" id="totalShares">-</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Viral Coefficient</div>
+                <div class="card-value" id="viralCoeff">-</div>
+                <div class="card-change">referrals per sharer</div>
+            </div>
+        </div>
+
+        <!-- Funnel -->
+        <div class="section">
+            <h3 class="section-title">📊 Conversion Funnel</h3>
+            <div class="funnel">
+                <div class="funnel-step">
+                    <div class="value" id="funnelVisit">-</div>
+                    <div class="label">Visits</div>
+                </div>
+                <div class="funnel-arrow">→</div>
+                <div class="funnel-step">
+                    <div class="value" id="funnelStart">-</div>
+                    <div class="label">Started Game</div>
+                    <div class="funnel-rate" id="funnelStartRate">-</div>
+                </div>
+                <div class="funnel-arrow">→</div>
+                <div class="funnel-step">
+                    <div class="value" id="funnelFinish">-</div>
+                    <div class="label">Finished</div>
+                    <div class="funnel-rate" id="funnelFinishRate">-</div>
+                </div>
+                <div class="funnel-arrow">→</div>
+                <div class="funnel-step">
+                    <div class="value" id="funnelShare">-</div>
+                    <div class="label">Shared</div>
+                    <div class="funnel-rate" id="funnelShareRate">-</div>
+                </div>
+                <div class="funnel-arrow">→</div>
+                <div class="funnel-step">
+                    <div class="value" id="funnelReferred">-</div>
+                    <div class="label">Friend Joined</div>
+                    <div class="funnel-rate" id="funnelReferredRate">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="two-col">
+            <!-- Top Referrers -->
+            <div class="section">
+                <h3 class="section-title">🏆 Top Referrers (Super Spreaders)</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Device ID</th>
+                                <th>Referrals</th>
+                                <th>Conversions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topReferrers">
+                            <tr><td colspan="4" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Traffic Sources -->
+            <div class="section">
+                <h3 class="section-title">📍 Traffic Sources</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Users</th>
+                                <th>% of Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trafficSources">
+                            <tr><td colspan="3" class="loading">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Retention -->
+        <div class="section">
+            <h3 class="section-title">📈 Retention (Users who returned)</h3>
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="card">
+                    <div class="card-label">Day 1</div>
+                    <div class="card-value" id="retentionD1">-</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Day 7</div>
+                    <div class="card-value" id="retentionD7">-</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Day 30</div>
+                    <div class="card-value" id="retentionD30">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="section">
+            <h3 class="section-title">🕐 Recent Activity</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Event</th>
+                            <th>Platform</th>
+                            <th>Source</th>
+                            <th>User Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentActivity">
+                        <tr><td colspan="5" class="loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mark Test Device -->
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center;">
+            <button onclick="markTestDevice()" style="background: var(--card); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+                Mark this device as test (exclude from analytics)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Supabase config - same as main app
+        const SUPABASE_URL = 'https://piydwvszbczwaqerxhvd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpeWR3dnN6YmN6d2FxZXJ4aHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4ODM0NzIsImV4cCI6MjA2NTQ1OTQ3Mn0.nJ0IkdexK8IpULbdbkzORwrFMraGF0vkJfHCgBliOGk';
+
+        let supabase;
+
+        // Simple password protection (change this!)
+        const DASHBOARD_PASSWORD = 'flagtriv2024';
+
+        function login() {
+            const password = document.getElementById('password').value;
+            if (password === DASHBOARD_PASSWORD) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                initSupabase();
+                loadData();
+            } else {
+                alert('Incorrect password');
+            }
+        }
+
+        function initSupabase() {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        async function loadData() {
+            const days = document.getElementById('timeRange').value;
+            const since = days === 'all' ? null : new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+            await Promise.all([
+                loadKeyMetrics(since),
+                loadFunnel(since),
+                loadTopReferrers(since),
+                loadTrafficSources(since),
+                loadRetention(),
+                loadRecentActivity()
+            ]);
+        }
+
+        async function loadKeyMetrics(since) {
+            try {
+                // Total unique users
+                let query = supabase
+                    .from('analytics_events')
+                    .select('device_id', { count: 'exact', head: true });
+
+                if (since) query = query.gte('created_at', since);
+
+                // Get unique device count using distinct
+                const { data: events } = await supabase
+                    .from('analytics_events')
+                    .select('device_id')
+                    .gte('created_at', since || '2020-01-01');
+
+                const uniqueDevices = new Set(events?.map(e => e.device_id) || []);
+                document.getElementById('totalUsers').textContent = uniqueDevices.size.toLocaleString();
+
+                // New users (first visit in period)
+                const { data: newUserEvents } = await supabase
+                    .from('analytics_events')
+                    .select('device_id, event_data')
+                    .eq('event_type', 'app_open')
+                    .gte('created_at', since || '2020-01-01');
+
+                const newUsers = newUserEvents?.filter(e => e.event_data?.is_first_visit).length || 0;
+                document.getElementById('newUsers').textContent = newUsers.toLocaleString();
+                document.getElementById('returningUsers').textContent = (uniqueDevices.size - newUsers).toLocaleString();
+
+                // Games played
+                const { count: gamesCount } = await supabase
+                    .from('analytics_events')
+                    .select('*', { count: 'exact', head: true })
+                    .in('event_type', ['daily_complete', 'practice_game'])
+                    .gte('created_at', since || '2020-01-01');
+
+                document.getElementById('gamesPlayed').textContent = (gamesCount || 0).toLocaleString();
+
+                // Shares
+                const { count: sharesCount } = await supabase
+                    .from('analytics_events')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('event_type', 'share')
+                    .gte('created_at', since || '2020-01-01');
+
+                document.getElementById('totalShares').textContent = (sharesCount || 0).toLocaleString();
+
+                // Viral coefficient (referrals / sharers)
+                const { data: referrals } = await supabase
+                    .from('analytics_referrals')
+                    .select('referrer_device_id')
+                    .gte('created_at', since || '2020-01-01');
+
+                const uniqueReferrers = new Set(referrals?.map(r => r.referrer_device_id) || []);
+                const referralCount = referrals?.length || 0;
+                const viralCoeff = uniqueReferrers.size > 0 ? (referralCount / uniqueReferrers.size).toFixed(2) : '0.00';
+                document.getElementById('viralCoeff').textContent = viralCoeff;
+
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+            }
+        }
+
+        async function loadFunnel(since) {
+            try {
+                const sinceDate = since || '2020-01-01';
+
+                // Visits (app_open events)
+                const { data: visits } = await supabase
+                    .from('analytics_events')
+                    .select('device_id')
+                    .eq('event_type', 'app_open')
+                    .gte('created_at', sinceDate);
+                const visitCount = new Set(visits?.map(v => v.device_id) || []).size;
+
+                // Started game
+                const { data: starts } = await supabase
+                    .from('analytics_events')
+                    .select('device_id')
+                    .eq('event_type', 'game_start')
+                    .gte('created_at', sinceDate);
+                const startCount = new Set(starts?.map(s => s.device_id) || []).size;
+
+                // Finished game
+                const { data: finishes } = await supabase
+                    .from('analytics_events')
+                    .select('device_id')
+                    .in('event_type', ['daily_complete', 'practice_game'])
+                    .gte('created_at', sinceDate);
+                const finishCount = new Set(finishes?.map(f => f.device_id) || []).size;
+
+                // Shared
+                const { data: shares } = await supabase
+                    .from('analytics_events')
+                    .select('device_id')
+                    .eq('event_type', 'share')
+                    .gte('created_at', sinceDate);
+                const shareCount = new Set(shares?.map(s => s.device_id) || []).size;
+
+                // Referred someone
+                const { data: referrals } = await supabase
+                    .from('analytics_referrals')
+                    .select('referrer_device_id')
+                    .gte('created_at', sinceDate);
+                const referredCount = new Set(referrals?.map(r => r.referrer_device_id) || []).size;
+
+                // Update UI
+                document.getElementById('funnelVisit').textContent = visitCount;
+                document.getElementById('funnelStart').textContent = startCount;
+                document.getElementById('funnelFinish').textContent = finishCount;
+                document.getElementById('funnelShare').textContent = shareCount;
+                document.getElementById('funnelReferred').textContent = referredCount;
+
+                // Conversion rates
+                document.getElementById('funnelStartRate').textContent = visitCount ? `${((startCount / visitCount) * 100).toFixed(1)}%` : '-';
+                document.getElementById('funnelFinishRate').textContent = startCount ? `${((finishCount / startCount) * 100).toFixed(1)}%` : '-';
+                document.getElementById('funnelShareRate').textContent = finishCount ? `${((shareCount / finishCount) * 100).toFixed(1)}%` : '-';
+                document.getElementById('funnelReferredRate').textContent = shareCount ? `${((referredCount / shareCount) * 100).toFixed(1)}%` : '-';
+
+            } catch (error) {
+                console.error('Error loading funnel:', error);
+            }
+        }
+
+        async function loadTopReferrers(since) {
+            try {
+                const { data: referrals } = await supabase
+                    .from('analytics_referrals')
+                    .select('referrer_device_id')
+                    .gte('created_at', since || '2020-01-01');
+
+                // Count referrals per device
+                const counts = {};
+                referrals?.forEach(r => {
+                    counts[r.referrer_device_id] = (counts[r.referrer_device_id] || 0) + 1;
+                });
+
+                // Sort by count
+                const sorted = Object.entries(counts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10);
+
+                const tbody = document.getElementById('topReferrers');
+                if (sorted.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="color: var(--text-muted); text-align: center;">No referrals yet</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = sorted.map(([deviceId, count], i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><code>${deviceId.substring(0, 12)}...</code></td>
+                        <td><strong>${count}</strong></td>
+                        <td>-</td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading referrers:', error);
+            }
+        }
+
+        async function loadTrafficSources(since) {
+            try {
+                const { data: events } = await supabase
+                    .from('analytics_events')
+                    .select('source, device_id')
+                    .eq('event_type', 'app_open')
+                    .gte('created_at', since || '2020-01-01');
+
+                // Count users per source
+                const sourceCounts = {};
+                const seenDevices = {};
+
+                events?.forEach(e => {
+                    const source = e.source || 'direct';
+                    if (!seenDevices[e.device_id]) {
+                        seenDevices[e.device_id] = true;
+                        sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+                    }
+                });
+
+                const total = Object.values(sourceCounts).reduce((a, b) => a + b, 0);
+                const sorted = Object.entries(sourceCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10);
+
+                const tbody = document.getElementById('trafficSources');
+                tbody.innerHTML = sorted.map(([source, count]) => `
+                    <tr>
+                        <td>${source}</td>
+                        <td><strong>${count}</strong></td>
+                        <td>${((count / total) * 100).toFixed(1)}%</td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading sources:', error);
+            }
+        }
+
+        async function loadRetention() {
+            try {
+                // Get users who have session_count > 1 (returned at least once)
+                const { data: events } = await supabase
+                    .from('analytics_events')
+                    .select('device_id, event_data, created_at')
+                    .eq('event_type', 'app_open');
+
+                // Group by device and find return patterns
+                const userSessions = {};
+                events?.forEach(e => {
+                    if (!userSessions[e.device_id]) {
+                        userSessions[e.device_id] = [];
+                    }
+                    userSessions[e.device_id].push(new Date(e.created_at));
+                });
+
+                let d1Return = 0, d7Return = 0, d30Return = 0;
+                let totalUsers = Object.keys(userSessions).length;
+
+                Object.values(userSessions).forEach(sessions => {
+                    if (sessions.length < 2) return;
+                    sessions.sort((a, b) => a - b);
+                    const firstVisit = sessions[0];
+
+                    for (let i = 1; i < sessions.length; i++) {
+                        const daysDiff = Math.floor((sessions[i] - firstVisit) / (1000 * 60 * 60 * 24));
+                        if (daysDiff >= 1 && daysDiff < 2) d1Return++;
+                        if (daysDiff >= 7 && daysDiff < 8) d7Return++;
+                        if (daysDiff >= 30 && daysDiff < 31) d30Return++;
+                    }
+                });
+
+                document.getElementById('retentionD1').textContent = totalUsers ? `${((d1Return / totalUsers) * 100).toFixed(1)}%` : '-';
+                document.getElementById('retentionD7').textContent = totalUsers ? `${((d7Return / totalUsers) * 100).toFixed(1)}%` : '-';
+                document.getElementById('retentionD30').textContent = totalUsers ? `${((d30Return / totalUsers) * 100).toFixed(1)}%` : '-';
+
+            } catch (error) {
+                console.error('Error loading retention:', error);
+            }
+        }
+
+        async function loadRecentActivity() {
+            try {
+                const { data: events } = await supabase
+                    .from('analytics_events')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                const tbody = document.getElementById('recentActivity');
+                tbody.innerHTML = events?.map(e => {
+                    const time = new Date(e.created_at).toLocaleString();
+                    const isNew = e.event_data?.is_first_visit;
+                    return `
+                        <tr>
+                            <td>${time}</td>
+                            <td>${e.event_type}</td>
+                            <td>${e.platform || '-'}</td>
+                            <td>${e.source || 'direct'}</td>
+                            <td>${isNew ? '<span class="badge badge-new">New</span>' : '<span class="badge badge-returning">Returning</span>'}</td>
+                        </tr>
+                    `;
+                }).join('') || '<tr><td colspan="5">No activity</td></tr>';
+
+            } catch (error) {
+                console.error('Error loading activity:', error);
+            }
+        }
+
+        function markTestDevice() {
+            const deviceId = localStorage.getItem('analytics_device_id');
+            if (deviceId && confirm('Mark this device as a test device? It will be excluded from analytics.')) {
+                localStorage.setItem('analytics_is_test', 'true');
+                alert('Device marked as test. Refresh analytics to see changes.');
+            }
+        }
+
+        // Check for auto-login via URL param
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('key') === DASHBOARD_PASSWORD) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            initSupabase();
+            loadData();
+        }
+    </script>
+</body>
+</html>
