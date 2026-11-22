@@ -1383,8 +1383,12 @@ function showDailyComplete() {
         document.getElementById('countdown-timer').textContent = dailyChallenge.getTimeUntilNext();
     }, 60000);
 
-    // Track analytics
-    window.analytics?.trackDailyComplete(result.score, result.total, result.timeMs, dayNum);
+    // Track analytics - only once per day (prevent duplicate tracking on result views)
+    const trackingKey = `analytics_tracked_daily_${dayNum}`;
+    if (!localStorage.getItem(trackingKey)) {
+        window.analytics?.trackDailyComplete(result.score, result.total, result.timeMs, dayNum);
+        localStorage.setItem(trackingKey, 'true');
+    }
 }
 
 function showDailyGameOver() {

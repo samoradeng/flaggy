@@ -87,10 +87,21 @@ class Analytics {
         // Load user state
         this.loadUserState();
 
-        // Check for ?test=1 URL param to mark as test device
+        // Check URL params
         const urlParams = new URLSearchParams(window.location.search);
+
+        // ?test=1 marks device as test
         if (urlParams.get('test') === '1') {
             this.markAsTestDevice();
+        }
+
+        // ?reset_analytics=1 clears all analytics localStorage (for full reset after DB truncate)
+        if (urlParams.get('reset_analytics') === '1') {
+            this.resetLocalStorage();
+            // Reload without the param
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+            window.location.reload();
         }
 
         // Listen for online/offline
@@ -457,6 +468,19 @@ class Analytics {
 
     isTestDevice() {
         return localStorage.getItem('analytics_is_test') === 'true';
+    }
+
+    // Reset all analytics localStorage (use after DB truncate for clean slate)
+    resetLocalStorage() {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith('analytics_') || key.startsWith('analytics_tracked_'))) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log('✅ Analytics localStorage reset - user will be tracked as new');
     }
 }
 
