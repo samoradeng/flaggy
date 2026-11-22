@@ -578,37 +578,40 @@
             try {
                 const sinceDate = since || '2020-01-01';
 
+                // Helper to filter out test devices
+                const filterTest = (data) => data?.filter(e => !e.event_data?.is_test) || [];
+
                 // Visits (app_open events)
                 const { data: visits } = await supabase
                     .from('analytics_events')
-                    .select('device_id')
+                    .select('device_id, event_data')
                     .eq('event_type', 'app_open')
                     .gte('created_at', sinceDate);
-                const visitCount = new Set(visits?.map(v => v.device_id) || []).size;
+                const visitCount = new Set(filterTest(visits).map(v => v.device_id)).size;
 
                 // Started game
                 const { data: starts } = await supabase
                     .from('analytics_events')
-                    .select('device_id')
+                    .select('device_id, event_data')
                     .eq('event_type', 'game_start')
                     .gte('created_at', sinceDate);
-                const startCount = new Set(starts?.map(s => s.device_id) || []).size;
+                const startCount = new Set(filterTest(starts).map(s => s.device_id)).size;
 
                 // Finished game
                 const { data: finishes } = await supabase
                     .from('analytics_events')
-                    .select('device_id')
+                    .select('device_id, event_data')
                     .in('event_type', ['daily_complete', 'practice_game'])
                     .gte('created_at', sinceDate);
-                const finishCount = new Set(finishes?.map(f => f.device_id) || []).size;
+                const finishCount = new Set(filterTest(finishes).map(f => f.device_id)).size;
 
                 // Shared
                 const { data: shares } = await supabase
                     .from('analytics_events')
-                    .select('device_id')
+                    .select('device_id, event_data')
                     .eq('event_type', 'share')
                     .gte('created_at', sinceDate);
-                const shareCount = new Set(shares?.map(s => s.device_id) || []).size;
+                const shareCount = new Set(filterTest(shares).map(s => s.device_id)).size;
 
                 // Referred someone
                 const { data: referrals } = await supabase
@@ -714,40 +717,66 @@
 
         async function loadRetention() {
             try {
-                // Get users who have session_count > 1 (returned at least once)
+                // Get all app_open events (excluding test devices)
                 const { data: events } = await supabase
                     .from('analytics_events')
                     .select('device_id, event_data, created_at')
                     .eq('event_type', 'app_open');
 
+                // Filter out test devices
+                const filteredEvents = events?.filter(e => !e.event_data?.is_test) || [];
+
                 // Group by device and find return patterns
                 const userSessions = {};
-                events?.forEach(e => {
+                filteredEvents.forEach(e => {
                     if (!userSessions[e.device_id]) {
                         userSessions[e.device_id] = [];
                     }
                     userSessions[e.device_id].push(new Date(e.created_at));
                 });
 
-                let d1Return = 0, d7Return = 0, d30Return = 0;
-                let totalUsers = Object.keys(userSessions).length;
+                const now = new Date();
+                let d1Eligible = 0, d1Return = 0;
+                let d7Eligible = 0, d7Return = 0;
+                let d30Eligible = 0, d30Return = 0;
 
                 Object.values(userSessions).forEach(sessions => {
-                    if (sessions.length < 2) return;
                     sessions.sort((a, b) => a - b);
                     const firstVisit = sessions[0];
+                    const daysSinceFirst = Math.floor((now - firstVisit) / (1000 * 60 * 60 * 24));
 
-                    for (let i = 1; i < sessions.length; i++) {
-                        const daysDiff = Math.floor((sessions[i] - firstVisit) / (1000 * 60 * 60 * 24));
-                        if (daysDiff >= 1 && daysDiff < 2) d1Return++;
-                        if (daysDiff >= 7 && daysDiff < 8) d7Return++;
-                        if (daysDiff >= 30 && daysDiff < 31) d30Return++;
+                    // Only count users who've had enough time to return
+                    if (daysSinceFirst >= 1) {
+                        d1Eligible++;
+                        // Check if they returned on day 1-2
+                        for (let i = 1; i < sessions.length; i++) {
+                            const daysDiff = Math.floor((sessions[i] - firstVisit) / (1000 * 60 * 60 * 24));
+                            if (daysDiff >= 1 && daysDiff < 3) { d1Return++; break; }
+                        }
+                    }
+                    if (daysSinceFirst >= 7) {
+                        d7Eligible++;
+                        for (let i = 1; i < sessions.length; i++) {
+                            const daysDiff = Math.floor((sessions[i] - firstVisit) / (1000 * 60 * 60 * 24));
+                            if (daysDiff >= 6 && daysDiff < 9) { d7Return++; break; }
+                        }
+                    }
+                    if (daysSinceFirst >= 30) {
+                        d30Eligible++;
+                        for (let i = 1; i < sessions.length; i++) {
+                            const daysDiff = Math.floor((sessions[i] - firstVisit) / (1000 * 60 * 60 * 24));
+                            if (daysDiff >= 28 && daysDiff < 32) { d30Return++; break; }
+                        }
                     }
                 });
 
-                document.getElementById('retentionD1').textContent = totalUsers ? `${((d1Return / totalUsers) * 100).toFixed(1)}%` : '-';
-                document.getElementById('retentionD7').textContent = totalUsers ? `${((d7Return / totalUsers) * 100).toFixed(1)}%` : '-';
-                document.getElementById('retentionD30').textContent = totalUsers ? `${((d30Return / totalUsers) * 100).toFixed(1)}%` : '-';
+                // Show N/A if no users eligible, percentage otherwise
+                document.getElementById('retentionD1').textContent = d1Eligible > 0
+                    ? `${((d1Return / d1Eligible) * 100).toFixed(1)}%` : 'N/A';
+                document.getElementById('retentionD7').textContent = d7Eligible > 0
+                    ? `${((d7Return / d7Eligible) * 100).toFixed(1)}%` : 'N/A';
+                document.getElementById('retentionD30').textContent = d30Eligible > 0
+                    ? `${((d30Return / d30Eligible) * 100).toFixed(1)}%` : 'N/A';
 
             } catch (error) {
                 console.error('Error loading retention:', error);
