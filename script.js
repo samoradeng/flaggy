@@ -1437,8 +1437,11 @@ async function submitDailyNameHandler() {
     
     // Submit to leaderboard - use saved result data
     const todayResult = dailyChallenge.getTodayResult();
+    const correctCount = todayResult?.results?.filter(r => r === 'correct').length || 0;
     const wrongCount = todayResult?.results?.filter(r => r === 'wrong').length || 0;
-    const attempts = wrongCount + 1; // 1 attempt if no wrongs, 2 if 1 wrong, etc.
+    // Store actual correct count in attempts field (we'll display it directly)
+    // Legacy: attempts was wrongCount+1, now it's 6-correctCount to maintain scoring math
+    const attempts = 6 - correctCount; // So correctCount = 6 - attempts still works
     const timeSpent = todayResult?.timeMs ? Math.round(todayResult.timeMs / 1000) : 0;
 
     const result = await dailyChallenge.submitToLeaderboard(playerName, timeSpent, attempts);
