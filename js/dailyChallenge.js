@@ -96,7 +96,8 @@ class DailyChallenge {
     // Check if there's an in-progress game for today
     hasInProgressGame() {
         const state = this.loadInProgress();
-        return state !== null && state.currentFlagIndex < this.FLAGS_PER_DAY && state.lives > 0;
+        // Lives don't matter for daily - always play all 5 flags
+        return state !== null && state.currentFlagIndex < this.FLAGS_PER_DAY;
     }
 
     hasPlayedToday() {
@@ -160,7 +161,8 @@ class DailyChallenge {
     startChallenge() {
         const inProgress = this.loadInProgress();
 
-        if (inProgress && inProgress.currentFlagIndex < this.FLAGS_PER_DAY && inProgress.lives > 0) {
+        // Lives don't end the game for daily - always play all 5 flags
+        if (inProgress && inProgress.currentFlagIndex < this.FLAGS_PER_DAY) {
             // Resume from saved state
             this.currentFlagIndex = inProgress.currentFlagIndex;
             this.lives = inProgress.lives;
@@ -223,15 +225,11 @@ class DailyChallenge {
 
         this.currentFlagIndex++;
 
-        // Check if game is over
-        const isGameOver = this.lives <= 0 || this.currentFlagIndex >= this.FLAGS_PER_DAY;
+        // Daily challenge: always play all 5 flags (lives are just for display, don't end game)
+        const isGameOver = this.currentFlagIndex >= this.FLAGS_PER_DAY;
 
         if (isGameOver) {
             this.endTime = Date.now();
-            // Mark remaining flags as skipped
-            while (this.results.length < this.FLAGS_PER_DAY) {
-                this.results.push('skipped');
-            }
             // Clear in-progress since game is complete
             this.clearInProgress();
         } else {
