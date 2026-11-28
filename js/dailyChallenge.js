@@ -315,7 +315,7 @@ class DailyChallenge {
         return `${year}-${month}-${day}`;
     }
 
-    // Generate share text (Wordle-style)
+    // Generate share text (Wordle-style) - NO FLAG SPOILERS!
     getShareText(result = null) {
         const r = result || this.getTodayResult();
         if (!r) return '';
@@ -324,13 +324,13 @@ class DailyChallenge {
         const squares = r.results.map(res => {
             if (res === 'correct') return '🟩';
             if (res === 'wrong') return '⬛';
-            return '❌'; // skipped (ran out of lives)
+            return '❌';
         }).join('');
 
         const timeStr = (r.timeMs / 1000).toFixed(2) + 's';
-        const flagEmojis = r.flags.map(f => this.getCountryEmoji(f.code)).join(' ');
 
-        return `Flagtriv Daily #${dayNum}\n${squares} ${r.score}/${r.total}\n⚡ ${timeStr}\n\n${flagEmojis}\n\nflagtriv.com`;
+        // Don't show flag emojis - that's a spoiler!
+        return `🏁 Flagtriv Daily #${dayNum}\n${squares} ${r.score}/${r.total}\n⚡ ${timeStr}\n\nCan you beat my score?\nflagtriv.com`;
     }
 
     // Convert country code to flag emoji
